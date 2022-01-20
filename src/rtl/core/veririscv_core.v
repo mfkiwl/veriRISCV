@@ -169,5 +169,18 @@ module veririscv_core (
         .mem_alu_out                    (mem_alu_out[`DATA_RANGE]),
         .mem_ill_instr                  (mem_ill_instr));
 
+
+    /////////////////////////////////
+    // Simulation Related
+    /////////////////////////////////
+
+    `ifdef COCOTB_SIM
+        initial begin
+        $dumpfile ("veririscv_core.vcd");
+        $dumpvars (0, veririscv_core);
+        #1;
+        end
+    `endif
+
 endmodule
 

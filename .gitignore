@@ -1,0 +1,7 @@
+
+__pycache__
+
+# cocotb
+sim_build
+results.xml
+*.vcd
