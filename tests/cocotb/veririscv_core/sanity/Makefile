@@ -27,7 +27,7 @@ VERILOG_SOURCES += $(RTL_FILES)
 # -----------------------------------------
 
 TOPLEVEL = veririscv_core
-MODULE 	 = CoreTB
+MODULE 	 = SanityTB
 
 # -----------------------------------------
 # Cocotb config
@@ -44,3 +44,6 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 # Other
 # -----------------------------------------
 
+clean_all: clean
+	rm -rf __pycache__
+	rm -rf results.xml *.vcd

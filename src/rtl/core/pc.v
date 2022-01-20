@@ -34,4 +34,6 @@ module pc (
         end
     end
 
+    assign pc_out = pc_value;
+
 endmodule
