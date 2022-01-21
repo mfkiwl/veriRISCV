@@ -27,7 +27,7 @@ VERILOG_SOURCES += $(RTL_FILES)
 # -----------------------------------------
 
 TOPLEVEL = veririscv_core
-MODULE 	 = SanityTB
+MODULE 	 = BasicTB
 
 # -----------------------------------------
 # Cocotb config

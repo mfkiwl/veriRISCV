@@ -44,10 +44,12 @@ class RAM:
             size += 1
         FH.close()
         self.mem = data
-        self._log.info(f"Read memory content from file: {file}. Memory size is {str(size * 4)} bytes")
+        self._log.info(f"Read memory content from file: {file}. Memory size is {str(size * 4)} bytes, {str(size)} words")
 
     def _get_integer(self, signal):
         try:
             return signal.value.integer
         except AttributeError:
             return signal
+        except ValueError:
+            return 0

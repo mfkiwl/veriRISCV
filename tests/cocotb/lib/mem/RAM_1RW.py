@@ -17,7 +17,7 @@
 ###################################################################################################
 
 import cocotb
-from cocotb.triggers import Timer, RisingEdge
+from cocotb.triggers import Timer, RisingEdge, FallingEdge
 
 from RAM import RAM
 
@@ -49,6 +49,7 @@ class RAM_1RW(RAM):
         """
         try:
             self.rdata <= self.mem[self.addr_reg]
+            #self._log.info(self.addr_reg)
         except KeyError:
             self.rdata <= 0
 
@@ -63,6 +64,7 @@ class RAM_1RW(RAM):
             self._read()
             self._write()
             # Capture the command, address, and data
+            await FallingEdge(self.clk)
             self.wen_reg = self._get_integer(self.wen)
             self.addr_reg = self._get_integer(self.addr)
             self.wdata_reg = self._get_integer(self.wdata)
