@@ -40,10 +40,13 @@ module regfile (
 
     // Note: Register $0 is always pointing to zero.
     // Here we use a mux to select 0 when read address is 0
+    // We also formard the data from WB stage if it has
+    // the dependence
 
     // Read port A
     always @(*) begin
         if (addr_rs1 == 0) dout_rs1 = 0;
+        else if (addr_rs1 == waddr && wen) dout_rs1 = din;
         else dout_rs1 = register[addr_rs1];
     end
 
@@ -51,6 +54,7 @@ module regfile (
     // Read port B
     always @(*) begin
         if (addr_rs2 == 0) dout_rs2 = 0;
+        else if (addr_rs2 == waddr && wen) dout_rs2 = din;
         else dout_rs2 = register[addr_rs2];
     end
 

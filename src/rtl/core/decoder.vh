@@ -39,7 +39,7 @@
 
 // Instruction Type
 `define DEC_TYPE_LOGIC      7'b0110011
-`define DEC_TYPE_IMM        7'b0010011
+`define DEC_TYPE_ILOGIC     7'b0010011
 
 // Logid Instruction Func3
 `define DEC_LOGIC_ADD       3'b000

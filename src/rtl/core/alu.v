@@ -40,7 +40,7 @@ module alu (
             `CORE_ALU_SLTU: alu_out = {{(`DATA_WIDTH-1){1'b0}},sltu_result};
             `CORE_ALU_XOR:  alu_out = alu_oprand_0 ^ alu_oprand_1;
             `CORE_ALU_SRL:  alu_out = alu_oprand_0 >> alu_oprand_1[4:0];
-            `CORE_ALU_SRA:  alu_out = alu_oprand_0 >>> alu_oprand_1[4:0];
+            `CORE_ALU_SRA:  alu_out = $signed(alu_oprand_0) >>> alu_oprand_1[4:0];
             `CORE_ALU_OR:   alu_out = alu_oprand_0 | alu_oprand_1;
             `CORE_ALU_AND:  alu_out = alu_oprand_0 & alu_oprand_1;
             default:        alu_out = alu_oprand_0 & alu_oprand_1;

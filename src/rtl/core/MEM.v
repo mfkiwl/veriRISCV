@@ -22,15 +22,15 @@ module MEM (
     input   clk,
     input   rst,
     // input from EX/MEM stage pipe
-    input                       ex_reg_wen,
-    input [`RF_RANGE]           ex_reg_waddr,
-    input [`DATA_RANGE]         ex_alu_out,
-    input                       ex_ill_instr,
+    input                       ex2mem_reg_wen,
+    input [`RF_RANGE]           ex2mem_reg_waddr,
+    input [`DATA_RANGE]         ex2mem_alu_out,
+    input                       ex2mem_ill_instr,
     // pipeline stage
-    output reg                  mem_reg_wen,
-    output reg [`RF_RANGE]      mem_reg_waddr,
-    output reg [`DATA_RANGE]    mem_alu_out,
-    output reg                  mem_ill_instr
+    output reg                  mem2wb_reg_wen,
+    output reg [`RF_RANGE]      mem2wb_reg_waddr,
+    output reg [`DATA_RANGE]    mem2wb_alu_out,
+    output reg                  mem2wb_ill_instr
 );
 
 
@@ -46,18 +46,18 @@ module MEM (
 
     always @(posedge clk) begin
         if (rst) begin
-            mem_reg_wen <= 1'b0;
-            mem_ill_instr <= 1'b0;
+            mem2wb_reg_wen <= 1'b0;
+            mem2wb_ill_instr <= 1'b0;
         end
         else begin
-            mem_reg_wen <= ex_reg_wen;
-            mem_ill_instr <= ex_ill_instr;
+            mem2wb_reg_wen <= ex2mem_reg_wen;
+            mem2wb_ill_instr <= ex2mem_ill_instr;
         end
     end
 
     always @(posedge clk) begin
-        mem_alu_out <= ex_alu_out;
-        mem_reg_waddr <= ex_reg_waddr;
+        mem2wb_alu_out <= ex2mem_alu_out;
+        mem2wb_reg_waddr <= ex2mem_reg_waddr;
     end
 
     //////////////////////////////

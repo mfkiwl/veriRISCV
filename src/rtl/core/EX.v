@@ -22,17 +22,25 @@ module EX (
     input   clk,
     input   rst,
     // input from ID/EX stage pipe
-    input                       id_reg_wen,
-    input [`RF_RANGE]           id_reg_waddr,
-    input [`DATA_RANGE]         id_reg_rs1_data,
-    input [`DATA_RANGE]         id_reg_rs2_data,
-    input [`CORE_ALU_OP_RANGE]  id_alu_op,
-    input                       id_ill_instr,
+    input                       id2ex_reg_wen,
+    input [`RF_RANGE]           id2ex_reg_waddr,
+    input [`DATA_RANGE]         id2ex_reg_rs1_data,
+    input [`DATA_RANGE]         id2ex_reg_rs2_data,
+    input [`IMM_RANGE]          id2ex_imm_value,
+    input [`CORE_ALU_OP_RANGE]  id2ex_alu_op,
+    input                       id2ex_sel_imm,
+    input                       id2ex_rs1_forward_from_mem,
+    input                       id2ex_rs1_forward_from_wb,
+    input                       id2ex_rs2_forward_from_mem,
+    input                       id2ex_rs2_forward_from_wb,
+    input                       id2ex_ill_instr,
+    // input from wb stage
+    input [`DATA_RANGE]         wb_reg_wdata,
     // pipeline stage
-    output reg                  ex_reg_wen,
-    output reg [`RF_RANGE]      ex_reg_waddr,
-    output reg [`DATA_RANGE]    ex_alu_out,
-    output reg                  ex_ill_instr
+    output reg                  ex2mem_reg_wen,
+    output reg [`RF_RANGE]      ex2mem_reg_waddr,
+    output reg [`DATA_RANGE]    ex2mem_alu_out,
+    output reg                  ex2mem_ill_instr
 );
 
 
@@ -40,7 +48,11 @@ module EX (
     // Signal Declaration
     //////////////////////////////
     wire [`DATA_RANGE]  alu_out;
-
+    wire [`DATA_RANGE]  rs1_forwarded;
+    wire [`DATA_RANGE]  rs2_forwarded;
+    wire [`DATA_RANGE]  alu_oprand_0;
+    wire [`DATA_RANGE]  alu_oprand_1;
+    wire [`DATA_RANGE]  imm_value;
 
     //////////////////////////////
 
@@ -50,28 +62,46 @@ module EX (
 
     always @(posedge clk) begin
         if (rst) begin
-            ex_reg_wen <= 1'b0;
-            ex_ill_instr <= 1'b0;
+            ex2mem_reg_wen <= 1'b0;
+            ex2mem_ill_instr <= 1'b0;
         end
         else begin
-            ex_reg_wen <= id_reg_wen;
-            ex_ill_instr <= id_ill_instr;
+            ex2mem_reg_wen <= id2ex_reg_wen;
+            ex2mem_ill_instr <= id2ex_ill_instr;
         end
     end
 
     always @(posedge clk) begin
-        ex_alu_out <= alu_out;
-        ex_reg_waddr <= id_reg_waddr;
+        ex2mem_alu_out <= alu_out;
+        ex2mem_reg_waddr <= id2ex_reg_waddr;
     end
+
+    //////////////////////////////
+    // Logic
+    //////////////////////////////
+
+    // Forwarding MUX
+    assign rs1_forwarded =  (id2ex_rs1_forward_from_mem) ? ex2mem_alu_out :
+                            (id2ex_rs1_forward_from_wb) ?  wb_reg_wdata :
+                            id2ex_reg_rs1_data;
+
+    assign rs2_forwarded =  (id2ex_rs2_forward_from_mem) ? ex2mem_alu_out :
+                            (id2ex_rs2_forward_from_wb) ?  wb_reg_wdata :
+                            id2ex_reg_rs2_data;
+
+    // immediate select
+    assign alu_oprand_0 = rs1_forwarded;
+    assign imm_value = {{12{id2ex_imm_value[19]}}, id2ex_imm_value};  // sign ext the imm value
+    assign alu_oprand_1 = (id2ex_sel_imm) ? imm_value : rs2_forwarded;
 
     //////////////////////////////
     // Module instantiation
     //////////////////////////////
     alu
     alu (
-        .alu_oprand_0       (id_reg_rs1_data),
-        .alu_oprand_1       (id_reg_rs2_data),
-        .alu_op             (id_alu_op),
+        .alu_oprand_0       (alu_oprand_0),
+        .alu_oprand_1       (alu_oprand_1),
+        .alu_op             (id2ex_alu_op),
         .alu_out            (alu_out)
     );
 

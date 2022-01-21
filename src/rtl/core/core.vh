@@ -35,5 +35,7 @@
 `define CORE_ALU_OR        4'b0110
 `define CORE_ALU_AND       4'b0111
 
+// Immediate number size for pipeline stage
+`define IMM_RANGE          19:0
 
 `endif
