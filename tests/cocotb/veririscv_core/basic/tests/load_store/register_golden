@@ -1,0 +1,40 @@
+ra (x1)
+0xffffffff
+sp (x2)
+0xffffffff
+gp (x3)
+0xffffffff
+tp (x4)
+0xffffffff
+t0 (x5)
+0xffffffff
+t1 (x6)
+0xffffffff
+t2 (x7)
+0xffffffff
+s0 (x8)
+0xffffffff
+s1 (x9)
+0x000000ff
+a0 (x10)
+0x000000ff
+a1 (x11)
+0x000000ff
+a2 (x12)
+0x000000ff
+a3 (x13)
+0x0000ffff
+a4 (x14)
+0x0000ffff
+a5 (x15)
+0x0000ffff
+a6 (x16)
+0xffff0000
+a7 (x17)
+0x000000ff
+s2 (x18)
+0x0000ff00
+s3 (x19)
+0x00ff0000
+s4 (x20)
+0xff000000

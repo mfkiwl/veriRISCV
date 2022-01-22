@@ -62,7 +62,7 @@ module MEM (
     end
 
     always @(posedge clk) begin
-        mem2wb_reg_wdata <= ex2mem_alu_out;
+        mem2wb_reg_wdata <= reg_wdata;
         mem2wb_reg_waddr <= ex2mem_reg_waddr;
     end
 

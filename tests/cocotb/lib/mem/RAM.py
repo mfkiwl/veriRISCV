@@ -63,7 +63,7 @@ class RAM:
             assert ValueError(f"Address out of memory range. Range: {hex(self.ram_depth)}, Actual: {hex(addr)}")
 
     def _data_check(self, data):
-        if data > self.self.max_data - 1:
+        if data > self.max_data - 1:
             assert ValueError(f"Data out of memory size. Size: {hex(self.max_data)}, Actual: {hex(data)}")
 
     def read(self, addr):
@@ -74,8 +74,13 @@ class RAM:
         else:
             return 0
 
-    def write(self, addr, data):
+    def write(self, addr, data, bit_en):
         """ Write the ram """
         self._addr_check(addr)
         self._data_check(addr)
-        self.mem[addr] = data
+        if addr in self.mem:
+            original_data = self.mem[addr]
+        else:
+            original_data = 0
+        wdata = data & bit_en | original_data & ~bit_en
+        self.mem[addr] = wdata

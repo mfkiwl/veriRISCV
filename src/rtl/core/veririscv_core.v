@@ -37,14 +37,18 @@ module veririscv_core (
     input                   ibus_hresp,
     input  [`DATA_RANGE]    ibus_hrdata,
 
-    // Memory/data bus port
-    output reg [`DATA_RAM_ADDR_RANGE]   mem_addr,
-    output reg [`DATA_RANGE]            mem_wdata,
-    output reg [3:0]                    mem_byte_en,
-    output                              mem_wr,
-    output                              mem_rd,
-    input  [`DATA_RANGE]                mem_rdata,
-    input                               mem_vld
+    // AHBLite Interface to memory/data bus
+    output                          dbus_hwrite,
+    output reg [2:0]                dbus_hsize,
+    output [2:0]                    dbus_hburst,
+    output [3:0]                    dbus_hport,
+    output [1:0]                    dbus_htrans,
+    output                          dbus_hmastlock,
+    output [`INSTR_RAM_ADDR_RANGE]  dbus_haddr,
+    output reg [`DATA_RANGE]        dbus_hwdata,
+    input                           dbus_hready,
+    input                           dbus_hresp,
+    input  [`DATA_RANGE]            dbus_hrdata
 );
 
     /////////////////////////////////
@@ -54,6 +58,9 @@ module veririscv_core (
     /*AUTOREG*/
 
     /*AUTOWIRE*/
+    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+    wire                mem_rd;                 // From lsu of lsu.v
+    // End of automatics
 
     // IF stage
     wire [`DATA_RANGE]    if2id_instruction;
@@ -107,22 +114,22 @@ module veririscv_core (
     IF
     IF (/*AUTOINST*/
         // Outputs
-        .ibus_hwrite                   (ibus_hwrite),
-        .ibus_hsize                    (ibus_hsize[2:0]),
-        .ibus_hburst                   (ibus_hburst[2:0]),
-        .ibus_hport                    (ibus_hport[3:0]),
-        .ibus_htrans                   (ibus_htrans[1:0]),
-        .ibus_hmastlock                (ibus_hmastlock),
-        .ibus_haddr                    (ibus_haddr[`INSTR_RAM_ADDR_RANGE]),
-        .ibus_hwdata                   (ibus_hwdata[`DATA_RANGE]),
+        .ibus_hwrite                    (ibus_hwrite),
+        .ibus_hsize                     (ibus_hsize[2:0]),
+        .ibus_hburst                    (ibus_hburst[2:0]),
+        .ibus_hport                     (ibus_hport[3:0]),
+        .ibus_htrans                    (ibus_htrans[1:0]),
+        .ibus_hmastlock                 (ibus_hmastlock),
+        .ibus_haddr                     (ibus_haddr[`INSTR_RAM_ADDR_RANGE]),
+        .ibus_hwdata                    (ibus_hwdata[`DATA_RANGE]),
         .if2id_pc                       (if2id_pc[`PC_RANGE]),
         .if2id_instruction              (if2id_instruction[`DATA_RANGE]),
         // Inputs
         .clk                            (clk),
         .rst                            (rst),
-        .ibus_hready                   (ibus_hready),
-        .ibus_hresp                    (ibus_hresp),
-        .ibus_hrdata                   (ibus_hrdata[`DATA_RANGE]));
+        .ibus_hready                    (ibus_hready),
+        .ibus_hresp                     (ibus_hresp),
+        .ibus_hrdata                    (ibus_hrdata[`DATA_RANGE]));
 
     /////////////////////////////////
     // ID stage
@@ -248,10 +255,14 @@ module veririscv_core (
     lsu (/*AUTOINST*/
          // Outputs
          .lsu_rdata                     (lsu_rdata[`DATA_RANGE]),
-         .mem_addr                      (mem_addr[`DATA_RAM_ADDR_RANGE]),
-         .mem_wdata                     (mem_wdata[`DATA_RANGE]),
-         .mem_byte_en                   (mem_byte_en[3:0]),
-         .mem_wr                        (mem_wr),
+         .dbus_hwrite                   (dbus_hwrite),
+         .dbus_hsize                    (dbus_hsize[2:0]),
+         .dbus_hburst                   (dbus_hburst[2:0]),
+         .dbus_hport                    (dbus_hport[3:0]),
+         .dbus_htrans                   (dbus_htrans[1:0]),
+         .dbus_hmastlock                (dbus_hmastlock),
+         .dbus_haddr                    (dbus_haddr[`INSTR_RAM_ADDR_RANGE]),
+         .dbus_hwdata                   (dbus_hwdata[`DATA_RANGE]),
          .mem_rd                        (mem_rd),
          // Inputs
          .clk                           (clk),
@@ -259,8 +270,9 @@ module veririscv_core (
          .mem_wr_op                     (id2ex_mem_wr_op),       // Templated
          .lsu_addr                      (lsu_addr[`DATA_RANGE]),
          .lsu_wdata                     (lsu_wdata[`DATA_RANGE]),
-         .mem_rdata                     (mem_rdata[`DATA_RANGE]),
-         .mem_vld                       (mem_vld));
+         .dbus_hready                   (dbus_hready),
+         .dbus_hresp                    (dbus_hresp),
+         .dbus_hrdata                   (dbus_hrdata[`DATA_RANGE]));
 
     /////////////////////////////////
     // Simulation Related

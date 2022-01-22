@@ -89,6 +89,8 @@ module ID (
         if (rst) begin
             id2ex_reg_wen  <= 1'b0;
             id2ex_ill_instr <= 1'b0;
+            id2ex_mem_rd_op <= `CORE_MEM_NO_RD;
+            id2ex_mem_wr_op <= `CORE_MEM_NO_WR;
         end
         else begin
             id2ex_reg_wen <= dec_reg_wen & id_stage_valid;

@@ -21,7 +21,7 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import Timer, FallingEdge
+from cocotb.triggers import Timer, FallingEdge, RisingEdge
 
 import sys
 sys.path.append('../../lib/mem')
@@ -30,12 +30,13 @@ sys.path.append('../../lib/common')
 from AHBLiteRAM_1rw import AHBLiteRAM_1rw
 from RegCheck import RegCheck
 
-async def reset(dut, time=20):
+async def reset(dut, time=50):
     """ Reset the design """
     dut.rst = 1
     dut.rstn = 0
     await Timer(time, units="ns")
-    await FallingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await Timer(1, units="ns")
     dut.rst = 0
     dut.rstn = 1
 
@@ -51,13 +52,21 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
                              dut.ibus_htrans, dut.ibus_hmastlock, dut.ibus_haddr, dut.ibus_hwdata,
                              dut.ibus_hready, dut.ibus_hresp, dut.ibus_hrdata)
 
+    # Data RAM
+    dataRAM = AHBLiteRAM_1rw(32,16,ram_file)
+    dataRAM.ahbPort.connect(dut.clk, dut.rstn,
+                             dut.dbus_hwrite, dut.dbus_hsize, dut.dbus_hburst, dut.dbus_hport,
+                             dut.dbus_htrans, dut.dbus_hmastlock, dut.dbus_haddr, dut.dbus_hwdata,
+                             dut.dbus_hready, dut.dbus_hresp, dut.dbus_hrdata)
+
     # Register checker
     regCheck = RegCheck(dut.ID.regfile, golden_file)
 
     # Test start
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10 ns period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
-    instrRAM.run()
+    instrRAM.run()  # Start memory
+    dataRAM.run() # Start memory
     await reset(dut)
     await Timer(time, "us")
     regCheck.checkRegister()
@@ -71,3 +80,8 @@ async def logic_simple(dut):
 async def logic_forward(dut):
     """ Immediate/Logic type instruction with data forward test """
     await RegCheckTest(dut, "tests/logic_forward/mem", "tests/logic_forward/register_golden")
+
+@cocotb.test()
+async def load_store(dut):
+    """ load store type instruction """
+    await RegCheckTest(dut, "tests/load_store/mem", "tests/load_store/register_golden")
