@@ -25,20 +25,26 @@ module MEM (
     input                       ex2mem_reg_wen,
     input [`RF_RANGE]           ex2mem_reg_waddr,
     input [`DATA_RANGE]         ex2mem_alu_out,
+    input                       ex2mem_mem_rd,
     input                       ex2mem_ill_instr,
+    // input from lsu
+    input [`DATA_RANGE]         lsu_rdata,
     // pipeline stage
     output reg                  mem2wb_reg_wen,
     output reg [`RF_RANGE]      mem2wb_reg_waddr,
-    output reg [`DATA_RANGE]    mem2wb_alu_out,
+    output reg [`DATA_RANGE]    mem2wb_reg_wdata,
     output reg                  mem2wb_ill_instr
 );
-
 
     //////////////////////////////
     // Signal Declaration
     //////////////////////////////
 
+    wire [`DATA_RANGE]          reg_wdata;
+
     //////////////////////////////
+
+    assign reg_wdata = ex2mem_mem_rd ? lsu_rdata : ex2mem_alu_out;
 
     //////////////////////////////
     // Pipeline Stage
@@ -56,7 +62,7 @@ module MEM (
     end
 
     always @(posedge clk) begin
-        mem2wb_alu_out <= ex2mem_alu_out;
+        mem2wb_reg_wdata <= ex2mem_alu_out;
         mem2wb_reg_waddr <= ex2mem_reg_waddr;
     end
 

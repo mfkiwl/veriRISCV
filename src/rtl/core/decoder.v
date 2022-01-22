@@ -30,11 +30,13 @@ module decoder (
     output [`RF_RANGE]      reg_rs2_addr,
 
     // datapath control signal
-    output reg [`CORE_ALU_OP_RANGE] alu_op,
-    output reg                      sel_imm,
+    output reg              sel_imm,
+    output reg [`CORE_ALU_OP_RANGE]     alu_op,
+    output reg [`CORE_MEM_RD_OP_RENGE]  mem_rd_op,
+    output reg [`CORE_MEM_WR_OP_RENGE]  mem_wr_op,
 
     // datapath data signal
-    output [`IMM_RANGE]     imm_value,
+    output reg [`IMM_RANGE]     imm_value,
 
     // exception
     output reg ill_instr         // Illegal instruction
@@ -61,8 +63,6 @@ module decoder (
     assign func7 = instruction[`DEC_FUNC7_FIELD];
     assign func3 = instruction[`DEC_FUNC3_FIELD];
 
-    assign imm_value = {8'b0, instruction[31:20]}; // need update for other instruction
-
     /////////////////////////////////
     // Decode logic
     /////////////////////////////////
@@ -73,7 +73,8 @@ module decoder (
         alu_op = `CORE_ALU_ADD;
         reg_wen = 1'b0;
         sel_imm = 1'b0;
-
+        mem_rd_op = `CORE_MEM_NO_RD;
+        mem_wr_op = `CORE_MEM_NO_WR;
         // LEVEL 1 - opcode
         case(opcode)
             `DEC_TYPE_LOGIC: begin  // Logic Type instruction
@@ -93,9 +94,33 @@ module decoder (
                 sel_imm = 1'b1;
                 alu_op[2:0] = func3;
                 if (func3 == `DEC_LOGIC_SRA)  alu_op[3] = func7[5];
-                if (func3 == 3'b001 || func3 == 3'b101) ill_instr = 1'b1;
+            end
+            `DEC_TYPE_LOAD: begin
+                reg_wen = 1'b1;
+                sel_imm = 1'b1;
+                alu_op = `CORE_ALU_ADD;
+                mem_rd_op = func3;
+                if (func3[2:1] == 2'b11) ill_instr = 1'b1;
+            end
+            `DEC_TYPE_STORE: begin
+                sel_imm = 1'b1;
+                alu_op = `CORE_ALU_ADD;
+                mem_wr_op = func3[1:0];
+                if (func3[2] == 1'b1 || func3 == 3'b011) ill_instr = 1'b1;
             end
         default: ill_instr = 1'b1;
+        endcase
+    end
+
+    always @(*) begin
+        case(opcode)
+            `DEC_TYPE_ILOGIC, `DEC_TYPE_LOAD: begin
+                imm_value = {{8{instruction[31]}}, instruction[31:20]}; // sign ext
+            end
+            `DEC_TYPE_STORE: begin
+                imm_value = {{8{instruction[31]}}, instruction[31:25], instruction[11:7]};
+            end
+        default: imm_value = {{8{instruction[31]}}, instruction[31:20]};
         endcase
     end
 

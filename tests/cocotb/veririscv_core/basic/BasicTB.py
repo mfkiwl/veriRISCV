@@ -26,15 +26,18 @@ from cocotb.triggers import Timer, FallingEdge
 import sys
 sys.path.append('../../lib/mem')
 sys.path.append('../../lib/common')
-from RAM_1RW import RAM_1RW
+
+from AHBLiteRAM_1rw import AHBLiteRAM_1rw
 from RegCheck import RegCheck
 
 async def reset(dut, time=20):
     """ Reset the design """
     dut.rst = 1
+    dut.rstn = 0
     await Timer(time, units="ns")
     await FallingEdge(dut.clk)
     dut.rst = 0
+    dut.rstn = 1
 
 async def RegCheckTest(dut, ram_file, golden_file, time=1):
     """
@@ -42,8 +45,12 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
     """
 
     # Instruction RAM
-    instrRAM = RAM_1RW(ram_file)
-    instrRAM.connect(dut.clk, 0, dut.instr_ram_addr, dut.instr_ram_din, 0)
+    instrRAM = AHBLiteRAM_1rw(32,16,ram_file)
+    instrRAM.ahbPort.connect(dut.clk, dut.rstn,
+                             dut.ibus_hwrite, dut.ibus_hsize, dut.ibus_hburst, dut.ibus_hport,
+                             dut.ibus_htrans, dut.ibus_hmastlock, dut.ibus_haddr, dut.ibus_hwdata,
+                             dut.ibus_hready, dut.ibus_hresp, dut.ibus_hrdata)
+
     # Register checker
     regCheck = RegCheck(dut.ID.regfile, golden_file)
 

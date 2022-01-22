@@ -37,4 +37,8 @@
 `define INSTR_RAM_ADDR_WIDTH 16
 `define INSTR_RAM_ADDR_RANGE 15:0
 
+// Data RAM
+`define DATA_RAM_ADDR_WIDTH 16
+`define DATA_RAM_ADDR_RANGE 15:0
+
 `endif

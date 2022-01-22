@@ -38,6 +38,8 @@ module ID (
     output reg [`DATA_RANGE]        id2ex_reg_rs2_data,
     output reg [`IMM_RANGE]         id2ex_imm_value,
     output reg [`CORE_ALU_OP_RANGE] id2ex_alu_op,
+    output reg [`CORE_MEM_RD_OP_RENGE] id2ex_mem_rd_op,
+    output reg [`CORE_MEM_WR_OP_RENGE] id2ex_mem_wr_op,
     output reg                      id2ex_sel_imm,
     output reg                      id2ex_rs1_forward_from_mem,
     output reg                      id2ex_rs1_forward_from_wb,
@@ -69,10 +71,13 @@ module ID (
     wire                        rs1_forward_from_wb;
     wire                        rs2_forward_from_mem;
     wire                        rs2_forward_from_wb;
+    wire [`CORE_MEM_RD_OP_RENGE] dec_mem_rd_op;
+    wire [`CORE_MEM_WR_OP_RENGE] dec_mem_wr_op;
     // datapath data
     wire [`IMM_RANGE]           dec_imm_value;
     // Other
     wire dec_ill_instr;
+    wire id_stage_valid;
 
     //////////////////////////////
 
@@ -86,7 +91,9 @@ module ID (
             id2ex_ill_instr <= 1'b0;
         end
         else begin
-            id2ex_reg_wen <= dec_reg_wen;
+            id2ex_reg_wen <= dec_reg_wen & id_stage_valid;
+            id2ex_mem_rd_op <= id_stage_valid ? dec_mem_rd_op : `CORE_MEM_NO_RD;
+            id2ex_mem_wr_op <= id_stage_valid ? dec_mem_wr_op : `CORE_MEM_NO_WR;
             id2ex_ill_instr <= dec_ill_instr;
         end
     end
@@ -103,6 +110,8 @@ module ID (
         id2ex_rs2_forward_from_mem <= rs2_forward_from_mem;
         id2ex_rs2_forward_from_wb <= rs2_forward_from_wb;
     end
+
+    assign id_stage_valid = ~dec_ill_instr;
 
     //////////////////////////////
     // Forward check
@@ -145,7 +154,7 @@ module ID (
     // decoder
     /* decoder AUTO_TEMPLATE (
         .instruction     (if2id_instruction),
-        .\(.*\)           (dec_\1),
+        .\(.*\)          (dec_\1),
         ); */
     decoder
     decoder (/*AUTOINST*/
@@ -154,11 +163,13 @@ module ID (
              .reg_waddr                 (dec_reg_waddr),         // Templated
              .reg_rs1_addr              (dec_reg_rs1_addr),      // Templated
              .reg_rs2_addr              (dec_reg_rs2_addr),      // Templated
-             .alu_op                    (dec_alu_op),            // Templated
              .sel_imm                   (dec_sel_imm),           // Templated
+             .alu_op                    (dec_alu_op),            // Templated
+             .mem_rd_op                 (dec_mem_rd_op),         // Templated
+             .mem_wr_op                 (dec_mem_wr_op),         // Templated
              .imm_value                 (dec_imm_value),         // Templated
              .ill_instr                 (dec_ill_instr),         // Templated
              // Inputs
-             .instruction               (if2id_instruction));        // Templated
+             .instruction               (if2id_instruction));     // Templated
 
 endmodule

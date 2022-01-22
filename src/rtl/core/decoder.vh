@@ -40,8 +40,10 @@
 // Instruction Type
 `define DEC_TYPE_LOGIC      7'b0110011
 `define DEC_TYPE_ILOGIC     7'b0010011
+`define DEC_TYPE_STORE      7'b0100011
+`define DEC_TYPE_LOAD       7'b0000011
 
-// Logid Instruction Func3
+// Logic Instruction Func3
 `define DEC_LOGIC_ADD       3'b000
 `define DEC_LOGIC_SUB       3'b000
 `define DEC_LOGIC_SLL       3'b001
@@ -52,4 +54,5 @@
 `define DEC_LOGIC_SRA       3'b101
 `define DEC_LOGIC_OR        3'b110
 `define DEC_LOGIC_AND       3'b111
+
 `endif
