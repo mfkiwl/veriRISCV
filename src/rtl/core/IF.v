@@ -20,6 +20,7 @@
 module IF (
     input                   clk,
     input                   rst,
+    input                   if_flush,
     // AHBLite Interface to Instruction RAM
     output                  ibus_hwrite,
     output [2:0]            ibus_hsize,
@@ -32,7 +33,11 @@ module IF (
     input                   ibus_hready,
     input                   ibus_hresp,
     input  [`DATA_RANGE]    ibus_hrdata,
+    // input from other pipeline stage
+    input                   take_branch,
+    input [`PC_RANGE]       target_pc,
     // pipeline stage
+    output reg              if2id_valid,
     output reg [`PC_RANGE]  if2id_pc,
     output [`DATA_RANGE]    if2id_instruction
 );
@@ -40,6 +45,10 @@ module IF (
     //////////////////////////////
     // Signal Declaration
     //////////////////////////////
+
+    /*AUTOWIRE*/
+
+    /*AUTOREG*/
 
     wire [`PC_RANGE]    pc_out;
 
@@ -67,22 +76,32 @@ module IF (
 
     always @(posedge clk) begin
         if (rst) begin
-            if2id_pc <= 'b0;
+            if2id_valid <= 1'b0;
         end
         else begin
-            if2id_pc <= pc_out;
+            if2id_valid <= ~if_flush;
         end
+    end
+
+    always @(posedge clk) begin
+        if2id_pc <= pc_out;
     end
 
 
     //////////////////////////////
     // Module instantiation
     //////////////////////////////
+    // PC
+    /* pc AUTO_TEMPLATE (
+        ); */
     pc
-    pc(
-        .clk(clk),
-        .rst(rst),
-        .pc_out(pc_out)
-    );
+    pc(/*AUTOINST*/
+       // Outputs
+       .pc_out                          (pc_out[`PC_RANGE]),
+       // Inputs
+       .clk                             (clk),
+       .rst                             (rst),
+       .take_branch                     (take_branch),
+       .target_pc                       (target_pc[`PC_RANGE]));
 
 endmodule

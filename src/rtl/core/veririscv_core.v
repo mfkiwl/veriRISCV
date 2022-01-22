@@ -59,7 +59,15 @@ module veririscv_core (
 
     /*AUTOWIRE*/
     // Beginning of automatic wires (for undeclared instantiated-module outputs)
+    wire                id2ex_br_instr;         // From ID of ID.v
+    wire [`CORE_BRANCH_OP_RANGE] id2ex_branch_op;// From ID of ID.v
+    wire [`PC_RANGE]    id2ex_pc;               // From ID of ID.v
+    wire                id_flush;               // From hdu of hdu.v
+    wire                if2id_valid;            // From IF of IF.v
+    wire                if_flush;               // From hdu of hdu.v
     wire                mem_rd;                 // From lsu of lsu.v
+    wire                take_branch;            // From EX of EX.v
+    wire [`PC_RANGE]    target_pc;              // From EX of EX.v
     // End of automatics
 
     // IF stage
@@ -80,8 +88,8 @@ module veririscv_core (
     wire                id2ex_rs2_forward_from_mem;
     wire                id2ex_rs2_forward_from_wb;
     wire                id2ex_sel_imm;
-    wire [`CORE_MEM_RD_OP_RENGE] id2ex_mem_rd_op;
-    wire [`CORE_MEM_WR_OP_RENGE] id2ex_mem_wr_op;
+    wire [`CORE_MEM_RD_OP_RANGE] id2ex_mem_rd_op;
+    wire [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op;
 
     // EX stage
     wire [`DATA_RANGE]  ex2mem_alu_out;
@@ -122,14 +130,18 @@ module veririscv_core (
         .ibus_hmastlock                 (ibus_hmastlock),
         .ibus_haddr                     (ibus_haddr[`INSTR_RAM_ADDR_RANGE]),
         .ibus_hwdata                    (ibus_hwdata[`DATA_RANGE]),
+        .if2id_valid                    (if2id_valid),
         .if2id_pc                       (if2id_pc[`PC_RANGE]),
         .if2id_instruction              (if2id_instruction[`DATA_RANGE]),
         // Inputs
         .clk                            (clk),
         .rst                            (rst),
+        .if_flush                       (if_flush),
         .ibus_hready                    (ibus_hready),
         .ibus_hresp                     (ibus_hresp),
-        .ibus_hrdata                    (ibus_hrdata[`DATA_RANGE]));
+        .ibus_hrdata                    (ibus_hrdata[`DATA_RANGE]),
+        .take_branch                    (take_branch),
+        .target_pc                      (target_pc[`PC_RANGE]));
 
     /////////////////////////////////
     // ID stage
@@ -141,14 +153,17 @@ module veririscv_core (
     ID
     ID (/*AUTOINST*/
         // Outputs
+        .id2ex_pc                       (id2ex_pc[`PC_RANGE]),
         .id2ex_reg_wen                  (id2ex_reg_wen),
         .id2ex_reg_waddr                (id2ex_reg_waddr[`RF_RANGE]),
         .id2ex_reg_rs1_data             (id2ex_reg_rs1_data[`DATA_RANGE]),
         .id2ex_reg_rs2_data             (id2ex_reg_rs2_data[`DATA_RANGE]),
         .id2ex_imm_value                (id2ex_imm_value[`IMM_RANGE]),
         .id2ex_alu_op                   (id2ex_alu_op[`CORE_ALU_OP_RANGE]),
-        .id2ex_mem_rd_op                (id2ex_mem_rd_op[`CORE_MEM_RD_OP_RENGE]),
-        .id2ex_mem_wr_op                (id2ex_mem_wr_op[`CORE_MEM_WR_OP_RENGE]),
+        .id2ex_mem_rd_op                (id2ex_mem_rd_op[`CORE_MEM_RD_OP_RANGE]),
+        .id2ex_mem_wr_op                (id2ex_mem_wr_op[`CORE_MEM_WR_OP_RANGE]),
+        .id2ex_branch_op                (id2ex_branch_op[`CORE_BRANCH_OP_RANGE]),
+        .id2ex_br_instr                 (id2ex_br_instr),
         .id2ex_sel_imm                  (id2ex_sel_imm),
         .id2ex_rs1_forward_from_mem     (id2ex_rs1_forward_from_mem),
         .id2ex_rs1_forward_from_wb      (id2ex_rs1_forward_from_wb),
@@ -158,6 +173,8 @@ module veririscv_core (
         // Inputs
         .clk                            (clk),
         .rst                            (rst),
+        .id_flush                       (id_flush),
+        .if2id_valid                    (if2id_valid),
         .if2id_pc                       (if2id_pc[`PC_RANGE]),
         .if2id_instruction              (if2id_instruction[`DATA_RANGE]),
         .ex2mem_reg_waddr               (ex2mem_reg_waddr[`RF_RANGE]),
@@ -178,6 +195,8 @@ module veririscv_core (
         // Outputs
         .lsu_addr                       (lsu_addr[`DATA_RANGE]),
         .lsu_wdata                      (lsu_wdata[`DATA_RANGE]),
+        .target_pc                      (target_pc[`PC_RANGE]),
+        .take_branch                    (take_branch),
         .ex2mem_reg_wen                 (ex2mem_reg_wen),
         .ex2mem_reg_waddr               (ex2mem_reg_waddr[`RF_RANGE]),
         .ex2mem_alu_out                 (ex2mem_alu_out[`DATA_RANGE]),
@@ -186,14 +205,17 @@ module veririscv_core (
         // Inputs
         .clk                            (clk),
         .rst                            (rst),
+        .id2ex_pc                       (id2ex_pc[`PC_RANGE]),
         .id2ex_reg_wen                  (id2ex_reg_wen),
         .id2ex_reg_waddr                (id2ex_reg_waddr[`RF_RANGE]),
         .id2ex_reg_rs1_data             (id2ex_reg_rs1_data[`DATA_RANGE]),
         .id2ex_reg_rs2_data             (id2ex_reg_rs2_data[`DATA_RANGE]),
         .id2ex_imm_value                (id2ex_imm_value[`IMM_RANGE]),
         .id2ex_alu_op                   (id2ex_alu_op[`CORE_ALU_OP_RANGE]),
-        .id2ex_mem_rd_op                (id2ex_mem_rd_op[`CORE_MEM_RD_OP_RENGE]),
-        .id2ex_mem_wr_op                (id2ex_mem_wr_op[`CORE_MEM_WR_OP_RENGE]),
+        .id2ex_mem_rd_op                (id2ex_mem_rd_op[`CORE_MEM_RD_OP_RANGE]),
+        .id2ex_mem_wr_op                (id2ex_mem_wr_op[`CORE_MEM_WR_OP_RANGE]),
+        .id2ex_branch_op                (id2ex_branch_op[`CORE_BRANCH_OP_RANGE]),
+        .id2ex_br_instr                 (id2ex_br_instr),
         .id2ex_sel_imm                  (id2ex_sel_imm),
         .id2ex_rs1_forward_from_mem     (id2ex_rs1_forward_from_mem),
         .id2ex_rs1_forward_from_wb      (id2ex_rs1_forward_from_wb),
@@ -273,6 +295,14 @@ module veririscv_core (
          .dbus_hready                   (dbus_hready),
          .dbus_hresp                    (dbus_hresp),
          .dbus_hrdata                   (dbus_hrdata[`DATA_RANGE]));
+
+    hdu
+    hdu (/*AUTOINST*/
+         // Outputs
+         .if_flush                      (if_flush),
+         .id_flush                      (id_flush),
+         // Inputs
+         .take_branch                   (take_branch));
 
     /////////////////////////////////
     // Simulation Related

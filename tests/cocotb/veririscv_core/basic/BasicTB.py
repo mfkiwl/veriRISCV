@@ -53,7 +53,7 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
                              dut.ibus_hready, dut.ibus_hresp, dut.ibus_hrdata)
 
     # Data RAM
-    dataRAM = AHBLiteRAM_1rw(32,16,ram_file)
+    dataRAM = AHBLiteRAM_1rw(32,16)
     dataRAM.ahbPort.connect(dut.clk, dut.rstn,
                              dut.dbus_hwrite, dut.dbus_hsize, dut.dbus_hburst, dut.dbus_hport,
                              dut.dbus_htrans, dut.dbus_hmastlock, dut.dbus_haddr, dut.dbus_hwdata,
@@ -85,3 +85,8 @@ async def logic_forward(dut):
 async def load_store(dut):
     """ load store type instruction """
     await RegCheckTest(dut, "tests/load_store/mem", "tests/load_store/register_golden")
+
+@cocotb.test()
+async def branch(dut):
+    """ load store type instruction """
+    await RegCheckTest(dut, "tests/branch/mem", "tests/branch/register_golden")

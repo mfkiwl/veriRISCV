@@ -22,14 +22,17 @@ module EX (
     input   clk,
     input   rst,
     // input from ID/EX stage pipe
+    input [`PC_RANGE]           id2ex_pc,
     input                       id2ex_reg_wen,
     input [`RF_RANGE]           id2ex_reg_waddr,
     input [`DATA_RANGE]         id2ex_reg_rs1_data,
     input [`DATA_RANGE]         id2ex_reg_rs2_data,
     input [`IMM_RANGE]          id2ex_imm_value,
     input [`CORE_ALU_OP_RANGE]  id2ex_alu_op,
-    input [`CORE_MEM_RD_OP_RENGE] id2ex_mem_rd_op,
-    input [`CORE_MEM_WR_OP_RENGE] id2ex_mem_wr_op,
+    input [`CORE_MEM_RD_OP_RANGE] id2ex_mem_rd_op,
+    input [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op,
+    input [`CORE_BRANCH_OP_RANGE] id2ex_branch_op,
+    input                         id2ex_br_instr,
     input                       id2ex_sel_imm,
     input                       id2ex_rs1_forward_from_mem,
     input                       id2ex_rs1_forward_from_wb,
@@ -42,9 +45,12 @@ module EX (
     input                       lsu_mem_rd,
     output [`DATA_RANGE]        lsu_addr,
     output [`DATA_RANGE]        lsu_wdata,
+    // branch control
+    output [`PC_RANGE]          target_pc,
+    output                      take_branch,
     // pipeline stage
-    //output reg [`CORE_MEM_RD_OP_RENGE] ex2mem_mem_rd_op,
-    //output reg [`CORE_MEM_WR_OP_RENGE] ex2mem_mem_wr_op,
+    //output reg [`CORE_MEM_RD_OP_RANGE] ex2mem_mem_rd_op,
+    //output reg [`CORE_MEM_WR_OP_RANGE] ex2mem_mem_wr_op,
     output reg                  ex2mem_reg_wen,
     output reg [`RF_RANGE]      ex2mem_reg_waddr,
     output reg [`DATA_RANGE]    ex2mem_alu_out,
@@ -114,12 +120,42 @@ module EX (
     //////////////////////////////
     // Module instantiation
     //////////////////////////////
+
+    // ALU
+    /* alu AUTO_TEMPLATE (
+        .alu_op        (id2ex_alu_op),
+        ); */
     alu
-    alu (
-        .alu_oprand_0       (alu_oprand_0),
-        .alu_oprand_1       (alu_oprand_1),
-        .alu_op             (id2ex_alu_op),
-        .alu_out            (alu_out)
-    );
+    alu (/*AUTOINST*/
+         // Outputs
+         .alu_out                       (alu_out[`DATA_RANGE]),
+         // Inputs
+         .alu_oprand_0                  (alu_oprand_0[`DATA_RANGE]),
+         .alu_oprand_1                  (alu_oprand_1[`DATA_RANGE]),
+         .alu_op                        (id2ex_alu_op));          // Templated
+
+
+
+    // BU
+    /* bu AUTO_TEMPLATE (
+        .rs1        (rs1_forwarded),
+        .rs2        (rs2_forwarded),
+        .br_instr   (id2ex_br_instr),
+        .branch_op  (id2ex_branch_op),
+        .pc         (id2ex_pc),
+        ); */
+    bu
+    bu (/*AUTOINST*/
+        // Outputs
+        .target_pc                      (target_pc[`PC_RANGE]),
+        .take_branch                    (take_branch),
+        // Inputs
+        .br_instr                       (id2ex_br_instr),        // Templated
+        .branch_op                      (id2ex_branch_op),       // Templated
+        .rs1                            (rs1_forwarded),         // Templated
+        .rs2                            (rs2_forwarded),         // Templated
+        .imm_value                      (imm_value[`IMM_RANGE]),
+        .pc                             (id2ex_pc));              // Templated
+
 
 endmodule

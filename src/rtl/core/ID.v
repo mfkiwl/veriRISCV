@@ -21,7 +21,9 @@
 module ID (
     input   clk,
     input   rst,
+    input   id_flush,
     // input from IF/ID stage pipe
+    input               if2id_valid,
     input [`PC_RANGE]   if2id_pc,
     input [`DATA_RANGE] if2id_instruction,
     // input from MEM stage
@@ -32,14 +34,17 @@ module ID (
     input [`RF_RANGE]   reg_waddr,
     input [`DATA_RANGE] reg_wdata,
     // pipeline stage
+    output reg [`PC_RANGE]          id2ex_pc,
     output reg                      id2ex_reg_wen,
     output reg [`RF_RANGE]          id2ex_reg_waddr,
     output reg [`DATA_RANGE]        id2ex_reg_rs1_data,
     output reg [`DATA_RANGE]        id2ex_reg_rs2_data,
     output reg [`IMM_RANGE]         id2ex_imm_value,
     output reg [`CORE_ALU_OP_RANGE] id2ex_alu_op,
-    output reg [`CORE_MEM_RD_OP_RENGE] id2ex_mem_rd_op,
-    output reg [`CORE_MEM_WR_OP_RENGE] id2ex_mem_wr_op,
+    output reg [`CORE_MEM_RD_OP_RANGE] id2ex_mem_rd_op,
+    output reg [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op,
+    output reg [`CORE_BRANCH_OP_RANGE] id2ex_branch_op,
+    output reg                         id2ex_br_instr,
     output reg                      id2ex_sel_imm,
     output reg                      id2ex_rs1_forward_from_mem,
     output reg                      id2ex_rs1_forward_from_wb,
@@ -71,13 +76,16 @@ module ID (
     wire                        rs1_forward_from_wb;
     wire                        rs2_forward_from_mem;
     wire                        rs2_forward_from_wb;
-    wire [`CORE_MEM_RD_OP_RENGE] dec_mem_rd_op;
-    wire [`CORE_MEM_WR_OP_RENGE] dec_mem_wr_op;
+    wire [`CORE_MEM_RD_OP_RANGE] dec_mem_rd_op;
+    wire [`CORE_MEM_WR_OP_RANGE] dec_mem_wr_op;
+    wire [`CORE_BRANCH_OP_RANGE] dec_branch_op;
+    wire                         dec_br_instr;
     // datapath data
     wire [`IMM_RANGE]           dec_imm_value;
     // Other
     wire dec_ill_instr;
     wire id_stage_valid;
+    wire id_stage_valid_raw;
 
     //////////////////////////////
 
@@ -91,29 +99,34 @@ module ID (
             id2ex_ill_instr <= 1'b0;
             id2ex_mem_rd_op <= `CORE_MEM_NO_RD;
             id2ex_mem_wr_op <= `CORE_MEM_NO_WR;
+            id2ex_br_instr <= 1'b0;
         end
         else begin
             id2ex_reg_wen <= dec_reg_wen & id_stage_valid;
             id2ex_mem_rd_op <= id_stage_valid ? dec_mem_rd_op : `CORE_MEM_NO_RD;
             id2ex_mem_wr_op <= id_stage_valid ? dec_mem_wr_op : `CORE_MEM_NO_WR;
-            id2ex_ill_instr <= dec_ill_instr;
+            id2ex_br_instr <= dec_br_instr & id_stage_valid;
+            id2ex_ill_instr <= dec_ill_instr & id_stage_valid_raw;
         end
     end
 
     always @(posedge clk) begin
+        id2ex_pc <= if2id_pc;
         id2ex_reg_waddr <= dec_reg_waddr;
         id2ex_reg_rs1_data <= dec_reg_rs1_data;
         id2ex_reg_rs2_data <= dec_reg_rs2_data;
         id2ex_imm_value <= dec_imm_value;
         id2ex_alu_op <= dec_alu_op;
         id2ex_sel_imm <= dec_sel_imm;
+        id2ex_branch_op <= dec_branch_op;
         id2ex_rs1_forward_from_mem <= rs1_forward_from_mem;
         id2ex_rs1_forward_from_wb <= rs1_forward_from_wb;
         id2ex_rs2_forward_from_mem <= rs2_forward_from_mem;
         id2ex_rs2_forward_from_wb <= rs2_forward_from_wb;
     end
 
-    assign id_stage_valid = ~dec_ill_instr;
+    assign id_stage_valid_raw = if2id_valid & ~id_flush;
+    assign id_stage_valid = id_stage_valid_raw & ~dec_ill_instr;
 
     //////////////////////////////
     // Forward check
@@ -169,6 +182,8 @@ module ID (
              .alu_op                    (dec_alu_op),            // Templated
              .mem_rd_op                 (dec_mem_rd_op),         // Templated
              .mem_wr_op                 (dec_mem_wr_op),         // Templated
+             .branch_op                 (dec_branch_op),         // Templated
+             .br_instr                  (dec_br_instr),          // Templated
              .imm_value                 (dec_imm_value),         // Templated
              .ill_instr                 (dec_ill_instr),         // Templated
              // Inputs

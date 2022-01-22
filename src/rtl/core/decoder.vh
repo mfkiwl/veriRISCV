@@ -42,6 +42,7 @@
 `define DEC_TYPE_ILOGIC     7'b0010011
 `define DEC_TYPE_STORE      7'b0100011
 `define DEC_TYPE_LOAD       7'b0000011
+`define DEC_TYPE_BRAHCN     7'b1100011
 
 // Logic Instruction Func3
 `define DEC_LOGIC_ADD       3'b000
@@ -54,5 +55,13 @@
 `define DEC_LOGIC_SRA       3'b101
 `define DEC_LOGIC_OR        3'b110
 `define DEC_LOGIC_AND       3'b111
+
+// Branch Instruction Func3
+`define DEC_BRANCH_BEQ      3'b000
+`define DEC_BRANCH_BNE      3'b001
+`define DEC_BRANCH_BLT      3'b100
+`define DEC_BRANCH_BGE      3'b101
+`define DEC_BRANCH_BLTU     3'b110
+`define DEC_BRANCH_BGEU     3'b111
 
 `endif

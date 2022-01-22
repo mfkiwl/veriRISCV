@@ -24,8 +24,8 @@
 module lsu (
     input                           clk,
     // input from core logic
-    input [`CORE_MEM_RD_OP_RENGE]   mem_rd_op,
-    input [`CORE_MEM_WR_OP_RENGE]   mem_wr_op,
+    input [`CORE_MEM_RD_OP_RANGE]   mem_rd_op,
+    input [`CORE_MEM_WR_OP_RANGE]   mem_wr_op,
     input [`DATA_RANGE]             lsu_addr,
     input [`DATA_RANGE]             lsu_wdata,
     output reg [`DATA_RANGE]        lsu_rdata,
@@ -47,7 +47,7 @@ module lsu (
 );
 
     reg [1:0]   last_lsu_byte_addr;
-    reg [`CORE_MEM_RD_OP_RENGE]   last_mem_rd_op;
+    reg [`CORE_MEM_RD_OP_RANGE]   last_mem_rd_op;
     reg         sign_bit;
     wire        sign_bit_final;
     wire        sign_ext;

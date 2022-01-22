@@ -32,8 +32,10 @@ module decoder (
     // datapath control signal
     output reg              sel_imm,
     output reg [`CORE_ALU_OP_RANGE]     alu_op,
-    output reg [`CORE_MEM_RD_OP_RENGE]  mem_rd_op,
-    output reg [`CORE_MEM_WR_OP_RENGE]  mem_wr_op,
+    output reg [`CORE_MEM_RD_OP_RANGE]  mem_rd_op,
+    output reg [`CORE_MEM_WR_OP_RANGE]  mem_wr_op,
+    output reg [`CORE_BRANCH_OP_RANGE]  branch_op,
+    output reg                          br_instr,
 
     // datapath data signal
     output reg [`IMM_RANGE]     imm_value,
@@ -75,6 +77,8 @@ module decoder (
         sel_imm = 1'b0;
         mem_rd_op = `CORE_MEM_NO_RD;
         mem_wr_op = `CORE_MEM_NO_WR;
+        branch_op = func3;
+        br_instr = 1'b0;
         // LEVEL 1 - opcode
         case(opcode)
             `DEC_TYPE_LOGIC: begin  // Logic Type instruction
@@ -108,6 +112,10 @@ module decoder (
                 mem_wr_op = func3[1:0];
                 if (func3[2] == 1'b1 || func3 == 3'b011) ill_instr = 1'b1;
             end
+            `DEC_TYPE_BRAHCN: begin
+                br_instr = 1'b1;
+                if (func3[2:1] == 2'b01) ill_instr = 1'b1;
+            end
         default: ill_instr = 1'b1;
         endcase
     end
@@ -119,6 +127,9 @@ module decoder (
             end
             `DEC_TYPE_STORE: begin
                 imm_value = {{8{instruction[31]}}, instruction[31:25], instruction[11:7]};
+            end
+            `DEC_TYPE_BRAHCN: begin
+                imm_value = {{8{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:7]};
             end
         default: imm_value = {{8{instruction[31]}}, instruction[31:20]};
         endcase

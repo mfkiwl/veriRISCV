@@ -20,6 +20,8 @@
 module pc (
     input                   clk,
     input                   rst,
+    input                   take_branch,
+    input [`PC_RANGE]       target_pc,
     output [`PC_RANGE]      pc_out
 );
 
@@ -30,7 +32,8 @@ module pc (
             pc_value <= 0;
         end
         else begin
-            pc_value <= pc_value + 4;
+            if (take_branch) pc_value <= target_pc;
+            else pc_value <= pc_value + 4;
         end
     end
 

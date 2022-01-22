@@ -9,6 +9,8 @@ RTL_FILES += $(CORE_PATH)/EX.v
 RTL_FILES += $(CORE_PATH)/MEM.v
 RTL_FILES += $(CORE_PATH)/WB.v
 RTL_FILES += $(CORE_PATH)/lsu.v
+RTL_FILES += $(CORE_PATH)/bu.v
+RTL_FILES += $(CORE_PATH)/hdu.v
 RTL_FILES += $(CORE_PATH)/veririscv_core.v
 # Include path
 COMPILE_ARGS = -I$(CORE_PATH)
