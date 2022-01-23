@@ -37,19 +37,19 @@ module ID (
     output reg [`PC_RANGE]          id2ex_pc,
     output reg                      id2ex_reg_wen,
     output reg [`RF_RANGE]          id2ex_reg_waddr,
-    output reg [`DATA_RANGE]        id2ex_reg_rs1_data,
-    output reg [`DATA_RANGE]        id2ex_reg_rs2_data,
-    output reg [`IMM_RANGE]         id2ex_imm_value,
+    output reg [`DATA_RANGE]        id2ex_op1_data,
+    output reg [`DATA_RANGE]        id2ex_op2_data,
+    output reg [`DATA_RANGE]        id2ex_imm_value,
     output reg [`CORE_ALU_OP_RANGE] id2ex_alu_op,
     output reg [`CORE_MEM_RD_OP_RANGE] id2ex_mem_rd_op,
     output reg [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op,
     output reg [`CORE_BRANCH_OP_RANGE] id2ex_branch_op,
     output reg                         id2ex_br_instr,
     output reg                      id2ex_sel_imm,
-    output reg                      id2ex_rs1_forward_from_mem,
-    output reg                      id2ex_rs1_forward_from_wb,
-    output reg                      id2ex_rs2_forward_from_mem,
-    output reg                      id2ex_rs2_forward_from_wb,
+    output reg                      id2ex_op1_forward_from_mem,
+    output reg                      id2ex_op1_forward_from_wb,
+    output reg                      id2ex_op2_forward_from_mem,
+    output reg                      id2ex_op2_forward_from_wb,
     output reg                      id2ex_ill_instr
 );
 
@@ -65,23 +65,31 @@ module ID (
     // register file
     wire                dec_reg_wen;
     wire [`RF_RANGE]    dec_reg_waddr;
+    wire                dec_reg_rs1_rd;
+    wire                dec_reg_rs2_rd;
     wire [`RF_RANGE]    dec_reg_rs1_addr;
     wire [`DATA_RANGE]  dec_reg_rs1_data;
     wire [`RF_RANGE]    dec_reg_rs2_addr;
     wire [`DATA_RANGE]  dec_reg_rs2_data;
     // datapath control
+    wire                dec_op1_sel_pc;
+    wire                dec_op1_sel_zero;
+
     wire [`CORE_ALU_OP_RANGE]   dec_alu_op;
     wire                        dec_sel_imm;
-    wire                        rs1_forward_from_mem;
-    wire                        rs1_forward_from_wb;
-    wire                        rs2_forward_from_mem;
-    wire                        rs2_forward_from_wb;
+    wire                        op1_forward_from_mem;
+    wire                        op1_forward_from_wb;
+    wire                        op2_forward_from_mem;
+    wire                        op2_forward_from_wb;
     wire [`CORE_MEM_RD_OP_RANGE] dec_mem_rd_op;
     wire [`CORE_MEM_WR_OP_RANGE] dec_mem_wr_op;
     wire [`CORE_BRANCH_OP_RANGE] dec_branch_op;
     wire                         dec_br_instr;
+    wire                         dec_forwarding;
+    wire                         dec_special_rs1_sel;
+    wire [`DATA_RANGE]           dec_special_rs1_value;
     // datapath data
-    wire [`IMM_RANGE]           dec_imm_value;
+    wire [`DATA_RANGE]           dec_imm_value;
     // Other
     wire dec_ill_instr;
     wire id_stage_valid;
@@ -113,16 +121,18 @@ module ID (
     always @(posedge clk) begin
         id2ex_pc <= if2id_pc;
         id2ex_reg_waddr <= dec_reg_waddr;
-        id2ex_reg_rs1_data <= dec_reg_rs1_data;
-        id2ex_reg_rs2_data <= dec_reg_rs2_data;
+        id2ex_op1_data <= dec_op1_sel_pc   ? if2id_pc :
+                          dec_op1_sel_zero ? 'b0      :
+                          dec_reg_rs1_data;
+        id2ex_op2_data <= dec_reg_rs2_data;
         id2ex_imm_value <= dec_imm_value;
         id2ex_alu_op <= dec_alu_op;
         id2ex_sel_imm <= dec_sel_imm;
         id2ex_branch_op <= dec_branch_op;
-        id2ex_rs1_forward_from_mem <= rs1_forward_from_mem;
-        id2ex_rs1_forward_from_wb <= rs1_forward_from_wb;
-        id2ex_rs2_forward_from_mem <= rs2_forward_from_mem;
-        id2ex_rs2_forward_from_wb <= rs2_forward_from_wb;
+        id2ex_op1_forward_from_mem <= op1_forward_from_mem;
+        id2ex_op1_forward_from_wb <= op1_forward_from_wb;
+        id2ex_op2_forward_from_mem <= op2_forward_from_mem;
+        id2ex_op2_forward_from_wb <= op2_forward_from_wb;
     end
 
     assign id_stage_valid_raw = if2id_valid & ~id_flush;
@@ -131,10 +141,10 @@ module ID (
     //////////////////////////////
     // Forward check
     //////////////////////////////
-    assign rs1_forward_from_mem = (dec_reg_rs1_addr == id2ex_reg_waddr) & id2ex_reg_wen;
-    assign rs1_forward_from_wb  = (dec_reg_rs1_addr == ex2mem_reg_waddr) & ex2mem_reg_wen;
-    assign rs2_forward_from_mem = (dec_reg_rs2_addr == id2ex_reg_waddr) & id2ex_reg_wen;
-    assign rs2_forward_from_wb  = (dec_reg_rs2_addr == ex2mem_reg_waddr) & ex2mem_reg_wen;
+    assign op1_forward_from_mem = (dec_reg_rs1_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs1_rd;
+    assign op1_forward_from_wb  = (dec_reg_rs1_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs1_rd;
+    assign op2_forward_from_mem = (dec_reg_rs2_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs2_rd;
+    assign op2_forward_from_wb  = (dec_reg_rs2_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs2_rd;
 
     //////////////////////////////
     // Module instantiation
@@ -178,15 +188,33 @@ module ID (
              .reg_waddr                 (dec_reg_waddr),         // Templated
              .reg_rs1_addr              (dec_reg_rs1_addr),      // Templated
              .reg_rs2_addr              (dec_reg_rs2_addr),      // Templated
+             .reg_rs1_rd                (dec_reg_rs1_rd),        // Templated
+             .reg_rs2_rd                (dec_reg_rs2_rd),        // Templated
              .sel_imm                   (dec_sel_imm),           // Templated
+             .imm_value                 (dec_imm_value),         // Templated
              .alu_op                    (dec_alu_op),            // Templated
              .mem_rd_op                 (dec_mem_rd_op),         // Templated
              .mem_wr_op                 (dec_mem_wr_op),         // Templated
              .branch_op                 (dec_branch_op),         // Templated
              .br_instr                  (dec_br_instr),          // Templated
-             .imm_value                 (dec_imm_value),         // Templated
+             .op1_sel_zero              (dec_op1_sel_zero),      // Templated
+             .op1_sel_pc                (dec_op1_sel_pc),        // Templated
              .ill_instr                 (dec_ill_instr),         // Templated
              // Inputs
              .instruction               (if2id_instruction));     // Templated
 
 endmodule
+
+// Notes for the forwarding logic and ALU operand1 and ALU operand2 source
+// ALU operand 1 source:
+//  1. register rs1 data
+//  2. 0 (for LUI)
+//  3. PC (for AUIPC)
+// ALU operand 2 source:
+//  1. register rs2 data
+//  2. immediate value
+
+// Register wdata source
+// 1. ALU result
+// 2. Memory read result
+// 3. PC + 4 (JAL/JALR)

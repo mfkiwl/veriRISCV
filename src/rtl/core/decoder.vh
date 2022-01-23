@@ -43,6 +43,10 @@
 `define DEC_TYPE_STORE      7'b0100011
 `define DEC_TYPE_LOAD       7'b0000011
 `define DEC_TYPE_BRAHCN     7'b1100011
+`define DEC_TYPE_JALR       7'b1100111
+`define DEC_TYPE_JAL        7'b1101111
+`define DEC_TYPE_AUIPC      7'b0010111
+`define DEC_TYPE_LUI        7'b0110111
 
 // Logic Instruction Func3
 `define DEC_LOGIC_ADD       3'b000

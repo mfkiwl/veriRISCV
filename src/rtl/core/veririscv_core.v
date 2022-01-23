@@ -58,38 +58,36 @@ module veririscv_core (
     /*AUTOREG*/
 
     /*AUTOWIRE*/
-    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-    wire                id2ex_br_instr;         // From ID of ID.v
-    wire [`CORE_BRANCH_OP_RANGE] id2ex_branch_op;// From ID of ID.v
-    wire [`PC_RANGE]    id2ex_pc;               // From ID of ID.v
-    wire                id_flush;               // From hdu of hdu.v
-    wire                if2id_valid;            // From IF of IF.v
-    wire                if_flush;               // From hdu of hdu.v
-    wire                mem_rd;                 // From lsu of lsu.v
-    wire                take_branch;            // From EX of EX.v
-    wire [`PC_RANGE]    target_pc;              // From EX of EX.v
-    // End of automatics
+
 
     // IF stage
+    wire                  take_branch;
+    wire [`PC_RANGE]      target_pc;
+    wire                  if_flush;
+    wire                  if2id_valid;
     wire [`DATA_RANGE]    if2id_instruction;
     wire [`PC_RANGE]      if2id_pc;
     wire [`PC_RANGE]      pc_out;
 
     // ID stage
+    wire                id_flush;
     wire [`CORE_ALU_OP_RANGE] id2ex_alu_op;
     wire                id2ex_ill_instr;
-    wire [`DATA_RANGE]  id2ex_reg_rs1_data;
-    wire [`DATA_RANGE]  id2ex_reg_rs2_data;
+    wire [`DATA_RANGE]  id2ex_op1_data;
+    wire [`DATA_RANGE]  id2ex_op2_data;
     wire [`RF_RANGE]    id2ex_reg_waddr;
     wire                id2ex_reg_wen;
-    wire [`IMM_RANGE]   id2ex_imm_value;
-    wire                id2ex_rs1_forward_from_mem;
-    wire                id2ex_rs1_forward_from_wb;
-    wire                id2ex_rs2_forward_from_mem;
-    wire                id2ex_rs2_forward_from_wb;
+    wire [`DATA_RANGE]  id2ex_imm_value;
+    wire                id2ex_op1_forward_from_mem;
+    wire                id2ex_op1_forward_from_wb;
+    wire                id2ex_op2_forward_from_mem;
+    wire                id2ex_op2_forward_from_wb;
     wire                id2ex_sel_imm;
     wire [`CORE_MEM_RD_OP_RANGE] id2ex_mem_rd_op;
     wire [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op;
+    wire                         id2ex_br_instr;
+    wire [`CORE_BRANCH_OP_RANGE] id2ex_branch_op;
+    wire [`PC_RANGE]             id2ex_pc;
 
     // EX stage
     wire [`DATA_RANGE]  ex2mem_alu_out;
@@ -97,6 +95,7 @@ module veririscv_core (
     wire [`RF_RANGE]    ex2mem_reg_waddr;
     wire                ex2mem_reg_wen;
     wire                ex2mem_mem_rd;
+    wire                mem_rd;
 
     // MEM stage
     wire [`DATA_RANGE]  mem2wb_reg_wdata;
@@ -156,19 +155,19 @@ module veririscv_core (
         .id2ex_pc                       (id2ex_pc[`PC_RANGE]),
         .id2ex_reg_wen                  (id2ex_reg_wen),
         .id2ex_reg_waddr                (id2ex_reg_waddr[`RF_RANGE]),
-        .id2ex_reg_rs1_data             (id2ex_reg_rs1_data[`DATA_RANGE]),
-        .id2ex_reg_rs2_data             (id2ex_reg_rs2_data[`DATA_RANGE]),
-        .id2ex_imm_value                (id2ex_imm_value[`IMM_RANGE]),
+        .id2ex_op1_data                 (id2ex_op1_data[`DATA_RANGE]),
+        .id2ex_op2_data                 (id2ex_op2_data[`DATA_RANGE]),
+        .id2ex_imm_value                (id2ex_imm_value[`DATA_RANGE]),
         .id2ex_alu_op                   (id2ex_alu_op[`CORE_ALU_OP_RANGE]),
         .id2ex_mem_rd_op                (id2ex_mem_rd_op[`CORE_MEM_RD_OP_RANGE]),
         .id2ex_mem_wr_op                (id2ex_mem_wr_op[`CORE_MEM_WR_OP_RANGE]),
         .id2ex_branch_op                (id2ex_branch_op[`CORE_BRANCH_OP_RANGE]),
         .id2ex_br_instr                 (id2ex_br_instr),
         .id2ex_sel_imm                  (id2ex_sel_imm),
-        .id2ex_rs1_forward_from_mem     (id2ex_rs1_forward_from_mem),
-        .id2ex_rs1_forward_from_wb      (id2ex_rs1_forward_from_wb),
-        .id2ex_rs2_forward_from_mem     (id2ex_rs2_forward_from_mem),
-        .id2ex_rs2_forward_from_wb      (id2ex_rs2_forward_from_wb),
+        .id2ex_op1_forward_from_mem     (id2ex_op1_forward_from_mem),
+        .id2ex_op1_forward_from_wb      (id2ex_op1_forward_from_wb),
+        .id2ex_op2_forward_from_mem     (id2ex_op2_forward_from_mem),
+        .id2ex_op2_forward_from_wb      (id2ex_op2_forward_from_wb),
         .id2ex_ill_instr                (id2ex_ill_instr),
         // Inputs
         .clk                            (clk),
@@ -208,19 +207,19 @@ module veririscv_core (
         .id2ex_pc                       (id2ex_pc[`PC_RANGE]),
         .id2ex_reg_wen                  (id2ex_reg_wen),
         .id2ex_reg_waddr                (id2ex_reg_waddr[`RF_RANGE]),
-        .id2ex_reg_rs1_data             (id2ex_reg_rs1_data[`DATA_RANGE]),
-        .id2ex_reg_rs2_data             (id2ex_reg_rs2_data[`DATA_RANGE]),
-        .id2ex_imm_value                (id2ex_imm_value[`IMM_RANGE]),
+        .id2ex_op1_data                 (id2ex_op1_data[`DATA_RANGE]),
+        .id2ex_op2_data                 (id2ex_op2_data[`DATA_RANGE]),
+        .id2ex_imm_value                (id2ex_imm_value[`DATA_RANGE]),
         .id2ex_alu_op                   (id2ex_alu_op[`CORE_ALU_OP_RANGE]),
         .id2ex_mem_rd_op                (id2ex_mem_rd_op[`CORE_MEM_RD_OP_RANGE]),
         .id2ex_mem_wr_op                (id2ex_mem_wr_op[`CORE_MEM_WR_OP_RANGE]),
         .id2ex_branch_op                (id2ex_branch_op[`CORE_BRANCH_OP_RANGE]),
         .id2ex_br_instr                 (id2ex_br_instr),
         .id2ex_sel_imm                  (id2ex_sel_imm),
-        .id2ex_rs1_forward_from_mem     (id2ex_rs1_forward_from_mem),
-        .id2ex_rs1_forward_from_wb      (id2ex_rs1_forward_from_wb),
-        .id2ex_rs2_forward_from_mem     (id2ex_rs2_forward_from_mem),
-        .id2ex_rs2_forward_from_wb      (id2ex_rs2_forward_from_wb),
+        .id2ex_op1_forward_from_mem     (id2ex_op1_forward_from_mem),
+        .id2ex_op1_forward_from_wb      (id2ex_op1_forward_from_wb),
+        .id2ex_op2_forward_from_mem     (id2ex_op2_forward_from_mem),
+        .id2ex_op2_forward_from_wb      (id2ex_op2_forward_from_wb),
         .id2ex_ill_instr                (id2ex_ill_instr),
         .wb_reg_wdata                   (wb_reg_wdata[`DATA_RANGE]),
         .lsu_mem_rd                     (mem_rd));                // Templated

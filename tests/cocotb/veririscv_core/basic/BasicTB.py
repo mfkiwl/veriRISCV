@@ -83,10 +83,15 @@ async def logic_forward(dut):
 
 @cocotb.test()
 async def load_store(dut):
-    """ load store type instruction """
+    """ load load type instruction """
     await RegCheckTest(dut, "tests/load_store/mem", "tests/load_store/register_golden")
 
 @cocotb.test()
 async def branch(dut):
     """ load store type instruction """
     await RegCheckTest(dut, "tests/branch/mem", "tests/branch/register_golden")
+
+@cocotb.test()
+async def lui_auipc(dut):
+    """ LUI/AUIPC instruction """
+    await RegCheckTest(dut, "tests/lui_auipc/mem", "tests/lui_auipc/register_golden")

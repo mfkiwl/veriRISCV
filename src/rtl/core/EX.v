@@ -25,19 +25,19 @@ module EX (
     input [`PC_RANGE]           id2ex_pc,
     input                       id2ex_reg_wen,
     input [`RF_RANGE]           id2ex_reg_waddr,
-    input [`DATA_RANGE]         id2ex_reg_rs1_data,
-    input [`DATA_RANGE]         id2ex_reg_rs2_data,
-    input [`IMM_RANGE]          id2ex_imm_value,
+    input [`DATA_RANGE]         id2ex_op1_data,
+    input [`DATA_RANGE]         id2ex_op2_data,
+    input [`DATA_RANGE]         id2ex_imm_value,
     input [`CORE_ALU_OP_RANGE]  id2ex_alu_op,
     input [`CORE_MEM_RD_OP_RANGE] id2ex_mem_rd_op,
     input [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op,
     input [`CORE_BRANCH_OP_RANGE] id2ex_branch_op,
     input                         id2ex_br_instr,
     input                       id2ex_sel_imm,
-    input                       id2ex_rs1_forward_from_mem,
-    input                       id2ex_rs1_forward_from_wb,
-    input                       id2ex_rs2_forward_from_mem,
-    input                       id2ex_rs2_forward_from_wb,
+    input                       id2ex_op1_forward_from_mem,
+    input                       id2ex_op1_forward_from_wb,
+    input                       id2ex_op2_forward_from_mem,
+    input                       id2ex_op2_forward_from_wb,
     input                       id2ex_ill_instr,
     // input from wb stage
     input [`DATA_RANGE]         wb_reg_wdata,
@@ -63,11 +63,10 @@ module EX (
     // Signal Declaration
     //////////////////////////////
     wire [`DATA_RANGE]  alu_out;
-    wire [`DATA_RANGE]  rs1_forwarded;
-    wire [`DATA_RANGE]  rs2_forwarded;
+    wire [`DATA_RANGE]  op1_forwarded;
+    wire [`DATA_RANGE]  op2_forwarded;
     wire [`DATA_RANGE]  alu_oprand_0;
     wire [`DATA_RANGE]  alu_oprand_1;
-    wire [`DATA_RANGE]  imm_value;
 
     //////////////////////////////
 
@@ -83,8 +82,6 @@ module EX (
         end
         else begin
             ex2mem_reg_wen <= id2ex_reg_wen;
-            //ex2mem_mem_rd_op <= id2ex_mem_rd_op;
-            //ex2mem_mem_wr_op <= id2ex_mem_wr_op;
             ex2mem_mem_rd <= lsu_mem_rd;
             ex2mem_ill_instr <= id2ex_ill_instr;
         end
@@ -100,22 +97,21 @@ module EX (
     //////////////////////////////
 
     // Forwarding MUX
-    assign rs1_forwarded =  (id2ex_rs1_forward_from_mem) ? ex2mem_alu_out :
-                            (id2ex_rs1_forward_from_wb) ?  wb_reg_wdata :
-                            id2ex_reg_rs1_data;
+    assign op1_forwarded =  (id2ex_op1_forward_from_mem) ? ex2mem_alu_out :
+                            (id2ex_op1_forward_from_wb) ?  wb_reg_wdata :
+                            id2ex_op1_data;
 
-    assign rs2_forwarded =  (id2ex_rs2_forward_from_mem) ? ex2mem_alu_out :
-                            (id2ex_rs2_forward_from_wb) ?  wb_reg_wdata :
-                            id2ex_reg_rs2_data;
+    assign op2_forwarded =  (id2ex_op2_forward_from_mem) ? ex2mem_alu_out :
+                            (id2ex_op2_forward_from_wb) ?  wb_reg_wdata :
+                            id2ex_op2_data;
 
     // immediate select
-    assign alu_oprand_0 = rs1_forwarded;
-    assign imm_value = {{12{id2ex_imm_value[19]}}, id2ex_imm_value};  // sign ext the imm value
-    assign alu_oprand_1 = (id2ex_sel_imm) ? imm_value : rs2_forwarded;
+    assign alu_oprand_0 = op1_forwarded;
+    assign alu_oprand_1 = (id2ex_sel_imm) ? id2ex_imm_value : op2_forwarded;
 
     // Address generation for memory
-    assign lsu_addr = rs1_forwarded + imm_value;
-    assign lsu_wdata = rs2_forwarded;
+    assign lsu_addr = op1_forwarded + id2ex_imm_value;
+    assign lsu_wdata = op2_forwarded;
 
     //////////////////////////////
     // Module instantiation
@@ -135,14 +131,14 @@ module EX (
          .alu_op                        (id2ex_alu_op));          // Templated
 
 
-
     // BU
     /* bu AUTO_TEMPLATE (
-        .rs1        (rs1_forwarded),
-        .rs2        (rs2_forwarded),
+        .rs1        (op1_forwarded),
+        .rs2        (op2_forwarded),
         .br_instr   (id2ex_br_instr),
         .branch_op  (id2ex_branch_op),
         .pc         (id2ex_pc),
+        .imm_value  (id2ex_imm_value),
         ); */
     bu
     bu (/*AUTOINST*/
@@ -152,9 +148,9 @@ module EX (
         // Inputs
         .br_instr                       (id2ex_br_instr),        // Templated
         .branch_op                      (id2ex_branch_op),       // Templated
-        .rs1                            (rs1_forwarded),         // Templated
-        .rs2                            (rs2_forwarded),         // Templated
-        .imm_value                      (imm_value[`IMM_RANGE]),
+        .rs1                            (op1_forwarded),         // Templated
+        .rs2                            (op2_forwarded),         // Templated
+        .imm_value                      (id2ex_imm_value),       // Templated
         .pc                             (id2ex_pc));              // Templated
 
 
