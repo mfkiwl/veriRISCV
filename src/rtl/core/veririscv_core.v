@@ -58,7 +58,9 @@ module veririscv_core (
     /*AUTOREG*/
 
     /*AUTOWIRE*/
-
+    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+    wire                if2id_stall;            // From hdu of hdu.v
+    // End of automatics
 
     // IF stage
     wire                  take_branch;
@@ -70,6 +72,7 @@ module veririscv_core (
     wire [`PC_RANGE]      pc_out;
 
     // ID stage
+    wire                load_dependence;
     wire                id_flush;
     wire [`CORE_ALU_OP_RANGE] id2ex_alu_op;
     wire                id2ex_ill_instr;
@@ -136,6 +139,7 @@ module veririscv_core (
         .clk                            (clk),
         .rst                            (rst),
         .if_flush                       (if_flush),
+        .if2id_stall                    (if2id_stall),
         .ibus_hready                    (ibus_hready),
         .ibus_hresp                     (ibus_hresp),
         .ibus_hrdata                    (ibus_hrdata[`DATA_RANGE]),
@@ -148,10 +152,12 @@ module veririscv_core (
 
     /* ID AUTO_TEMPLATE (
         .reg_\(.*\)     (wb_reg_\1),
+        .lsu_mem_rd     (mem_rd),
         ); */
     ID
     ID (/*AUTOINST*/
         // Outputs
+        .load_dependence                (load_dependence),
         .id2ex_pc                       (id2ex_pc[`PC_RANGE]),
         .id2ex_reg_wen                  (id2ex_reg_wen),
         .id2ex_reg_waddr                (id2ex_reg_waddr[`RF_RANGE]),
@@ -176,6 +182,7 @@ module veririscv_core (
         .if2id_valid                    (if2id_valid),
         .if2id_pc                       (if2id_pc[`PC_RANGE]),
         .if2id_instruction              (if2id_instruction[`DATA_RANGE]),
+        .lsu_mem_rd                     (mem_rd),                // Templated
         .ex2mem_reg_waddr               (ex2mem_reg_waddr[`RF_RANGE]),
         .ex2mem_reg_wen                 (ex2mem_reg_wen),
         .reg_wen                        (wb_reg_wen),            // Templated
@@ -300,8 +307,10 @@ module veririscv_core (
          // Outputs
          .if_flush                      (if_flush),
          .id_flush                      (id_flush),
+         .if2id_stall                   (if2id_stall),
          // Inputs
-         .take_branch                   (take_branch));
+         .take_branch                   (take_branch),
+         .load_dependence               (load_dependence));
 
     /////////////////////////////////
     // Simulation Related

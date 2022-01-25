@@ -26,6 +26,8 @@ module ID (
     input               if2id_valid,
     input [`PC_RANGE]   if2id_pc,
     input [`DATA_RANGE] if2id_instruction,
+    // input from EX stage
+    input               lsu_mem_rd,
     // input from MEM stage
     input [`RF_RANGE]   ex2mem_reg_waddr,
     input               ex2mem_reg_wen,
@@ -33,6 +35,8 @@ module ID (
     input               reg_wen,
     input [`RF_RANGE]   reg_waddr,
     input [`DATA_RANGE] reg_wdata,
+    // to HDU
+    output              load_dependence,
     // pipeline stage
     output reg [`PC_RANGE]          id2ex_pc,
     output reg                      id2ex_reg_wen,
@@ -145,6 +149,13 @@ module ID (
     assign op1_forward_from_wb  = (dec_reg_rs1_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs1_rd;
     assign op2_forward_from_mem = (dec_reg_rs2_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs2_rd;
     assign op2_forward_from_wb  = (dec_reg_rs2_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs2_rd;
+
+    //////////////////////////////
+    // Load Dependence check
+    //////////////////////////////
+    assign load_dependence = lsu_mem_rd & id2ex_reg_wen &
+                             ((dec_reg_rs1_addr == id2ex_reg_waddr) & dec_reg_rs1_rd  |
+                              (dec_reg_rs2_addr == id2ex_reg_waddr) & dec_reg_rs2_rd);
 
     //////////////////////////////
     // Module instantiation

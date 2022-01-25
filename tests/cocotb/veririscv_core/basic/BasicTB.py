@@ -71,27 +71,32 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
     await Timer(time, "us")
     regCheck.checkRegister()
 
-@cocotb.test()
+#@cocotb.test()
 async def logic_simple(dut):
     """ Simple logic instruction test, no forwarding """
     await RegCheckTest(dut, "tests/logic_simple/mem", "tests/logic_simple/register_golden")
 
-@cocotb.test()
+#@cocotb.test()
 async def logic_forward(dut):
     """ Immediate/Logic type instruction with data forward test """
     await RegCheckTest(dut, "tests/logic_forward/mem", "tests/logic_forward/register_golden")
 
-@cocotb.test()
+#@cocotb.test()
 async def load_store(dut):
     """ load load type instruction """
     await RegCheckTest(dut, "tests/load_store/mem", "tests/load_store/register_golden")
 
-@cocotb.test()
+#@cocotb.test()
 async def branch(dut):
     """ load store type instruction """
     await RegCheckTest(dut, "tests/branch/mem", "tests/branch/register_golden")
 
-@cocotb.test()
+#@cocotb.test()
 async def lui_auipc(dut):
     """ LUI/AUIPC instruction """
     await RegCheckTest(dut, "tests/lui_auipc/mem", "tests/lui_auipc/register_golden")
+
+@cocotb.test()
+async def load_stall(dut):
+    """ LUI/AUIPC instruction """
+    await RegCheckTest(dut, "tests/load_stall/mem", "tests/load_stall/register_golden")

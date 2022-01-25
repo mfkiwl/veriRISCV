@@ -21,6 +21,7 @@ module IF (
     input                   clk,
     input                   rst,
     input                   if_flush,
+    input                   if2id_stall,
     // AHBLite Interface to Instruction RAM
     output                  ibus_hwrite,
     output [2:0]            ibus_hsize,
@@ -52,6 +53,9 @@ module IF (
 
     wire [`PC_RANGE]    pc_out;
 
+    reg  [`DATA_RANGE]  prev_instr;
+    reg                 use_prev_instr;
+
     //////////////////////////////
 
     // AHBlite interface
@@ -68,7 +72,7 @@ module IF (
     // ibus_hready
     // ibus_hresp
 
-    assign if2id_instruction = ibus_hrdata;
+    assign if2id_instruction = use_prev_instr ? prev_instr : ibus_hrdata;
 
     //////////////////////////////
     // Pipeline Stage
@@ -79,14 +83,35 @@ module IF (
             if2id_valid <= 1'b0;
         end
         else begin
-            if2id_valid <= ~if_flush;
+            if (!if2id_stall) begin
+                if2id_valid <= ~if_flush;
+            end
         end
     end
 
     always @(posedge clk) begin
-        if2id_pc <= pc_out;
+        if (!if2id_stall) begin
+            if2id_pc <= pc_out;
+        end
     end
 
+    //////////////////////////////
+    // logic
+    //////////////////////////////
+    // store the current instruction if stall
+    always @(posedge clk) begin
+        if (if2id_stall) begin
+            prev_instr <= ibus_hrdata;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (rst) use_prev_instr <= 1'b0;
+        else begin
+            if (if2id_stall) use_prev_instr <= 1'b1;
+            else use_prev_instr <= 1'b0;
+        end
+    end
 
     //////////////////////////////
     // Module instantiation

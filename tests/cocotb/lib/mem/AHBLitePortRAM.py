@@ -20,6 +20,8 @@ import math
 import cocotb
 from cocotb.triggers import RisingEdge, FallingEdge, Timer
 
+DELTA = 0.001
+
 class AHBLitePortRAM:
     """
         AHBLite Port for the RAM Model
@@ -88,7 +90,6 @@ class AHBLitePortRAM:
             num_of_halfword = int(self.data_width / 16)
             halfword_sel_mask = (1 << int(math.log(num_of_halfword, 2))) - 1
             halfword_sel = (self.p_addr >> 1) & halfword_sel_mask
-            print(f"halfword_sel_mask: {halfword_sel_mask}, halfword_sel: {halfword_sel}")
             return 0xFFFF << (halfword_sel * 16)
         if self.p_size == 2: # word
             num_of_word = int(self.data_width / 32)
@@ -112,8 +113,10 @@ class AHBLitePortRAM:
     async def _steps(self):
         """ Things to be done for single clock """
         while True:
-            await FallingEdge(self.clk)
+            await RisingEdge(self.clk)
+            await Timer(DELTA, units="ns")
             self._data_phase()
+            await FallingEdge(self.clk)
             self._addr_phase()
 
     def run(self):
