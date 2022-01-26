@@ -96,7 +96,12 @@ async def lui_auipc(dut):
     """ LUI/AUIPC instruction """
     await RegCheckTest(dut, "tests/lui_auipc/mem", "tests/lui_auipc/register_golden")
 
-@cocotb.test()
+#@cocotb.test()
 async def load_stall(dut):
     """ LUI/AUIPC instruction """
     await RegCheckTest(dut, "tests/load_stall/mem", "tests/load_stall/register_golden")
+
+@cocotb.test()
+async def jal_jalr(dut):
+    """ LUI/AUIPC instruction """
+    await RegCheckTest(dut, "tests/jal_jalr/mem", "tests/jal_jalr/register_golden")

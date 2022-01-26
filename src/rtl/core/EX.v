@@ -33,7 +33,12 @@ module EX (
     input [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op,
     input [`CORE_BRANCH_OP_RANGE] id2ex_branch_op,
     input                         id2ex_br_instr,
+    input                       id2ex_jal_instr,
+    input                       id2ex_jalr_instr,
     input                       id2ex_sel_imm,
+    input                       id2ex_op1_sel_pc,
+    input                       id2ex_op1_sel_zero,
+    input                       id2ex_op2_sel_4,
     input                       id2ex_op1_forward_from_mem,
     input                       id2ex_op1_forward_from_wb,
     input                       id2ex_op2_forward_from_mem,
@@ -106,8 +111,12 @@ module EX (
                             id2ex_op2_data;
 
     // immediate select
-    assign alu_oprand_0 = op1_forwarded;
-    assign alu_oprand_1 = (id2ex_sel_imm) ? id2ex_imm_value : op2_forwarded;
+    assign alu_oprand_0 = id2ex_op1_sel_pc ? id2ex_pc :
+                          id2ex_op1_sel_zero ? 'b0 :
+                          op1_forwarded;
+    assign alu_oprand_1 = id2ex_sel_imm ? id2ex_imm_value :
+                          id2ex_op2_sel_4 ? 'd4 :
+                          op2_forwarded;
 
     // Address generation for memory
     assign lsu_addr = op1_forwarded + id2ex_imm_value;
@@ -136,6 +145,8 @@ module EX (
         .rs1        (op1_forwarded),
         .rs2        (op2_forwarded),
         .br_instr   (id2ex_br_instr),
+        .jal_instr  (id2ex_jal_instr),
+        .jalr_instr (id2ex_jalr_instr),
         .branch_op  (id2ex_branch_op),
         .pc         (id2ex_pc),
         .imm_value  (id2ex_imm_value),
@@ -145,8 +156,11 @@ module EX (
         // Outputs
         .target_pc                      (target_pc[`PC_RANGE]),
         .take_branch                    (take_branch),
+        .exc_addr_misaligned            (exc_addr_misaligned),
         // Inputs
         .br_instr                       (id2ex_br_instr),        // Templated
+        .jal_instr                      (id2ex_jal_instr),      // Templated
+        .jalr_instr                     (id2ex_jalr_instr),     // Templated
         .branch_op                      (id2ex_branch_op),       // Templated
         .rs1                            (op1_forwarded),         // Templated
         .rs2                            (op2_forwarded),         // Templated

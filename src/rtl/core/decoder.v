@@ -39,13 +39,16 @@ module decoder (
     output reg [`CORE_MEM_WR_OP_RANGE]  mem_wr_op,
 
     output reg [`CORE_BRANCH_OP_RANGE]  branch_op,
-    output reg                          br_instr,
+    output reg                          br_instr,   // indicating branch instruction
+    output reg                          jal_instr,   // indicating jal instruction
+    output reg                          jalr_instr,   // indicating jalr instruction
 
-    output reg                          op1_sel_zero,
-    output reg                          op1_sel_pc,
+    output reg                          op1_sel_zero,   // for LUI
+    output reg                          op1_sel_pc,     // for AUIPC, JAL, JALR
+    output reg                          op2_sel_4,      // for JAL, JALR
 
     // exception
-    output reg ill_instr         // Illegal instruction
+    output reg                          exc_ill_instr         // Illegal instruction
 );
 
     /////////////////////////////////
@@ -76,7 +79,7 @@ module decoder (
 
     always @(*) begin
         // Default value
-        ill_instr = 1'b0;
+        exc_ill_instr = 1'b0;
         alu_op = `CORE_ALU_ADD;
         reg_wen = 1'b0;
         reg_rs1_rd = 1'b0;
@@ -86,8 +89,11 @@ module decoder (
         mem_wr_op = `CORE_MEM_NO_WR;
         branch_op = func3;
         br_instr = 1'b0;
+        jal_instr = 1'b0;
+        jalr_instr = 1'b0;
         op1_sel_zero = 1'b0;
         op1_sel_pc = 1'b0;
+        op2_sel_4 = 1'b0;
         // LEVEL 1 - opcode
         case(opcode)
             `DEC_TYPE_LOGIC: begin  // Logic Type instruction
@@ -117,7 +123,7 @@ module decoder (
                 sel_imm = 1'b1;
                 alu_op = `CORE_ALU_ADD;
                 mem_rd_op = func3;
-                if (func3[2:1] == 2'b11) ill_instr = 1'b1;
+                if (func3[2:1] == 2'b11) exc_ill_instr = 1'b1;
             end
             `DEC_TYPE_STORE: begin  // Store instruction
                 reg_rs1_rd = 1'b1;
@@ -125,13 +131,13 @@ module decoder (
                 sel_imm = 1'b1;
                 alu_op = `CORE_ALU_ADD;
                 mem_wr_op = func3[1:0];
-                if (func3[2] == 1'b1 || func3 == 3'b011) ill_instr = 1'b1;
+                if (func3[2] == 1'b1 || func3 == 3'b011) exc_ill_instr = 1'b1;
             end
             `DEC_TYPE_BRAHCN: begin // Branch instruction
                 reg_rs1_rd = 1'b1;
                 reg_rs2_rd = 1'b1;
                 br_instr = 1'b1;
-                if (func3[2:1] == 2'b01) ill_instr = 1'b1;
+                if (func3[2:1] == 2'b01) exc_ill_instr = 1'b1;
             end
             `DEC_TYPE_LUI: begin    // LUI
                 sel_imm = 1'b1;
@@ -145,7 +151,22 @@ module decoder (
                 alu_op = `CORE_ALU_ADD;
                 reg_wen = 1'b1;
             end
-        default: ill_instr = 1'b1;
+            `DEC_TYPE_JAL: begin    // JAL
+                jal_instr = 1'b1;
+                op1_sel_pc = 1'b1;
+                op2_sel_4 = 1'b1;
+                alu_op = `CORE_ALU_ADD;
+                reg_wen = 1'b1;
+            end
+            `DEC_TYPE_JALR: begin    // JALR
+                reg_rs1_rd = 1'b1;
+                jalr_instr = 1'b1;
+                op1_sel_pc = 1'b1;
+                op2_sel_4 = 1'b1;
+                alu_op = `CORE_ALU_ADD;
+                reg_wen = 1'b1;
+            end
+        default: exc_ill_instr = 1'b1;
         endcase
     end
 

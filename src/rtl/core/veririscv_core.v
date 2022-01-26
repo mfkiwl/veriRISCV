@@ -58,9 +58,6 @@ module veririscv_core (
     /*AUTOREG*/
 
     /*AUTOWIRE*/
-    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-    wire                if2id_stall;            // From hdu of hdu.v
-    // End of automatics
 
     // IF stage
     wire                  take_branch;
@@ -86,9 +83,15 @@ module veririscv_core (
     wire                id2ex_op2_forward_from_mem;
     wire                id2ex_op2_forward_from_wb;
     wire                id2ex_sel_imm;
+    wire                id2ex_op1_sel_pc;
+    wire                id2ex_op1_sel_zero;
+    wire                id2ex_op2_sel_4;
+    wire                if2id_stall;
     wire [`CORE_MEM_RD_OP_RANGE] id2ex_mem_rd_op;
     wire [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op;
     wire                         id2ex_br_instr;
+    wire                         id2ex_jal_instr;
+    wire                         id2ex_jalr_instr;
     wire [`CORE_BRANCH_OP_RANGE] id2ex_branch_op;
     wire [`PC_RANGE]             id2ex_pc;
 
@@ -169,7 +172,12 @@ module veririscv_core (
         .id2ex_mem_wr_op                (id2ex_mem_wr_op[`CORE_MEM_WR_OP_RANGE]),
         .id2ex_branch_op                (id2ex_branch_op[`CORE_BRANCH_OP_RANGE]),
         .id2ex_br_instr                 (id2ex_br_instr),
+        .id2ex_jal_instr                (id2ex_jal_instr),
+        .id2ex_jalr_instr               (id2ex_jalr_instr),
         .id2ex_sel_imm                  (id2ex_sel_imm),
+        .id2ex_op1_sel_pc               (id2ex_op1_sel_pc),
+        .id2ex_op1_sel_zero             (id2ex_op1_sel_zero),
+        .id2ex_op2_sel_4                (id2ex_op2_sel_4),
         .id2ex_op1_forward_from_mem     (id2ex_op1_forward_from_mem),
         .id2ex_op1_forward_from_wb      (id2ex_op1_forward_from_wb),
         .id2ex_op2_forward_from_mem     (id2ex_op2_forward_from_mem),
@@ -222,7 +230,12 @@ module veririscv_core (
         .id2ex_mem_wr_op                (id2ex_mem_wr_op[`CORE_MEM_WR_OP_RANGE]),
         .id2ex_branch_op                (id2ex_branch_op[`CORE_BRANCH_OP_RANGE]),
         .id2ex_br_instr                 (id2ex_br_instr),
+        .id2ex_jal_instr                (id2ex_jal_instr),
+        .id2ex_jalr_instr               (id2ex_jalr_instr),
         .id2ex_sel_imm                  (id2ex_sel_imm),
+        .id2ex_op1_sel_pc               (id2ex_op1_sel_pc),
+        .id2ex_op1_sel_zero             (id2ex_op1_sel_zero),
+        .id2ex_op2_sel_4                (id2ex_op2_sel_4),
         .id2ex_op1_forward_from_mem     (id2ex_op1_forward_from_mem),
         .id2ex_op1_forward_from_wb      (id2ex_op1_forward_from_wb),
         .id2ex_op2_forward_from_mem     (id2ex_op2_forward_from_mem),
