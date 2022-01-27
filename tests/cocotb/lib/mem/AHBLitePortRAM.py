@@ -66,8 +66,8 @@ class AHBLitePortRAM:
     def _addr_phase(self):
         """ Address phase """
         self.p_trans = False
-        self.hreadyout <= 1  # always ready
-        self.hresp <= 0      # always OK, no error
+        self.hreadyout = 1  # always ready
+        self.hresp = 0      # always OK, no error
         if self.rstn.value.integer != 0:
             if self.htrans.value.integer == 2: # Only NONSEQ and IDLE are support
                 self.p_trans = True
@@ -108,7 +108,7 @@ class AHBLitePortRAM:
                 bit_en = self._bit_mask()
                 self.ram.write(word_addr, wdata, bit_en)
             else: # read
-                self.hrdata <= self.ram.read(word_addr)
+                self.hrdata.value = self.ram.read(word_addr)
 
     async def _steps(self):
         """ Things to be done for single clock """

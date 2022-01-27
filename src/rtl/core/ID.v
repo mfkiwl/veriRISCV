@@ -162,10 +162,10 @@ module ID (
     //////////////////////////////
     // Forward check
     //////////////////////////////
-    assign op1_forward_from_mem = (dec_reg_rs1_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs1_rd;
-    assign op1_forward_from_wb  = (dec_reg_rs1_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs1_rd;
-    assign op2_forward_from_mem = (dec_reg_rs2_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs2_rd;
-    assign op2_forward_from_wb  = (dec_reg_rs2_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs2_rd;
+    assign op1_forward_from_mem = (dec_reg_rs1_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs1_rd & (dec_reg_rs1_addr != 0);
+    assign op1_forward_from_wb  = (dec_reg_rs1_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs1_rd & (dec_reg_rs1_addr != 0);
+    assign op2_forward_from_mem = (dec_reg_rs2_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs2_rd & (dec_reg_rs2_addr != 0);
+    assign op2_forward_from_wb  = (dec_reg_rs2_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs2_rd & (dec_reg_rs2_addr != 0);
 
     //////////////////////////////
     // Load Dependence check
