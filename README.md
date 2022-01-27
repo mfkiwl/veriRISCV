@@ -1,5 +1,11 @@
 # veriRISCV
 
+- [veriRISCV](#veririscv)
+  - [Introduction](#introduction)
+  - [Planned Hardware Feature and Architecture](#planned-hardware-feature-and-architecture)
+  - [Planned Software Feature and Architecture](#planned-software-feature-and-architecture)
+  - [Prerequisites](#prerequisites)
+
 ## Introduction
 
 The purpose of this repository is to get some hands-on experience with RISC-V ISA, cpu design, soc design and bare-metal embedded system design.
@@ -28,3 +34,28 @@ The SoC design will be based on [SiFive E300 platform](https://static.dev.sifive
 ## Planned Software Feature and Architecture
 
 TBD
+
+## Prerequisites
+
+### RISC-V Tool Chain
+
+**GNU MCU Eclipse RISC-V Embedded GCC** is used to compile the C code into RISC-V ISA using newlib as the C standard library.
+
+- GNU MCU Eclipse RISC-V Embedded GCC: <https://gnu-mcu-eclipse.github.io/blog/2019/05/21/riscv-none-gcc-v8-2-0-2-2-20190521-released>
+- Check [riscv_tool_chain_installation](doc/riscv_tool_chain_installation.md) for more detail on how to install the tool chain.
+
+### Python3, Cocotb, Icarus Verilog
+
+cocotb is a Coroutine based COsimulation TestBench environment for verifying VHDL and SystemVerilog RTL using Python.
+Icarus Verilog is an open source verilog simulator. The test environment in this repo is cocotb and the verilog code is simulated in Icarus Verilog
+
+- Python3: <https://www.python.org/downloads/>
+- Cocotb: <https://docs.cocotb.org/en/stable/index.html>
+- Icarus Verilog <http://iverilog.icarus.com/>
+
+### Xilinx Vivado/Intel Quartus
+
+Vivado and Quartus are used to synthesis the design and generate FPGA bit stream.
+
+- Vivado: <https://www.xilinx.com/products/design-tools/vivado.html>
+- Quartus: <https://www.intel.com/content/www/us/en/software/programmable/quartus-prime/overview.html>
