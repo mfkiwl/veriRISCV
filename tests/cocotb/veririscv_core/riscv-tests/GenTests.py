@@ -26,7 +26,7 @@ HEADER = f"""###################################################################
 ## Module Name: RVTests.py
 ##
 ## Author: Heqing Huang
-## Date Created: {date.today}
+## Date Created: {date.today()}
 ##
 ## ================== Description ==================
 ##
@@ -37,19 +37,34 @@ HEADER = f"""###################################################################
 from RVTestsUtils import *
 
 """
+# Common instruction in RISCV
+CONTROL = ['jal', 'jalr', 'beq', 'bne', 'blt', 'bge', 'bltu', 'bgeu']
+INTEGER = ['lui', 'auipc', \
+           'addi', 'slti', 'sltiu', 'xori', 'ori', 'andi', 'slli', 'srli', 'srai', \
+           'add', 'sub', 'sll', 'slt', 'sltu', 'xor', 'srl', 'sra', 'or', 'and']
 
-def genTest(isa, mode, name):
+# Instruction for rv32ui, p architecture
+rv32ui_p_instruction = CONTROL + INTEGER
+rv32ui_p = ['rv32ui', 'p', rv32ui_p_instruction]
+
+all_instructions = [rv32ui_p]
+
+def genTest(isa, mode, instruction):
     func = f"""@cocotb.test()
-async def add(dut):
-    await testVerilog(dut, '{isa}-{mode}-{name}')"""
+async def {instruction.upper()}(dut):
+    await testVerilog(dut, '{isa}-{mode}-{instruction}')
+
+"""
     return func
 
-
-def gen():
+def genRVTests(all_instructions):
     OUTPUT = 'RVTests.py'
     FH = open(OUTPUT, "w")
     FH.write(HEADER)
-    FH.write(genTest('rv32ui', 'p', 'add'))
+    for a in all_instructions:
+        (isa, mode, nameList) = a
+        for name in nameList:
+            FH.write(genTest(isa, mode, name))
     FH.close()
 
-gen()
+genRVTests(all_instructions)

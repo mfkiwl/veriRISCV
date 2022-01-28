@@ -329,7 +329,7 @@ module veririscv_core (
     // Simulation Related
     /////////////////////////////////
 
-    `ifdef COCOTB_SIM
+    `ifdef COCOTB_SIM_DUMP
         initial begin
             $dumpfile ("veririscv_core.vcd");
             $dumpvars (0, veririscv_core);
