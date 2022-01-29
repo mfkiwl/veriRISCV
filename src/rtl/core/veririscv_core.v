@@ -39,13 +39,13 @@ module veririscv_core (
 
     // AHBLite Interface to memory/data bus
     output                          dbus_hwrite,
-    output reg [2:0]                dbus_hsize,
+    output [2:0]                    dbus_hsize,
     output [2:0]                    dbus_hburst,
     output [3:0]                    dbus_hport,
     output [1:0]                    dbus_htrans,
     output                          dbus_hmastlock,
     output [`INSTR_RAM_ADDR_RANGE]  dbus_haddr,
-    output reg [`DATA_RANGE]        dbus_hwdata,
+    output [`DATA_RANGE]            dbus_hwdata,
     input                           dbus_hready,
     input                           dbus_hresp,
     input  [`DATA_RANGE]            dbus_hrdata
