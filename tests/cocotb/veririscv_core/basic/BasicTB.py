@@ -32,13 +32,13 @@ from RegCheck import RegCheck
 
 async def reset(dut, time=50):
     """ Reset the design """
-    dut.rst = 1
-    dut.rstn = 0
+    dut.rst.value = 1
+    dut.rstn.value = 0
     await Timer(time, units="ns")
     await RisingEdge(dut.clk)
     await Timer(1, units="ns")
-    dut.rst = 0
-    dut.rstn = 1
+    dut.rst.value = 0
+    dut.rstn.value = 1
 
 async def RegCheckTest(dut, ram_file, golden_file, time=1):
     """

@@ -27,6 +27,7 @@
 `define DEC_RS1_FIELD       19:15
 `define DEC_RS2_FIELD       24:20
 `define DEC_FUNC7_FIELD     31:25
+`define DEC_CSR_ADDR_FIELD  31:20
 
 // Instruction Field Range
 `define DEC_OPCODE_RANGE    6:0
@@ -35,6 +36,7 @@
 `define DEC_RS1_RANGE       4:0
 `define DEC_RS2_RANGE       4:0
 `define DEC_FUNC7_RANGE     6:0
+`define DEC_CSR_ADDR_FIELD  31:20
 
 
 // Instruction Type
@@ -47,6 +49,7 @@
 `define DEC_TYPE_JAL        7'b1101111
 `define DEC_TYPE_AUIPC      7'b0010111
 `define DEC_TYPE_LUI        7'b0110111
+`define DEC_TYPE_CSR        7'b1110011
 
 // Logic Instruction Func3
 `define DEC_LOGIC_ADD       3'b000

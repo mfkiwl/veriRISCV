@@ -57,5 +57,13 @@
 // Same as Func3 encoding
 `define CORE_BRANCH_OP_RANGE    2:0
 
+// CSR opcode
+// Same as Func3 encoding
+`define CORE_CSR_ADDR_RANGE 11:0
+`define CORE_CSR_OP_RANGE   1:0
+`define CORE_CSR_NOP        2'b00
+`define CORE_CSR_RW         2'b01
+`define CORE_CSR_RS         2'b10
+`define CORE_CSR_RC         2'b11
 
 `endif

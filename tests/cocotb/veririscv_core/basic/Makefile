@@ -18,7 +18,7 @@ CORE_PATH  		= $(REPO_ROOT)/src/rtl/core
 # Source files
 # -----------------------------------------
 
-include filelists.mk
+include ../filelists.mk
 
 VERILOG_SOURCES += $(RTL_FILES)
 

@@ -19,47 +19,52 @@
 `include "core.vh"
 
 module ID (
-    input   clk,
-    input   rst,
-    input   id_flush,
+    input                               clk,
+    input                               rst,
+    input                               id_flush,
     // input from IF/ID stage pipe
-    input               if2id_valid,
-    input [`PC_RANGE]   if2id_pc,
-    input [`DATA_RANGE] if2id_instruction,
+    input                               if2id_valid,
+    input [`PC_RANGE]                   if2id_pc,
+    input [`DATA_RANGE]                 if2id_instruction,
     // input from EX stage
-    input               lsu_mem_rd,
+    input                               lsu_mem_rd,
     // input from MEM stage
-    input [`RF_RANGE]   ex2mem_reg_waddr,
-    input               ex2mem_reg_wen,
+    input [`RF_RANGE]                   ex2mem_reg_waddr,
+    input                               ex2mem_reg_wen,
     // input from WB stage
-    input               reg_wen,
-    input [`RF_RANGE]   reg_waddr,
-    input [`DATA_RANGE] reg_wdata,
+    input                               reg_wen,
+    input [`RF_RANGE]                   reg_waddr,
+    input [`DATA_RANGE]                 reg_wdata,
     // to HDU
-    output              load_dependence,
+    output                              load_dependence,
     // pipeline stage
-    output reg [`PC_RANGE]          id2ex_pc,
-    output reg                      id2ex_reg_wen,
-    output reg [`RF_RANGE]          id2ex_reg_waddr,
-    output reg [`DATA_RANGE]        id2ex_op1_data,
-    output reg [`DATA_RANGE]        id2ex_op2_data,
-    output reg [`DATA_RANGE]        id2ex_imm_value,
-    output reg [`CORE_ALU_OP_RANGE] id2ex_alu_op,
-    output reg [`CORE_MEM_RD_OP_RANGE] id2ex_mem_rd_op,
-    output reg [`CORE_MEM_WR_OP_RANGE] id2ex_mem_wr_op,
-    output reg [`CORE_BRANCH_OP_RANGE] id2ex_branch_op,
-    output reg                         id2ex_br_instr,
-    output reg                      id2ex_jal_instr,
-    output reg                      id2ex_jalr_instr,
-    output reg                      id2ex_sel_imm,
-    output reg                      id2ex_op1_sel_pc,
-    output reg                      id2ex_op1_sel_zero,
-    output reg                      id2ex_op2_sel_4,
-    output reg                      id2ex_op1_forward_from_mem,
-    output reg                      id2ex_op1_forward_from_wb,
-    output reg                      id2ex_op2_forward_from_mem,
-    output reg                      id2ex_op2_forward_from_wb,
-    output reg                      id2ex_ill_instr
+    output reg [`PC_RANGE]              id2ex_pc,
+    output reg                          id2ex_br_instr,
+    output reg                          id2ex_jal_instr,
+    output reg                          id2ex_jalr_instr,
+    output reg                          id2ex_sel_imm,
+    output reg                          id2ex_op1_sel_pc,
+    output reg                          id2ex_op1_sel_zero,
+    output reg                          id2ex_op2_sel_4,
+    output reg                          id2ex_op1_forward_from_mem,
+    output reg                          id2ex_op1_forward_from_wb,
+    output reg                          id2ex_op2_forward_from_mem,
+    output reg                          id2ex_op2_forward_from_wb,
+    output reg                          id2ex_csr_rd,
+    output reg                          id2ex_sel_csr,
+    output reg [`CORE_CSR_OP_RANGE]     id2ex_csr_wr_op,
+    output reg [`CORE_CSR_ADDR_RANGE]   id2ex_csr_addr,
+    output reg                          id2ex_reg_wen,
+    output reg [`RF_RANGE]              id2ex_reg_waddr,
+    output reg [`DATA_RANGE]            id2ex_op1_data,
+    output reg [`DATA_RANGE]            id2ex_op2_data,
+    output reg [`DATA_RANGE]            id2ex_imm_value,
+    output reg [`CORE_ALU_OP_RANGE]     id2ex_alu_op,
+    output reg [`CORE_MEM_RD_OP_RANGE]  id2ex_mem_rd_op,
+    output reg [`CORE_MEM_WR_OP_RANGE]  id2ex_mem_wr_op,
+    output reg [`CORE_BRANCH_OP_RANGE]  id2ex_branch_op,
+    // exception
+    output reg  id2ex_ill_instr
 );
 
 
@@ -95,10 +100,13 @@ module ID (
     wire    dec_br_instr;
     wire    dec_jal_instr;
     wire    dec_jalr_instr;
-
-    wire [`DATA_RANGE]  dec_special_rs1_value;
-    wire [`DATA_RANGE]  dec_imm_value;
-    wire [`CORE_ALU_OP_RANGE]   dec_alu_op;
+    wire    dec_csr_rd;
+    wire    dec_sel_csr;
+    wire [`CORE_CSR_ADDR_RANGE]  dec_csr_addr;
+    wire [`DATA_RANGE]           dec_special_rs1_value;
+    wire [`DATA_RANGE]           dec_imm_value;
+    wire [`CORE_ALU_OP_RANGE]    dec_alu_op;
+    wire [`CORE_CSR_OP_RANGE]    dec_csr_wr_op;
     wire [`CORE_MEM_RD_OP_RANGE] dec_mem_rd_op;
     wire [`CORE_MEM_WR_OP_RANGE] dec_mem_wr_op;
     wire [`CORE_BRANCH_OP_RANGE] dec_branch_op;
@@ -126,6 +134,8 @@ module ID (
             id2ex_br_instr <= 1'b0;
             id2ex_jal_instr <= 1'b0;
             id2ex_jalr_instr <= 1'b0;
+            id2ex_csr_rd <= 1'b0;
+            id2ex_csr_wr_op <= `CORE_CSR_NOP;
         end
         else begin
             id2ex_reg_wen <= dec_reg_wen & id_stage_valid;
@@ -135,6 +145,8 @@ module ID (
             id2ex_jal_instr <= dec_jal_instr & id_stage_valid;
             id2ex_jalr_instr <= dec_jalr_instr & id_stage_valid;
             id2ex_ill_instr <= dec_ill_instr & id_stage_valid_raw;
+            id2ex_csr_rd <= dec_csr_rd;
+            id2ex_csr_wr_op <= dec_csr_wr_op;
         end
     end
 
@@ -154,6 +166,8 @@ module ID (
         id2ex_op1_forward_from_wb <= op1_forward_from_wb;
         id2ex_op2_forward_from_mem <= op2_forward_from_mem;
         id2ex_op2_forward_from_wb <= op2_forward_from_wb;
+        id2ex_sel_csr <= dec_sel_csr;
+        id2ex_csr_addr <= dec_csr_addr;
     end
 
     assign id_stage_valid_raw = if2id_valid & ~id_flush;
@@ -218,18 +232,22 @@ module ID (
              .reg_rs2_addr              (dec_reg_rs2_addr),      // Templated
              .reg_rs1_rd                (dec_reg_rs1_rd),        // Templated
              .reg_rs2_rd                (dec_reg_rs2_rd),        // Templated
-             .sel_imm                   (dec_sel_imm),           // Templated
-             .imm_value                 (dec_imm_value),         // Templated
-             .alu_op                    (dec_alu_op),            // Templated
-             .mem_rd_op                 (dec_mem_rd_op),         // Templated
-             .mem_wr_op                 (dec_mem_wr_op),         // Templated
-             .branch_op                 (dec_branch_op),         // Templated
              .br_instr                  (dec_br_instr),          // Templated
              .jal_instr                 (dec_jal_instr),         // Templated
              .jalr_instr                (dec_jalr_instr),        // Templated
              .op1_sel_zero              (dec_op1_sel_zero),      // Templated
              .op1_sel_pc                (dec_op1_sel_pc),        // Templated
              .op2_sel_4                 (dec_op2_sel_4),         // Templated
+             .sel_imm                   (dec_sel_imm),           // Templated
+             .csr_rd                    (dec_csr_rd),            // Templated
+             .csr_wr_op                 (dec_csr_wr_op),         // Templated
+             .csr_addr                  (dec_csr_addr),          // Templated
+             .sel_csr                   (dec_sel_csr),           // Templated
+             .imm_value                 (dec_imm_value),         // Templated
+             .alu_op                    (dec_alu_op),            // Templated
+             .branch_op                 (dec_branch_op),         // Templated
+             .mem_rd_op                 (dec_mem_rd_op),         // Templated
+             .mem_wr_op                 (dec_mem_wr_op),         // Templated
              .exc_ill_instr             (dec_exc_ill_instr),     // Templated
              // Inputs
              .instruction               (if2id_instruction));     // Templated
