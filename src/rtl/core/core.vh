@@ -40,18 +40,14 @@
 
 // Memory opcode
 // Encoding is same in instruction
-`define CORE_MEM_RD_OP_RANGE 2:0
-`define CORE_MEM_LB         3'b000
-`define CORE_MEM_LH         3'b001
-`define CORE_MEM_LW         3'b010
-`define CORE_MEM_LBU        3'b100
-`define CORE_MEM_LHU        3'b101
-`define CORE_MEM_NO_RD      3'b111
-`define CORE_MEM_WR_OP_RANGE 1:0
-`define CORE_MEM_SB         2'b00
-`define CORE_MEM_SH         2'b01
-`define CORE_MEM_SW         2'b10
-`define CORE_MEM_NO_WR      2'b11
+`define CORE_MEM_OP_RANGE 2:0
+// One hot encoding for byte, half, and sign
+// which is the same as func3 field
+// Bit 0: 1- half word access
+// Bit 1: 1- word access
+// Bit 2: 1 - signed. 0 - unsigned
+`define CORE_MEM_HALF   2'b01
+`define CORE_MEM_WORD   2'b10
 
 // Branch Unit (bu) opcode
 // Same as Func3 encoding

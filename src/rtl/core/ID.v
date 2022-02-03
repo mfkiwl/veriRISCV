@@ -26,19 +26,19 @@ module ID (
     input                               if2id_valid,
     input [`PC_RANGE]                   if2id_pc,
     input [`DATA_RANGE]                 if2id_instruction,
-    // input from EX stage
-    input                               lsu_mem_rd,
     // input from MEM stage
+    input                               lsu_mem_rd, // this signal is actually from EX stage
     input [`RF_RANGE]                   ex2mem_reg_waddr,
     input                               ex2mem_reg_wen,
     // input from WB stage
-    input                               reg_wen,
-    input [`RF_RANGE]                   reg_waddr,
-    input [`DATA_RANGE]                 reg_wdata,
+    input                               wb_reg_wen,
+    input [`RF_RANGE]                   wb_reg_waddr,
+    input [`DATA_RANGE]                 wb_reg_wdata,
     // to HDU
     output                              load_dependence,
     // pipeline stage
     output reg [`PC_RANGE]              id2ex_pc,
+    output reg [`DATA_RANGE]            id2ex_isntruction,
     output reg                          id2ex_br_instr,
     output reg                          id2ex_jal_instr,
     output reg                          id2ex_jalr_instr,
@@ -60,11 +60,12 @@ module ID (
     output reg [`DATA_RANGE]            id2ex_op2_data,
     output reg [`DATA_RANGE]            id2ex_imm_value,
     output reg [`CORE_ALU_OP_RANGE]     id2ex_alu_op,
-    output reg [`CORE_MEM_RD_OP_RANGE]  id2ex_mem_rd_op,
-    output reg [`CORE_MEM_WR_OP_RANGE]  id2ex_mem_wr_op,
+    output reg                          id2ex_mem_rd,
+    output reg                          id2ex_mem_wr,
+    output reg [`CORE_MEM_OP_RANGE]     id2ex_mem_op,
     output reg [`CORE_BRANCH_OP_RANGE]  id2ex_branch_op,
     // exception
-    output reg  id2ex_ill_instr
+    output reg                          id2ex_ill_instr
 );
 
 
@@ -73,51 +74,44 @@ module ID (
     //////////////////////////////
 
     /*AUTOWIRE*/
+    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+    wire [`CORE_ALU_OP_RANGE] alu_op;           // From decoder of decoder.v
+    wire                br_instr;               // From decoder of decoder.v
+    wire [`CORE_BRANCH_OP_RANGE] branch_op;     // From decoder of decoder.v
+    wire [`CORE_CSR_ADDR_RANGE] csr_addr;       // From decoder of decoder.v
+    wire                csr_rd;                 // From decoder of decoder.v
+    wire [`CORE_CSR_OP_RANGE] csr_wr_op;        // From decoder of decoder.v
+    wire                exc_ill_instr;          // From decoder of decoder.v
+    wire [`DATA_RANGE]  imm_value;              // From decoder of decoder.v
+    wire                jal_instr;              // From decoder of decoder.v
+    wire                jalr_instr;             // From decoder of decoder.v
+    wire [`CORE_MEM_OP_RANGE] mem_op;           // From decoder of decoder.v
+    wire                mem_rd;                 // From decoder of decoder.v
+    wire                mem_wr;                 // From decoder of decoder.v
+    wire                op1_sel_pc;             // From decoder of decoder.v
+    wire                op1_sel_zero;           // From decoder of decoder.v
+    wire                op2_sel_4;              // From decoder of decoder.v
+    wire [`RF_RANGE]    reg_rs1_addr;           // From decoder of decoder.v
+    wire [`DATA_RANGE]  reg_rs1_data;           // From regfile of regfile.v
+    wire                reg_rs1_rd;             // From decoder of decoder.v
+    wire [`RF_RANGE]    reg_rs2_addr;           // From decoder of decoder.v
+    wire [`DATA_RANGE]  reg_rs2_data;           // From regfile of regfile.v
+    wire                reg_rs2_rd;             // From decoder of decoder.v
+    wire [`RF_RANGE]    reg_waddr;              // From decoder of decoder.v
+    wire                reg_wen;                // From decoder of decoder.v
+    wire                sel_csr;                // From decoder of decoder.v
+    wire                sel_imm;                // From decoder of decoder.v
+    // End of automatics
 
     /*AUTOREG*/
 
-    // register file
-    wire                dec_reg_wen;
-    wire [`RF_RANGE]    dec_reg_waddr;
-    wire                dec_reg_rs1_rd;
-    wire                dec_reg_rs2_rd;
-    wire [`RF_RANGE]    dec_reg_rs1_addr;
-    wire [`DATA_RANGE]  dec_reg_rs1_data;
-    wire [`RF_RANGE]    dec_reg_rs2_addr;
-    wire [`DATA_RANGE]  dec_reg_rs2_data;
-    // datapath
-    wire    dec_op1_sel_pc;
-    wire    dec_op1_sel_zero;
-    wire    dec_sel_imm;
-    wire    op1_forward_from_mem;
-    wire    op1_forward_from_wb;
-    wire    op2_forward_from_mem;
-    wire    op2_forward_from_wb;
-    wire    dec_forwarding;
-    wire    dec_special_rs1_sel;
-    wire    dec_ja_instr;
-    wire    dec_op2_sel_4;
-    wire    dec_br_instr;
-    wire    dec_jal_instr;
-    wire    dec_jalr_instr;
-    wire    dec_csr_rd;
-    wire    dec_sel_csr;
-    wire [`CORE_CSR_ADDR_RANGE]  dec_csr_addr;
-    wire [`DATA_RANGE]           dec_special_rs1_value;
-    wire [`DATA_RANGE]           dec_imm_value;
-    wire [`CORE_ALU_OP_RANGE]    dec_alu_op;
-    wire [`CORE_CSR_OP_RANGE]    dec_csr_wr_op;
-    wire [`CORE_MEM_RD_OP_RANGE] dec_mem_rd_op;
-    wire [`CORE_MEM_WR_OP_RANGE] dec_mem_wr_op;
-    wire [`CORE_BRANCH_OP_RANGE] dec_branch_op;
-
-
-    // exception
-    wire dec_ill_instr;
-    wire dec_exc_ill_instr;
     // Others
     wire id_stage_valid;
     wire id_stage_valid_raw;
+    wire op1_forward_from_mem;
+    wire op1_forward_from_wb;
+    wire op2_forward_from_mem;
+    wire op2_forward_from_wb;
 
     //////////////////////////////
 
@@ -129,8 +123,8 @@ module ID (
         if (rst) begin
             id2ex_reg_wen  <= 1'b0;
             id2ex_ill_instr <= 1'b0;
-            id2ex_mem_rd_op <= `CORE_MEM_NO_RD;
-            id2ex_mem_wr_op <= `CORE_MEM_NO_WR;
+            id2ex_mem_rd <= 1'b0;
+            id2ex_mem_wr <= 1'b0;
             id2ex_br_instr <= 1'b0;
             id2ex_jal_instr <= 1'b0;
             id2ex_jalr_instr <= 1'b0;
@@ -138,55 +132,57 @@ module ID (
             id2ex_csr_wr_op <= `CORE_CSR_NOP;
         end
         else begin
-            id2ex_reg_wen <= dec_reg_wen & id_stage_valid;
-            id2ex_mem_rd_op <= id_stage_valid ? dec_mem_rd_op : `CORE_MEM_NO_RD;
-            id2ex_mem_wr_op <= id_stage_valid ? dec_mem_wr_op : `CORE_MEM_NO_WR;
-            id2ex_br_instr <= dec_br_instr & id_stage_valid;
-            id2ex_jal_instr <= dec_jal_instr & id_stage_valid;
-            id2ex_jalr_instr <= dec_jalr_instr & id_stage_valid;
-            id2ex_ill_instr <= dec_ill_instr & id_stage_valid_raw;
-            id2ex_csr_rd <= dec_csr_rd;
-            id2ex_csr_wr_op <= dec_csr_wr_op;
+            id2ex_reg_wen <= reg_wen & id_stage_valid;
+            id2ex_mem_rd <= mem_rd & id_stage_valid;
+            id2ex_mem_wr <= mem_wr & id_stage_valid;
+            id2ex_br_instr <= br_instr & id_stage_valid;
+            id2ex_jal_instr <= jal_instr & id_stage_valid;
+            id2ex_jalr_instr <= jalr_instr & id_stage_valid;
+            id2ex_ill_instr <= exc_ill_instr & id_stage_valid_raw;
+            id2ex_csr_rd <= csr_rd;
+            id2ex_csr_wr_op <= csr_wr_op;
         end
     end
 
     always @(posedge clk) begin
         id2ex_pc <= if2id_pc;
-        id2ex_reg_waddr <= dec_reg_waddr;
-        id2ex_op1_data <= dec_reg_rs1_data;
-        id2ex_op2_data <= dec_reg_rs2_data;
-        id2ex_imm_value <= dec_imm_value;
-        id2ex_alu_op <= dec_alu_op;
-        id2ex_sel_imm <= dec_sel_imm;
-        id2ex_op1_sel_pc <= dec_op1_sel_pc;
-        id2ex_op1_sel_zero <= dec_op1_sel_zero;
-        id2ex_op2_sel_4 <= dec_op2_sel_4;
-        id2ex_branch_op <= dec_branch_op;
+        id2ex_isntruction <= if2id_instruction;
+        id2ex_reg_waddr <= reg_waddr;
+        id2ex_op1_data <= reg_rs1_data;
+        id2ex_op2_data <= reg_rs2_data;
+        id2ex_imm_value <= imm_value;
+        id2ex_alu_op <= alu_op;
+        id2ex_sel_imm <= sel_imm;
+        id2ex_op1_sel_pc <= op1_sel_pc;
+        id2ex_op1_sel_zero <= op1_sel_zero;
+        id2ex_op2_sel_4 <= op2_sel_4;
+        id2ex_mem_op <= mem_op;
+        id2ex_branch_op <= branch_op;
         id2ex_op1_forward_from_mem <= op1_forward_from_mem;
         id2ex_op1_forward_from_wb <= op1_forward_from_wb;
         id2ex_op2_forward_from_mem <= op2_forward_from_mem;
         id2ex_op2_forward_from_wb <= op2_forward_from_wb;
-        id2ex_sel_csr <= dec_sel_csr;
-        id2ex_csr_addr <= dec_csr_addr;
+        id2ex_sel_csr <= sel_csr;
+        id2ex_csr_addr <= csr_addr;
     end
 
     assign id_stage_valid_raw = if2id_valid & ~id_flush;
-    assign id_stage_valid = id_stage_valid_raw & ~dec_exc_ill_instr;
+    assign id_stage_valid = id_stage_valid_raw & ~exc_ill_instr;
 
     //////////////////////////////
     // Forward check
     //////////////////////////////
-    assign op1_forward_from_mem = (dec_reg_rs1_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs1_rd & (dec_reg_rs1_addr != 0);
-    assign op1_forward_from_wb  = (dec_reg_rs1_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs1_rd & (dec_reg_rs1_addr != 0);
-    assign op2_forward_from_mem = (dec_reg_rs2_addr == id2ex_reg_waddr) & id2ex_reg_wen & dec_reg_rs2_rd & (dec_reg_rs2_addr != 0);
-    assign op2_forward_from_wb  = (dec_reg_rs2_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & dec_reg_rs2_rd & (dec_reg_rs2_addr != 0);
+    assign op1_forward_from_mem = (reg_rs1_addr == id2ex_reg_waddr) & id2ex_reg_wen & reg_rs1_rd & (reg_rs1_addr != 0);
+    assign op1_forward_from_wb  = (reg_rs1_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & reg_rs1_rd & (reg_rs1_addr != 0);
+    assign op2_forward_from_mem = (reg_rs2_addr == id2ex_reg_waddr) & id2ex_reg_wen & reg_rs2_rd & (reg_rs2_addr != 0);
+    assign op2_forward_from_wb  = (reg_rs2_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & reg_rs2_rd & (reg_rs2_addr != 0);
 
     //////////////////////////////
     // Load Dependence check
     //////////////////////////////
-    assign load_dependence = lsu_mem_rd & id2ex_reg_wen &
-                             ((dec_reg_rs1_addr == id2ex_reg_waddr) & dec_reg_rs1_rd  |
-                              (dec_reg_rs2_addr == id2ex_reg_waddr) & dec_reg_rs2_rd);
+    assign load_dependence = id2ex_mem_rd & id2ex_reg_wen &
+                             ((reg_rs1_addr == id2ex_reg_waddr) & reg_rs1_rd  |
+                              (reg_rs2_addr == id2ex_reg_waddr) & reg_rs2_rd);
 
     //////////////////////////////
     // Module instantiation
@@ -196,59 +192,59 @@ module ID (
     /* regfile AUTO_TEMPLATE (
         .clk        (clk),
         .rst        (rst),
-        .wen        (reg_wen),
-        .waddr      (reg_waddr),
-        .din        (reg_wdata),
-        .addr_rs1   (dec_reg_rs1_addr),
-        .dout_rs1   (dec_reg_rs1_data),
-        .addr_rs2   (dec_reg_rs2_addr),
-        .dout_rs2   (dec_reg_rs2_data),
+        .wen        (wb_reg_wen),
+        .waddr      (wb_reg_waddr),
+        .din        (wb_reg_wdata),
+        .addr_rs1   (reg_rs1_addr[`RF_RANGE]),
+        .dout_rs1   (reg_rs1_data[`DATA_RANGE]),
+        .addr_rs2   (reg_rs2_addr[`RF_RANGE]),
+        .dout_rs2   (reg_rs2_data[`DATA_RANGE]),
         ); */
     regfile
     regfile (/*AUTOINST*/
              // Outputs
-             .dout_rs1                  (dec_reg_rs1_data),      // Templated
-             .dout_rs2                  (dec_reg_rs2_data),      // Templated
+             .dout_rs1                  (reg_rs1_data[`DATA_RANGE]), // Templated
+             .dout_rs2                  (reg_rs2_data[`DATA_RANGE]), // Templated
              // Inputs
              .clk                       (clk),                   // Templated
              .rst                       (rst),                   // Templated
-             .wen                       (reg_wen),               // Templated
-             .waddr                     (reg_waddr),             // Templated
-             .din                       (reg_wdata),             // Templated
-             .addr_rs1                  (dec_reg_rs1_addr),      // Templated
-             .addr_rs2                  (dec_reg_rs2_addr));      // Templated
+             .wen                       (wb_reg_wen),            // Templated
+             .waddr                     (wb_reg_waddr),          // Templated
+             .din                       (wb_reg_wdata),          // Templated
+             .addr_rs1                  (reg_rs1_addr[`RF_RANGE]), // Templated
+             .addr_rs2                  (reg_rs2_addr[`RF_RANGE])); // Templated
 
     // decoder
     /* decoder AUTO_TEMPLATE (
         .instruction     (if2id_instruction),
-        .\(.*\)          (dec_\1),
         ); */
     decoder
     decoder (/*AUTOINST*/
              // Outputs
-             .reg_wen                   (dec_reg_wen),           // Templated
-             .reg_waddr                 (dec_reg_waddr),         // Templated
-             .reg_rs1_addr              (dec_reg_rs1_addr),      // Templated
-             .reg_rs2_addr              (dec_reg_rs2_addr),      // Templated
-             .reg_rs1_rd                (dec_reg_rs1_rd),        // Templated
-             .reg_rs2_rd                (dec_reg_rs2_rd),        // Templated
-             .br_instr                  (dec_br_instr),          // Templated
-             .jal_instr                 (dec_jal_instr),         // Templated
-             .jalr_instr                (dec_jalr_instr),        // Templated
-             .op1_sel_zero              (dec_op1_sel_zero),      // Templated
-             .op1_sel_pc                (dec_op1_sel_pc),        // Templated
-             .op2_sel_4                 (dec_op2_sel_4),         // Templated
-             .sel_imm                   (dec_sel_imm),           // Templated
-             .csr_rd                    (dec_csr_rd),            // Templated
-             .csr_wr_op                 (dec_csr_wr_op),         // Templated
-             .csr_addr                  (dec_csr_addr),          // Templated
-             .sel_csr                   (dec_sel_csr),           // Templated
-             .imm_value                 (dec_imm_value),         // Templated
-             .alu_op                    (dec_alu_op),            // Templated
-             .branch_op                 (dec_branch_op),         // Templated
-             .mem_rd_op                 (dec_mem_rd_op),         // Templated
-             .mem_wr_op                 (dec_mem_wr_op),         // Templated
-             .exc_ill_instr             (dec_exc_ill_instr),     // Templated
+             .reg_wen                   (reg_wen),
+             .reg_waddr                 (reg_waddr[`RF_RANGE]),
+             .reg_rs1_addr              (reg_rs1_addr[`RF_RANGE]),
+             .reg_rs2_addr              (reg_rs2_addr[`RF_RANGE]),
+             .reg_rs1_rd                (reg_rs1_rd),
+             .reg_rs2_rd                (reg_rs2_rd),
+             .br_instr                  (br_instr),
+             .jal_instr                 (jal_instr),
+             .jalr_instr                (jalr_instr),
+             .op1_sel_zero              (op1_sel_zero),
+             .op1_sel_pc                (op1_sel_pc),
+             .op2_sel_4                 (op2_sel_4),
+             .sel_imm                   (sel_imm),
+             .csr_rd                    (csr_rd),
+             .csr_wr_op                 (csr_wr_op[`CORE_CSR_OP_RANGE]),
+             .csr_addr                  (csr_addr[`CORE_CSR_ADDR_RANGE]),
+             .sel_csr                   (sel_csr),
+             .imm_value                 (imm_value[`DATA_RANGE]),
+             .alu_op                    (alu_op[`CORE_ALU_OP_RANGE]),
+             .branch_op                 (branch_op[`CORE_BRANCH_OP_RANGE]),
+             .mem_rd                    (mem_rd),
+             .mem_wr                    (mem_wr),
+             .mem_op                    (mem_op[`CORE_MEM_OP_RANGE]),
+             .exc_ill_instr             (exc_ill_instr),
              // Inputs
              .instruction               (if2id_instruction));     // Templated
 

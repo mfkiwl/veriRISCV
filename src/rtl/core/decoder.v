@@ -49,8 +49,10 @@ module decoder (
     output reg [`DATA_RANGE]            imm_value,
     output reg [`CORE_ALU_OP_RANGE]     alu_op,
     output reg [`CORE_BRANCH_OP_RANGE]  branch_op,
-    output reg [`CORE_MEM_RD_OP_RANGE]  mem_rd_op,
-    output reg [`CORE_MEM_WR_OP_RANGE]  mem_wr_op,
+    output reg                          mem_rd,
+    output reg                          mem_wr,
+    output reg [`CORE_MEM_OP_RANGE]     mem_op,
+
 
     // exception
     output reg                          exc_ill_instr   // Illegal instruction
@@ -91,8 +93,9 @@ module decoder (
         reg_rs1_rd = 1'b0;
         reg_rs2_rd = 1'b0;
         sel_imm = 1'b0;
-        mem_rd_op = `CORE_MEM_NO_RD;
-        mem_wr_op = `CORE_MEM_NO_WR;
+        mem_rd = 1'b0;
+        mem_wr = 1'b0;
+        mem_op = func3;
         branch_op = func3;
         csr_rd = 1'b0;
         br_instr = 1'b0;
@@ -130,7 +133,7 @@ module decoder (
                 reg_wen = 1'b1;
                 sel_imm = 1'b1;
                 alu_op = `CORE_ALU_ADD;
-                mem_rd_op = func3;
+                mem_rd = 1'b1;
                 if (func3[2:1] == 2'b11) exc_ill_instr = 1'b1;
             end
             `DEC_TYPE_STORE: begin  // Store instruction
@@ -138,7 +141,7 @@ module decoder (
                 reg_rs2_rd = 1'b1;
                 sel_imm = 1'b1;
                 alu_op = `CORE_ALU_ADD;
-                mem_wr_op = func3[1:0];
+                mem_wr = 1'b1;
                 if (func3[2] == 1'b1 || func3 == 3'b011) exc_ill_instr = 1'b1;
             end
             `DEC_TYPE_BRAHCN: begin // Branch instruction

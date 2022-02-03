@@ -22,6 +22,8 @@ module WB (
     input                           clk,
     input                           rst,
     // input from MEM/WB stage pipe
+    input [`PC_RANGE]               mem2wb_pc,
+    input [`DATA_RANGE]             mem2wb_isntruction,
     input                           mem2wb_reg_wen,
     input [`RF_RANGE]               mem2wb_reg_waddr,
     input [`DATA_RANGE]             mem2wb_reg_wdata,
@@ -31,6 +33,7 @@ module WB (
     input [`CORE_CSR_ADDR_RANGE]    mem2wb_csr_addr,
     input                           mem2wb_sel_csr,
     input                           mem2wb_ill_instr,
+    input                           mem2wb_exc_instr_addr_misaligned,
     // to register file
     output                          wb_reg_wen,
     output [`RF_RANGE]              wb_reg_waddr,
@@ -47,6 +50,15 @@ module WB (
     /*AUTOREG*/
 
     wire [`DATA_RANGE]  csr_rdata;
+
+    wire [`DATA_RANGE]  mcause_o;
+    wire [`DATA_RANGE]  mepc_o;
+    wire                mstatus_mie_o;
+    wire                mstatus_mpie_o;
+    wire [1:0]          mstatus_mpp_o;
+    wire [`DATA_RANGE]  mtval_o;
+    wire [`PC_RANGE]    target_pc;
+    wire                take_trap;
 
     //////////////////////////////
 
@@ -81,5 +93,12 @@ module WB (
          .csr_addr                      (mem2wb_csr_addr[`CORE_CSR_ADDR_RANGE]), // Templated
          .csr_wdata                     (mem2wb_csr_wdata[`DATA_RANGE])); // Templated
 
+    // trap_ctrl
+    /* trap_ctrl AUTO_TEMPLATE (
+         .pc                        (mem2wb_pc),
+         .fault_instruction         (mem2wb_isntruction),
+        ); */
+    //trap_ctrl
+    //trap_ctrl(/*AUTOINST*/);
 
 endmodule

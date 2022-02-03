@@ -31,7 +31,7 @@ module bu (
     input [`PC_RANGE]               pc,
     output [`PC_RANGE]              target_pc,
     output                          take_branch,
-    output                          exc_addr_misaligned
+    output                          exc_instr_addr_misaligned
 );
 
     wire    beq;
@@ -80,6 +80,6 @@ module bu (
     ////////////////////////////
     // Exception
     ////////////////////////////
-    assign exc_addr_misaligned = take_branch & (target_pc[1] != 0);  // address should be 4 byte aligned, target_pc[0] is already 0
+    assign exc_instr_addr_misaligned = take_branch & (target_pc[1] != 0);  // address should be 4 byte aligned, target_pc[0] is already 0
 
 endmodule
