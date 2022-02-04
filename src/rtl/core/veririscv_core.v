@@ -25,18 +25,17 @@ module veririscv_core (
     input   rstn,
     `endif
     // AHBLite Interface to Instruction RAM
-    output                  ibus_hwrite,
-    output [2:0]            ibus_hsize,
-    output [2:0]            ibus_hburst,
-    output [3:0]            ibus_hport,
-    output [1:0]            ibus_htrans,
-    output                  ibus_hmastlock,
+    output                          ibus_hwrite,
+    output [2:0]                    ibus_hsize,
+    output [2:0]                    ibus_hburst,
+    output [3:0]                    ibus_hport,
+    output [1:0]                    ibus_htrans,
+    output                          ibus_hmastlock,
     output [`INSTR_RAM_ADDR_RANGE]  ibus_haddr,
-    output [`DATA_RANGE]    ibus_hwdata,
-    input                   ibus_hready,
-    input                   ibus_hresp,
-    input  [`DATA_RANGE]    ibus_hrdata,
-
+    output [`DATA_RANGE]            ibus_hwdata,
+    input                           ibus_hready,
+    input                           ibus_hresp,
+    input  [`DATA_RANGE]            ibus_hrdata,
     // AHBLite Interface to memory/data bus
     output                          dbus_hwrite,
     output [2:0]                    dbus_hsize,
@@ -48,7 +47,12 @@ module veririscv_core (
     output [`DATA_RANGE]            dbus_hwdata,
     input                           dbus_hready,
     input                           dbus_hresp,
-    input  [`DATA_RANGE]            dbus_hrdata
+    input  [`DATA_RANGE]            dbus_hrdata,
+    // Interrupt
+    input                           software_interrupt,
+    input                           timer_interrupt,
+    input                           external_interrupt,
+    input                           debug_interrupt
 );
 
     /////////////////////////////////
@@ -64,27 +68,28 @@ module veririscv_core (
     wire                ex2mem_csr_rd;          // From EX of EX.v
     wire [`DATA_RANGE]  ex2mem_csr_wdata;       // From EX of EX.v
     wire [`CORE_CSR_OP_RANGE] ex2mem_csr_wr_op; // From EX of EX.v
+    wire                ex2mem_exc_ill_instr;   // From EX of EX.v
     wire                ex2mem_exc_instr_addr_misaligned;// From EX of EX.v
-    wire                ex2mem_ill_instr;       // From EX of EX.v
-    wire [`DATA_RANGE]  ex2mem_isntruction;     // From EX of EX.v
+    wire [`DATA_RANGE]  ex2mem_instruction;     // From EX of EX.v
+    wire                ex2mem_mret;            // From EX of EX.v
     wire [`PC_RANGE]    ex2mem_pc;              // From EX of EX.v
     wire [`RF_RANGE]    ex2mem_reg_waddr;       // From EX of EX.v
     wire                ex2mem_reg_wen;         // From EX of EX.v
-    wire                ex2mem_sel_csr;         // From EX of EX.v
     wire [`CORE_ALU_OP_RANGE] id2ex_alu_op;     // From ID of ID.v
     wire                id2ex_br_instr;         // From ID of ID.v
     wire [`CORE_BRANCH_OP_RANGE] id2ex_branch_op;// From ID of ID.v
     wire [`CORE_CSR_ADDR_RANGE] id2ex_csr_addr; // From ID of ID.v
     wire                id2ex_csr_rd;           // From ID of ID.v
     wire [`CORE_CSR_OP_RANGE] id2ex_csr_wr_op;  // From ID of ID.v
-    wire                id2ex_ill_instr;        // From ID of ID.v
+    wire                id2ex_exc_ill_instr;    // From ID of ID.v
     wire [`DATA_RANGE]  id2ex_imm_value;        // From ID of ID.v
-    wire [`DATA_RANGE]  id2ex_isntruction;      // From ID of ID.v
+    wire [`DATA_RANGE]  id2ex_instruction;      // From ID of ID.v
     wire                id2ex_jal_instr;        // From ID of ID.v
     wire                id2ex_jalr_instr;       // From ID of ID.v
     wire [`CORE_MEM_OP_RANGE] id2ex_mem_op;     // From ID of ID.v
     wire                id2ex_mem_rd;           // From ID of ID.v
     wire                id2ex_mem_wr;           // From ID of ID.v
+    wire                id2ex_mret;             // From ID of ID.v
     wire [`DATA_RANGE]  id2ex_op1_data;         // From ID of ID.v
     wire                id2ex_op1_forward_from_mem;// From ID of ID.v
     wire                id2ex_op1_forward_from_wb;// From ID of ID.v
@@ -97,7 +102,6 @@ module veririscv_core (
     wire [`PC_RANGE]    id2ex_pc;               // From ID of ID.v
     wire [`RF_RANGE]    id2ex_reg_waddr;        // From ID of ID.v
     wire                id2ex_reg_wen;          // From ID of ID.v
-    wire                id2ex_sel_csr;          // From ID of ID.v
     wire                id2ex_sel_imm;          // From ID of ID.v
     wire                id_flush;               // From hdu of hdu.v
     wire [`DATA_RANGE]  if2id_instruction;      // From IF of IF.v
@@ -111,18 +115,21 @@ module veririscv_core (
     wire                lsu_mem_rd;             // From EX of EX.v
     wire                lsu_mem_wr;             // From EX of EX.v
     wire [`DATA_RANGE]  lsu_wdata;              // From EX of EX.v
-    wire [`CORE_CSR_ADDR_RANGE] mem2wb_csr_addr;// From MEW of MEM.v
-    wire                mem2wb_csr_rd;          // From MEW of MEM.v
-    wire [`DATA_RANGE]  mem2wb_csr_wdata;       // From MEW of MEM.v
-    wire [`CORE_CSR_OP_RANGE] mem2wb_csr_wr_op; // From MEW of MEM.v
-    wire                mem2wb_exc_instr_addr_misaligned;// From MEW of MEM.v
-    wire                mem2wb_ill_instr;       // From MEW of MEM.v
-    wire [`DATA_RANGE]  mem2wb_isntruction;     // From MEW of MEM.v
-    wire [`PC_RANGE]    mem2wb_pc;              // From MEW of MEM.v
-    wire [`RF_RANGE]    mem2wb_reg_waddr;       // From MEW of MEM.v
-    wire [`DATA_RANGE]  mem2wb_reg_wdata;       // From MEW of MEM.v
-    wire                mem2wb_reg_wen;         // From MEW of MEM.v
-    wire                mem2wb_sel_csr;         // From MEW of MEM.v
+    wire [`CORE_CSR_ADDR_RANGE] mem2wb_csr_addr;// From MEM of MEM.v
+    wire                mem2wb_csr_rd;          // From MEM of MEM.v
+    wire [`DATA_RANGE]  mem2wb_csr_wdata;       // From MEM of MEM.v
+    wire [`CORE_CSR_OP_RANGE] mem2wb_csr_wr_op; // From MEM of MEM.v
+    wire                mem2wb_exc_ill_instr;   // From MEM of MEM.v
+    wire                mem2wb_exc_instr_addr_misaligned;// From MEM of MEM.v
+    wire                mem2wb_exc_load_addr_misaligned;// From MEM of MEM.v
+    wire                mem2wb_exc_store_addr_misaligned;// From MEM of MEM.v
+    wire [`DATA_RANGE]  mem2wb_instruction;     // From MEM of MEM.v
+    wire [`DATA_RANGE]  mem2wb_lsu_addr;        // From MEM of MEM.v
+    wire                mem2wb_mret;            // From MEM of MEM.v
+    wire [`PC_RANGE]    mem2wb_pc;              // From MEM of MEM.v
+    wire [`RF_RANGE]    mem2wb_reg_waddr;       // From MEM of MEM.v
+    wire [`DATA_RANGE]  mem2wb_reg_wdata;       // From MEM of MEM.v
+    wire                mem2wb_reg_wen;         // From MEM of MEM.v
     wire                take_branch;            // From EX of EX.v
     wire [`PC_RANGE]    target_pc;              // From EX of EX.v
     wire [`RF_RANGE]    wb_reg_waddr;           // From WB of WB.v
@@ -174,7 +181,7 @@ module veririscv_core (
         // Outputs
         .load_dependence                (load_dependence),
         .id2ex_pc                       (id2ex_pc[`PC_RANGE]),
-        .id2ex_isntruction              (id2ex_isntruction[`DATA_RANGE]),
+        .id2ex_instruction              (id2ex_instruction[`DATA_RANGE]),
         .id2ex_br_instr                 (id2ex_br_instr),
         .id2ex_jal_instr                (id2ex_jal_instr),
         .id2ex_jalr_instr               (id2ex_jalr_instr),
@@ -187,7 +194,6 @@ module veririscv_core (
         .id2ex_op2_forward_from_mem     (id2ex_op2_forward_from_mem),
         .id2ex_op2_forward_from_wb      (id2ex_op2_forward_from_wb),
         .id2ex_csr_rd                   (id2ex_csr_rd),
-        .id2ex_sel_csr                  (id2ex_sel_csr),
         .id2ex_csr_wr_op                (id2ex_csr_wr_op[`CORE_CSR_OP_RANGE]),
         .id2ex_csr_addr                 (id2ex_csr_addr[`CORE_CSR_ADDR_RANGE]),
         .id2ex_reg_wen                  (id2ex_reg_wen),
@@ -200,7 +206,8 @@ module veririscv_core (
         .id2ex_mem_wr                   (id2ex_mem_wr),
         .id2ex_mem_op                   (id2ex_mem_op[`CORE_MEM_OP_RANGE]),
         .id2ex_branch_op                (id2ex_branch_op[`CORE_BRANCH_OP_RANGE]),
-        .id2ex_ill_instr                (id2ex_ill_instr),
+        .id2ex_mret                     (id2ex_mret),
+        .id2ex_exc_ill_instr            (id2ex_exc_ill_instr),
         // Inputs
         .clk                            (clk),
         .rst                            (rst),
@@ -232,22 +239,22 @@ module veririscv_core (
         .target_pc                      (target_pc[`PC_RANGE]),
         .take_branch                    (take_branch),
         .ex2mem_pc                      (ex2mem_pc[`PC_RANGE]),
-        .ex2mem_isntruction             (ex2mem_isntruction[`DATA_RANGE]),
+        .ex2mem_instruction             (ex2mem_instruction[`DATA_RANGE]),
         .ex2mem_csr_rd                  (ex2mem_csr_rd),
         .ex2mem_csr_wr_op               (ex2mem_csr_wr_op[`CORE_CSR_OP_RANGE]),
         .ex2mem_csr_wdata               (ex2mem_csr_wdata[`DATA_RANGE]),
         .ex2mem_csr_addr                (ex2mem_csr_addr[`CORE_CSR_ADDR_RANGE]),
-        .ex2mem_sel_csr                 (ex2mem_sel_csr),
         .ex2mem_reg_wen                 (ex2mem_reg_wen),
         .ex2mem_reg_waddr               (ex2mem_reg_waddr[`RF_RANGE]),
         .ex2mem_alu_out                 (ex2mem_alu_out[`DATA_RANGE]),
-        .ex2mem_ill_instr               (ex2mem_ill_instr),
+        .ex2mem_mret                    (ex2mem_mret),
+        .ex2mem_exc_ill_instr           (ex2mem_exc_ill_instr),
         .ex2mem_exc_instr_addr_misaligned(ex2mem_exc_instr_addr_misaligned),
         // Inputs
         .clk                            (clk),
         .rst                            (rst),
         .id2ex_pc                       (id2ex_pc[`PC_RANGE]),
-        .id2ex_isntruction              (id2ex_isntruction[`DATA_RANGE]),
+        .id2ex_instruction              (id2ex_instruction[`DATA_RANGE]),
         .id2ex_reg_wen                  (id2ex_reg_wen),
         .id2ex_reg_waddr                (id2ex_reg_waddr[`RF_RANGE]),
         .id2ex_op1_data                 (id2ex_op1_data[`DATA_RANGE]),
@@ -270,10 +277,10 @@ module veririscv_core (
         .id2ex_op2_forward_from_mem     (id2ex_op2_forward_from_mem),
         .id2ex_op2_forward_from_wb      (id2ex_op2_forward_from_wb),
         .id2ex_csr_rd                   (id2ex_csr_rd),
-        .id2ex_sel_csr                  (id2ex_sel_csr),
         .id2ex_csr_wr_op                (id2ex_csr_wr_op[`CORE_CSR_OP_RANGE]),
         .id2ex_csr_addr                 (id2ex_csr_addr[`CORE_CSR_ADDR_RANGE]),
-        .id2ex_ill_instr                (id2ex_ill_instr),
+        .id2ex_mret                     (id2ex_mret),
+        .id2ex_exc_ill_instr            (id2ex_exc_ill_instr),
         .wb_reg_wdata                   (wb_reg_wdata[`DATA_RANGE]));
 
     /////////////////////////////////
@@ -292,7 +299,7 @@ module veririscv_core (
          .dbus_haddr                    (dbus_haddr[`INSTR_RAM_ADDR_RANGE]),
          .dbus_hwdata                   (dbus_hwdata[`DATA_RANGE]),
          .mem2wb_pc                     (mem2wb_pc[`PC_RANGE]),
-         .mem2wb_isntruction            (mem2wb_isntruction[`DATA_RANGE]),
+         .mem2wb_instruction            (mem2wb_instruction[`DATA_RANGE]),
          .mem2wb_reg_wen                (mem2wb_reg_wen),
          .mem2wb_reg_waddr              (mem2wb_reg_waddr[`RF_RANGE]),
          .mem2wb_reg_wdata              (mem2wb_reg_wdata[`DATA_RANGE]),
@@ -300,14 +307,17 @@ module veririscv_core (
          .mem2wb_csr_wr_op              (mem2wb_csr_wr_op[`CORE_CSR_OP_RANGE]),
          .mem2wb_csr_wdata              (mem2wb_csr_wdata[`DATA_RANGE]),
          .mem2wb_csr_addr               (mem2wb_csr_addr[`CORE_CSR_ADDR_RANGE]),
-         .mem2wb_sel_csr                (mem2wb_sel_csr),
-         .mem2wb_ill_instr              (mem2wb_ill_instr),
+         .mem2wb_lsu_addr               (mem2wb_lsu_addr[`DATA_RANGE]),
+         .mem2wb_mret                   (mem2wb_mret),
+         .mem2wb_exc_ill_instr          (mem2wb_exc_ill_instr),
          .mem2wb_exc_instr_addr_misaligned(mem2wb_exc_instr_addr_misaligned),
+         .mem2wb_exc_load_addr_misaligned(mem2wb_exc_load_addr_misaligned),
+         .mem2wb_exc_store_addr_misaligned(mem2wb_exc_store_addr_misaligned),
          // Inputs
          .clk                           (clk),
          .rst                           (rst),
          .ex2mem_pc                     (ex2mem_pc[`PC_RANGE]),
-         .ex2mem_isntruction            (ex2mem_isntruction[`DATA_RANGE]),
+         .ex2mem_instruction            (ex2mem_instruction[`DATA_RANGE]),
          .ex2mem_reg_wen                (ex2mem_reg_wen),
          .ex2mem_reg_waddr              (ex2mem_reg_waddr[`RF_RANGE]),
          .ex2mem_alu_out                (ex2mem_alu_out[`DATA_RANGE]),
@@ -315,8 +325,8 @@ module veririscv_core (
          .ex2mem_csr_wr_op              (ex2mem_csr_wr_op[`CORE_CSR_OP_RANGE]),
          .ex2mem_csr_wdata              (ex2mem_csr_wdata[`DATA_RANGE]),
          .ex2mem_csr_addr               (ex2mem_csr_addr[`CORE_CSR_ADDR_RANGE]),
-         .ex2mem_sel_csr                (ex2mem_sel_csr),
-         .ex2mem_ill_instr              (ex2mem_ill_instr),
+         .ex2mem_mret                   (ex2mem_mret),
+         .ex2mem_exc_ill_instr          (ex2mem_exc_ill_instr),
          .ex2mem_exc_instr_addr_misaligned(ex2mem_exc_instr_addr_misaligned),
          .lsu_mem_rd                    (lsu_mem_rd),
          .lsu_mem_wr                    (lsu_mem_wr),
@@ -340,8 +350,13 @@ module veririscv_core (
         // Inputs
         .clk                            (clk),
         .rst                            (rst),
+        .software_interrupt             (software_interrupt),
+        .timer_interrupt                (timer_interrupt),
+        .external_interrupt             (external_interrupt),
+        .debug_interrupt                (debug_interrupt),
         .mem2wb_pc                      (mem2wb_pc[`PC_RANGE]),
-        .mem2wb_isntruction             (mem2wb_isntruction[`DATA_RANGE]),
+        .mem2wb_instruction             (mem2wb_instruction[`DATA_RANGE]),
+        .mem2wb_mret                    (mem2wb_mret),
         .mem2wb_reg_wen                 (mem2wb_reg_wen),
         .mem2wb_reg_waddr               (mem2wb_reg_waddr[`RF_RANGE]),
         .mem2wb_reg_wdata               (mem2wb_reg_wdata[`DATA_RANGE]),
@@ -349,9 +364,11 @@ module veririscv_core (
         .mem2wb_csr_wr_op               (mem2wb_csr_wr_op[`CORE_CSR_OP_RANGE]),
         .mem2wb_csr_wdata               (mem2wb_csr_wdata[`DATA_RANGE]),
         .mem2wb_csr_addr                (mem2wb_csr_addr[`CORE_CSR_ADDR_RANGE]),
-        .mem2wb_sel_csr                 (mem2wb_sel_csr),
-        .mem2wb_ill_instr               (mem2wb_ill_instr),
-        .mem2wb_exc_instr_addr_misaligned(mem2wb_exc_instr_addr_misaligned));
+        .mem2wb_lsu_addr                (mem2wb_lsu_addr[`DATA_RANGE]),
+        .mem2wb_exc_ill_instr           (mem2wb_exc_ill_instr),
+        .mem2wb_exc_instr_addr_misaligned(mem2wb_exc_instr_addr_misaligned),
+        .mem2wb_exc_load_addr_misaligned(mem2wb_exc_load_addr_misaligned),
+        .mem2wb_exc_store_addr_misaligned(mem2wb_exc_store_addr_misaligned));
 
 
     /////////////////////////////////
@@ -366,7 +383,10 @@ module veririscv_core (
          .if2id_stall                   (if2id_stall),
          // Inputs
          .take_branch                   (take_branch),
-         .load_dependence               (load_dependence));
+         .load_dependence               (load_dependence),
+         .id2ex_csr_rd                  (id2ex_csr_rd),
+         .ex2mem_csr_rd                 (ex2mem_csr_rd),
+         .mem2wb_csr_rd                 (mem2wb_csr_rd));
 
     /////////////////////////////////
     // Simulation Related

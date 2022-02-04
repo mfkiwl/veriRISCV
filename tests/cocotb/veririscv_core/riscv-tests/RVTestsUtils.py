@@ -55,7 +55,7 @@ def checkRegResult(dut):
     failed = (reg1 == 0xf and reg2 == 0xf and reg3 == 0xf)
     completed = passed or failed
     if failed:
-        raise TestFailure("Test failed. Register value does not match")
+        raise Exception("Test failed.")
     return completed, passed
 
 async def test(dut, ram_file, timeout=10):
@@ -94,7 +94,7 @@ async def test(dut, ram_file, timeout=10):
         if completed:
             break
     if not passed:
-        raise TestFailure("Test timeout")
+        raise Exception("Test timeout")
 
 async def testVerilog(dut, name, timeout=10):
     REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')

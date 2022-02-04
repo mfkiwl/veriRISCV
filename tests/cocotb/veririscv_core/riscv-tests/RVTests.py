@@ -7,7 +7,7 @@
 ## Module Name: RVTests.py
 ##
 ## Author: Heqing Huang
-## Date Created: 2022-01-27
+## Date Created: 2022-02-03
 ##
 ## ================== Description ==================
 ##
@@ -132,4 +132,12 @@ async def OR(dut):
 @cocotb.test()
 async def AND(dut):
     await testVerilog(dut, 'rv32ui-p-and')
+
+@cocotb.test()
+async def MCSR(dut):
+    await testVerilog(dut, 'rv32mi-p-mcsr')
+
+@cocotb.test()
+async def CSR(dut):
+    await testVerilog(dut, 'rv32mi-p-csr')
 

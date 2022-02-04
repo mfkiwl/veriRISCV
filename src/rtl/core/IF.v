@@ -56,6 +56,9 @@ module IF (
     reg  [`DATA_RANGE]  prev_instr;
     reg                 use_prev_instr;
 
+    reg                 if2id_stall_s1;
+    wire                if2id_stall_first_cycle;
+
     //////////////////////////////
 
     // AHBlite interface
@@ -98,9 +101,16 @@ module IF (
     //////////////////////////////
     // logic
     //////////////////////////////
+    always @(posedge clk) begin
+        if (rst) if2id_stall_s1 <= 1'b0;
+        else if2id_stall_s1 <= if2id_stall;
+    end
+
+    assign if2id_stall_first_cycle = if2id_stall & ~if2id_stall_s1;
+
     // store the current instruction if stall
     always @(posedge clk) begin
-        if (if2id_stall) begin
+        if (if2id_stall_first_cycle) begin
             prev_instr <= ibus_hrdata;
         end
     end
@@ -126,6 +136,7 @@ module IF (
        // Inputs
        .clk                             (clk),
        .rst                             (rst),
+       .if2id_stall                     (if2id_stall),
        .take_branch                     (take_branch),
        .target_pc                       (target_pc[`PC_RANGE]));
 

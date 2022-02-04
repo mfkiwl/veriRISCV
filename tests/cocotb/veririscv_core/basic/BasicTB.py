@@ -45,6 +45,11 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
         Run test the checks register file as golden result
     """
 
+    dut.software_interrupt.value = 0
+    dut.timer_interrupt.value = 0
+    dut.external_interrupt.value = 0
+    dut.debug_interrupt.value = 0
+
     # Instruction RAM
     instrRAM = AHBLiteRAM_1rw(32,16,ram_file)
     instrRAM.ahbPort.connect(dut.clk, dut.rstn,

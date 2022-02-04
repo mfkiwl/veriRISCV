@@ -43,8 +43,6 @@ module decoder (
     output reg                          csr_rd,         // indicating read csr
     output reg [`CORE_CSR_OP_RANGE]     csr_wr_op,
     output [`CORE_CSR_ADDR_RANGE]       csr_addr,
-    output reg                          sel_csr,        // select csr data as rd data at WB stage
-
 
     output reg [`DATA_RANGE]            imm_value,
     output reg [`CORE_ALU_OP_RANGE]     alu_op,
@@ -53,6 +51,7 @@ module decoder (
     output reg                          mem_wr,
     output reg [`CORE_MEM_OP_RANGE]     mem_op,
 
+    output reg                          mret,
 
     // exception
     output reg                          exc_ill_instr   // Illegal instruction
@@ -65,6 +64,7 @@ module decoder (
     wire [`DEC_OPCODE_RANGE] opcode;
     wire [`DEC_FUNC7_RANGE] func7;
     wire [`DEC_FUNC3_RANGE] func3;
+    wire [`DEC_SYSTEM_31_7] instr_31_7;
 
     /////////////////////////////////
 
@@ -104,7 +104,7 @@ module decoder (
         op1_sel_zero = 1'b0;
         op1_sel_pc = 1'b0;
         op2_sel_4 = 1'b0;
-        sel_csr = 1'b0;
+        mret = 1'b0;
         // LEVEL 1 - opcode
         case(opcode)
             `DEC_TYPE_LOGIC: begin  // Logic Type instruction
@@ -177,13 +177,20 @@ module decoder (
                 alu_op = `CORE_ALU_ADD;
                 reg_wen = 1'b1;
             end
-            `DEC_TYPE_CSR: begin    // CSR
-                // for CSRRW/CSRRWI, if rd=x0, then the instruction should not read the CSR
-                csr_rd = (func3[1:0] != `CORE_CSR_RW) | (reg_waddr != 0);
-                // for CSRRS, CSRRC, if rs1=x0, then the instruction should notwrite to the CSR
-                csr_wr_op = (func3[1] && (reg_rs1_addr == 0)) ? `CORE_CSR_NOP : func3[1:0];
-                sel_imm = 1'b1;
-                exc_ill_instr = (func3[1:0] == 0);
+            `DEC_TYPE_SYSTEM: begin    // SYSTEM
+                if (func3 != 3'b000) begin   // CSR
+                    // for CSRRW/CSRRWI, if rd=x0, then the instruction should not read the CSR
+                    csr_rd = (func3[1:0] != `CORE_CSR_RW) | (reg_waddr != 0);
+                    // for CSRRS, CSRRC, if rs1=x0, then the instruction should notwrite to the CSR
+                    csr_wr_op = (func3[1] && (reg_rs1_addr == 0)) ? `CORE_CSR_NOP : func3[1:0];
+                    reg_wen = csr_rd;
+                    reg_rs1_rd = ~func3[2];
+                    sel_imm = func3[2];
+                end
+                else begin  // other
+                    if (instr_31_7 == `DEC_SYSTEM_MRET) mret = 1'b1;    // MRET
+                    else exc_ill_instr = 1'b1;
+                end
             end
         default: exc_ill_instr = 1'b1;
         endcase

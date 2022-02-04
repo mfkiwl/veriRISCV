@@ -13,6 +13,7 @@ RTL_FILES += $(CORE_PATH)/bu.v
 RTL_FILES += $(CORE_PATH)/hdu.v
 RTL_FILES += $(CORE_PATH)/csr.v
 RTL_FILES += $(CORE_PATH)/mcsr.v
+RTL_FILES += $(CORE_PATH)/trap_ctrl.v
 RTL_FILES += $(CORE_PATH)/veririscv_core.v
 # Include path
 COMPILE_ARGS = -I$(CORE_PATH)

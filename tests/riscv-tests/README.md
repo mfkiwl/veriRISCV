@@ -31,6 +31,6 @@ This section lists all the modification I made on the original riscv-tests repo.
 - Rewrite the riscv_test.h file.
   - The original files is running with privilege mode and including many instructions that my CPU does not support right now so the code is largely rewritten base on the original framework
   - Removed all the un-used macros.
-  - Rewrite the `RVTEST_CODE_BEGIN` macro: Removed most of the isntruction and only include register initialization
+  - Rewrite the `RVTEST_CODE_BEGIN` macro: Removed most of the instruction and only include register initialization
   - Rewrite the `RVTEST_PASS` and `RVTEST_FAIL` macro: When test passes, it will write 1, 2, 3 to register x1, x2, x3 respectively. When test fails, it will write 0xf, x0f, 0xf register x1, x2, x3 respectively. User can check the registe value to determine if the test passes or not
   - Rewrite the `RVTEST_DATA_BEGIN` macro: Removd most of the content there.

@@ -38,7 +38,7 @@ module ID (
     output                              load_dependence,
     // pipeline stage
     output reg [`PC_RANGE]              id2ex_pc,
-    output reg [`DATA_RANGE]            id2ex_isntruction,
+    output reg [`DATA_RANGE]            id2ex_instruction,
     output reg                          id2ex_br_instr,
     output reg                          id2ex_jal_instr,
     output reg                          id2ex_jalr_instr,
@@ -51,7 +51,6 @@ module ID (
     output reg                          id2ex_op2_forward_from_mem,
     output reg                          id2ex_op2_forward_from_wb,
     output reg                          id2ex_csr_rd,
-    output reg                          id2ex_sel_csr,
     output reg [`CORE_CSR_OP_RANGE]     id2ex_csr_wr_op,
     output reg [`CORE_CSR_ADDR_RANGE]   id2ex_csr_addr,
     output reg                          id2ex_reg_wen,
@@ -64,8 +63,9 @@ module ID (
     output reg                          id2ex_mem_wr,
     output reg [`CORE_MEM_OP_RANGE]     id2ex_mem_op,
     output reg [`CORE_BRANCH_OP_RANGE]  id2ex_branch_op,
+    output reg                          id2ex_mret,
     // exception
-    output reg                          id2ex_ill_instr
+    output reg                          id2ex_exc_ill_instr
 );
 
 
@@ -88,6 +88,7 @@ module ID (
     wire [`CORE_MEM_OP_RANGE] mem_op;           // From decoder of decoder.v
     wire                mem_rd;                 // From decoder of decoder.v
     wire                mem_wr;                 // From decoder of decoder.v
+    wire                mret;                   // From decoder of decoder.v
     wire                op1_sel_pc;             // From decoder of decoder.v
     wire                op1_sel_zero;           // From decoder of decoder.v
     wire                op2_sel_4;              // From decoder of decoder.v
@@ -99,7 +100,6 @@ module ID (
     wire                reg_rs2_rd;             // From decoder of decoder.v
     wire [`RF_RANGE]    reg_waddr;              // From decoder of decoder.v
     wire                reg_wen;                // From decoder of decoder.v
-    wire                sel_csr;                // From decoder of decoder.v
     wire                sel_imm;                // From decoder of decoder.v
     // End of automatics
 
@@ -122,7 +122,7 @@ module ID (
     always @(posedge clk) begin
         if (rst) begin
             id2ex_reg_wen  <= 1'b0;
-            id2ex_ill_instr <= 1'b0;
+            id2ex_exc_ill_instr <= 1'b0;
             id2ex_mem_rd <= 1'b0;
             id2ex_mem_wr <= 1'b0;
             id2ex_br_instr <= 1'b0;
@@ -130,6 +130,7 @@ module ID (
             id2ex_jalr_instr <= 1'b0;
             id2ex_csr_rd <= 1'b0;
             id2ex_csr_wr_op <= `CORE_CSR_NOP;
+            id2ex_mret <= 1'b0;
         end
         else begin
             id2ex_reg_wen <= reg_wen & id_stage_valid;
@@ -138,15 +139,16 @@ module ID (
             id2ex_br_instr <= br_instr & id_stage_valid;
             id2ex_jal_instr <= jal_instr & id_stage_valid;
             id2ex_jalr_instr <= jalr_instr & id_stage_valid;
-            id2ex_ill_instr <= exc_ill_instr & id_stage_valid_raw;
-            id2ex_csr_rd <= csr_rd;
-            id2ex_csr_wr_op <= csr_wr_op;
+            id2ex_mret <= mret & id_stage_valid;
+            id2ex_csr_rd <= csr_rd & id_stage_valid;
+            id2ex_csr_wr_op <= id_stage_valid ? csr_wr_op : `CORE_CSR_NOP;
+            id2ex_exc_ill_instr <= exc_ill_instr & id_stage_valid_raw;
         end
     end
 
     always @(posedge clk) begin
         id2ex_pc <= if2id_pc;
-        id2ex_isntruction <= if2id_instruction;
+        id2ex_instruction <= if2id_instruction;
         id2ex_reg_waddr <= reg_waddr;
         id2ex_op1_data <= reg_rs1_data;
         id2ex_op2_data <= reg_rs2_data;
@@ -162,7 +164,6 @@ module ID (
         id2ex_op1_forward_from_wb <= op1_forward_from_wb;
         id2ex_op2_forward_from_mem <= op2_forward_from_mem;
         id2ex_op2_forward_from_wb <= op2_forward_from_wb;
-        id2ex_sel_csr <= sel_csr;
         id2ex_csr_addr <= csr_addr;
     end
 
@@ -237,13 +238,13 @@ module ID (
              .csr_rd                    (csr_rd),
              .csr_wr_op                 (csr_wr_op[`CORE_CSR_OP_RANGE]),
              .csr_addr                  (csr_addr[`CORE_CSR_ADDR_RANGE]),
-             .sel_csr                   (sel_csr),
              .imm_value                 (imm_value[`DATA_RANGE]),
              .alu_op                    (alu_op[`CORE_ALU_OP_RANGE]),
              .branch_op                 (branch_op[`CORE_BRANCH_OP_RANGE]),
              .mem_rd                    (mem_rd),
              .mem_wr                    (mem_wr),
              .mem_op                    (mem_op[`CORE_MEM_OP_RANGE]),
+             .mret                      (mret),
              .exc_ill_instr             (exc_ill_instr),
              // Inputs
              .instruction               (if2id_instruction));     // Templated

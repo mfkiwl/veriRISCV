@@ -20,6 +20,7 @@
 module pc (
     input                   clk,
     input                   rst,
+    input                   if2id_stall,
     input                   take_branch,
     input [`PC_RANGE]       target_pc,
     output [`PC_RANGE]      pc_out
@@ -33,7 +34,7 @@ module pc (
         end
         else begin
             if (take_branch) pc_value <= target_pc;
-            else pc_value <= pc_value + 4;
+            else if (!if2id_stall) pc_value <= pc_value + 4;
         end
     end
 

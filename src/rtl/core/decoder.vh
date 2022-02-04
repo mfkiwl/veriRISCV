@@ -37,6 +37,7 @@
 `define DEC_RS2_RANGE       4:0
 `define DEC_FUNC7_RANGE     6:0
 `define DEC_CSR_ADDR_FIELD  31:20
+`define DEC_SYSTEM_31_7     31:7
 
 
 // Instruction Type
@@ -50,6 +51,7 @@
 `define DEC_TYPE_AUIPC      7'b0010111
 `define DEC_TYPE_LUI        7'b0110111
 `define DEC_TYPE_CSR        7'b1110011
+`define DEC_TYPE_SYSTEM     7'b1110011
 
 // Logic Instruction Func3
 `define DEC_LOGIC_ADD       3'b000
@@ -70,5 +72,8 @@
 `define DEC_BRANCH_BGE      3'b101
 `define DEC_BRANCH_BLTU     3'b110
 `define DEC_BRANCH_BGEU     3'b111
+
+// MRET
+`define DEC_SYSTEM_MRET     25'b0011000000100000000000000
 
 `endif

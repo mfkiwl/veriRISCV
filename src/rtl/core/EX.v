@@ -23,7 +23,7 @@ module EX (
     input                               rst,
     // input from ID/EX stage pipe
     input [`PC_RANGE]                   id2ex_pc,
-    input [`DATA_RANGE]                 id2ex_isntruction,
+    input [`DATA_RANGE]                 id2ex_instruction,
     input                               id2ex_reg_wen,
     input [`RF_RANGE]                   id2ex_reg_waddr,
     input [`DATA_RANGE]                 id2ex_op1_data,
@@ -46,10 +46,10 @@ module EX (
     input                               id2ex_op2_forward_from_mem,
     input                               id2ex_op2_forward_from_wb,
     input                               id2ex_csr_rd,
-    input                               id2ex_sel_csr,
     input [`CORE_CSR_OP_RANGE]          id2ex_csr_wr_op,
     input [`CORE_CSR_ADDR_RANGE]        id2ex_csr_addr,
-    input                               id2ex_ill_instr,
+    input                               id2ex_mret,
+    input                               id2ex_exc_ill_instr,
     // input from wb stage
     input [`DATA_RANGE]                 wb_reg_wdata,
     // interface to lsu in memory stage
@@ -63,17 +63,17 @@ module EX (
     output                              take_branch,
     // pipeline stage
     output reg [`PC_RANGE]              ex2mem_pc,
-    output reg [`DATA_RANGE]            ex2mem_isntruction,
+    output reg [`DATA_RANGE]            ex2mem_instruction,
     output reg                          ex2mem_csr_rd,
     output reg [`CORE_CSR_OP_RANGE]     ex2mem_csr_wr_op,
     output reg [`DATA_RANGE]            ex2mem_csr_wdata,
     output reg [`CORE_CSR_ADDR_RANGE]   ex2mem_csr_addr,
-    output reg                          ex2mem_sel_csr,
     output reg                          ex2mem_reg_wen,
     output reg [`RF_RANGE]              ex2mem_reg_waddr,
     output reg [`DATA_RANGE]            ex2mem_alu_out,
+    output reg                          ex2mem_mret,
     // exception
-    output reg                          ex2mem_ill_instr,
+    output reg                          ex2mem_exc_ill_instr,
     output reg                          ex2mem_exc_instr_addr_misaligned
 );
 
@@ -106,25 +106,26 @@ module EX (
             ex2mem_reg_wen <= 1'b0;
             ex2mem_csr_rd <= 1'b0;
             ex2mem_csr_wr_op <= `CORE_CSR_NOP;
-            ex2mem_ill_instr <= 1'b0;
+            ex2mem_mret <= 1'b0;
+            ex2mem_exc_ill_instr <= 1'b0;
             ex2mem_exc_instr_addr_misaligned <= 1'b0;
         end
         else begin
             ex2mem_reg_wen <= id2ex_reg_wen;
             ex2mem_csr_rd <= id2ex_csr_rd;
             ex2mem_csr_wr_op <= id2ex_csr_wr_op;
-            ex2mem_csr_addr <= id2ex_csr_addr;
-            ex2mem_ill_instr <= id2ex_ill_instr;
+            ex2mem_mret <= id2ex_mret;
+            ex2mem_exc_ill_instr <= id2ex_exc_ill_instr;
             ex2mem_exc_instr_addr_misaligned <= exc_instr_addr_misaligned;
         end
     end
 
     always @(posedge clk) begin
         ex2mem_pc <= id2ex_pc;
-        ex2mem_isntruction <= id2ex_isntruction;
+        ex2mem_instruction <= id2ex_instruction;
         ex2mem_alu_out <= alu_out;
         ex2mem_reg_waddr <= id2ex_reg_waddr;
-        ex2mem_sel_csr <= id2ex_sel_csr;
+        ex2mem_csr_addr <= id2ex_csr_addr;
         ex2mem_csr_wdata <= id2ex_sel_imm ? id2ex_imm_value : op1_forwarded;
     end
 
