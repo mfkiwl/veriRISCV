@@ -1,267 +1,154 @@
-// ---------------------------------// ---------------------------------// ---------------------------------
-//
+// ------------------------------------------------------------------------------------------------
 // Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
-//
-// ~~~ veriRISCV ~~~
-//
-// Module Name: ID
-//
 // Author: Heqing Huang
+//
 // Date Created: 01/18/2022
-//
-// ================== Description ==================
-//
-// ID (Instruction decode stage)
-//
-// ---------------------------------// ---------------------------------// ---------------------------------
+// ------------------------------------------------------------------------------------------------
+// veriRISCV
+// ------------------------------------------------------------------------------------------------
+// Decode Stage
+// ------------------------------------------------------------------------------------------------
 
-`include "veririscv_core.vh"
-`include "core.vh"
+`include "core.svh"
 
 module ID (
     input                               clk,
     input                               rst,
     input                               id_flush,
-    // input from IF/ID stage pipe
-    input                               if2id_valid,
-    input [`PC_RANGE]                   if2id_pc,
-    input [`DATA_RANGE]                 if2id_instruction,
-    // input from MEM stage
-    input                               lsu_mem_rd, // this signal is actually from EX stage
-    input [`RF_RANGE]                   ex2mem_reg_waddr,
-    input                               ex2mem_reg_wen,
-    // input from WB stage
-    input                               wb_reg_wen,
-    input [`RF_RANGE]                   wb_reg_waddr,
-    input [`DATA_RANGE]                 wb_reg_wdata,
+    input                               id_stall,
+
+    // from IF/ID stage pipeline
+    input if2id_pipeline_ctrl_t         if2id_pipeline_ctrl,
+    input if2id_pipeline_data_t         if2id_pipeline_data,
+
+    // from MEM stage
+    input [`RF_RANGE]                   mem_reg_regid,
+    input                               mem_reg_write,
+
+    // from WB stage
+    input                               wb_reg_write,
+    input [`RF_RANGE]                   wb_reg_regid,
+    input [`DATA_RANGE]                 wb_reg_writedata,
+
     // to HDU
-    output                              load_dependence,
-    // pipeline stage
-    output reg [`PC_RANGE]              id2ex_pc,
-    output reg [`DATA_RANGE]            id2ex_instruction,
-    output reg                          id2ex_br_instr,
-    output reg                          id2ex_jal_instr,
-    output reg                          id2ex_jalr_instr,
-    output reg                          id2ex_sel_imm,
-    output reg                          id2ex_op1_sel_pc,
-    output reg                          id2ex_op1_sel_zero,
-    output reg                          id2ex_op2_sel_4,
-    output reg                          id2ex_op1_forward_from_mem,
-    output reg                          id2ex_op1_forward_from_wb,
-    output reg                          id2ex_op2_forward_from_mem,
-    output reg                          id2ex_op2_forward_from_wb,
-    output reg                          id2ex_csr_rd,
-    output reg [`CORE_CSR_OP_RANGE]     id2ex_csr_wr_op,
-    output reg [`CORE_CSR_ADDR_RANGE]   id2ex_csr_addr,
-    output reg                          id2ex_reg_wen,
-    output reg [`RF_RANGE]              id2ex_reg_waddr,
-    output reg [`DATA_RANGE]            id2ex_op1_data,
-    output reg [`DATA_RANGE]            id2ex_op2_data,
-    output reg [`DATA_RANGE]            id2ex_imm_value,
-    output reg [`CORE_ALU_OP_RANGE]     id2ex_alu_op,
-    output reg                          id2ex_mem_rd,
-    output reg                          id2ex_mem_wr,
-    output reg [`CORE_MEM_OP_RANGE]     id2ex_mem_op,
-    output reg [`CORE_BRANCH_OP_RANGE]  id2ex_branch_op,
-    output reg                          id2ex_mret,
-    // exception
-    output reg                          id2ex_exc_ill_instr
+    output                              hdu_load_stall,
+    // to ID/EX pipelineline stage
+    output id2ex_pipeline_ctrl_t        id2ex_pipeline_ctrl,
+    output id2ex_pipeline_data_t        id2ex_pipeline_data
 );
 
 
-    //////////////////////////////
+    // ---------------------------------
     // Signal Declaration
-    //////////////////////////////
+    // ---------------------------------
 
-    /*AUTOWIRE*/
-    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-    wire [`CORE_ALU_OP_RANGE] alu_op;           // From decoder of decoder.v
-    wire                br_instr;               // From decoder of decoder.v
-    wire [`CORE_BRANCH_OP_RANGE] branch_op;     // From decoder of decoder.v
-    wire [`CORE_CSR_ADDR_RANGE] csr_addr;       // From decoder of decoder.v
-    wire                csr_rd;                 // From decoder of decoder.v
-    wire [`CORE_CSR_OP_RANGE] csr_wr_op;        // From decoder of decoder.v
-    wire                exc_ill_instr;          // From decoder of decoder.v
-    wire [`DATA_RANGE]  imm_value;              // From decoder of decoder.v
-    wire                jal_instr;              // From decoder of decoder.v
-    wire                jalr_instr;             // From decoder of decoder.v
-    wire [`CORE_MEM_OP_RANGE] mem_op;           // From decoder of decoder.v
-    wire                mem_rd;                 // From decoder of decoder.v
-    wire                mem_wr;                 // From decoder of decoder.v
-    wire                mret;                   // From decoder of decoder.v
-    wire                op1_sel_pc;             // From decoder of decoder.v
-    wire                op1_sel_zero;           // From decoder of decoder.v
-    wire                op2_sel_4;              // From decoder of decoder.v
-    wire [`RF_RANGE]    reg_rs1_addr;           // From decoder of decoder.v
-    wire [`DATA_RANGE]  reg_rs1_data;           // From regfile of regfile.v
-    wire                reg_rs1_rd;             // From decoder of decoder.v
-    wire [`RF_RANGE]    reg_rs2_addr;           // From decoder of decoder.v
-    wire [`DATA_RANGE]  reg_rs2_data;           // From regfile of regfile.v
-    wire                reg_rs2_rd;             // From decoder of decoder.v
-    wire [`RF_RANGE]    reg_waddr;              // From decoder of decoder.v
-    wire                reg_wen;                // From decoder of decoder.v
-    wire                sel_imm;                // From decoder of decoder.v
-    // End of automatics
+    logic                   regfile_rs1_read;
+    logic [`RF_RANGE]       regfile_rs1_regid;
+    logic [`DATA_RANGE]     regfile_rs1_readdata;
 
-    /*AUTOREG*/
+    logic                   regfile_rs2_read;
+    logic [`RF_RANGE]       regfile_rs2_regid;
+    logic [`DATA_RANGE]     regfile_rs2_readdata;
 
-    // Others
-    wire id_stage_valid;
-    wire id_stage_valid_raw;
-    wire op1_forward_from_mem;
-    wire op1_forward_from_wb;
-    wire op2_forward_from_mem;
-    wire op2_forward_from_wb;
+    logic                   rs1_match_ex;
+    logic                   rs1_match_mem;
+    logic                   rs1_non_zero;
+    logic                   rs2_match_ex;
+    logic                   rs2_match_mem;
+    logic                   rs2_non_zero;
 
-    //////////////////////////////
+    id2ex_pipeline_ctrl_t   id_stage_ctrl;
+    id2ex_pipeline_data_t   id_stage_data;
+    logic                   stage_run;
 
-    //////////////////////////////
-    // Pipeline Stage
-    //////////////////////////////
+    // ---------------------------------
+    // Main logic
+    // ---------------------------------
+
+    assign id_stage_ctrl.valid       = if2id_pipeline_ctrl.valid;
+    assign id_stage_data.instruction = if2id_pipeline_data.instruction;
+    assign id_stage_data.pc          = if2id_pipeline_data.pc;
+
+    // Forward check on ID stage for better timing performance
+    assign rs1_match_ex  = regfile_rs1_regid == id2ex_pipeline_data.reg_regid;
+    assign rs1_match_mem = regfile_rs1_regid == mem_reg_regid;
+    assign rs1_non_zero  = regfile_rs1_regid != 0;
+    assign id_stage_data.op1_forward_from_mem = rs1_match_ex  & regfile_rs1_read & id2ex_pipeline_ctrl.reg_write & rs1_non_zero;
+    assign id_stage_data.op1_forward_from_wb  = rs1_match_mem & regfile_rs1_read & mem_reg_write & rs1_non_zero;
+
+    assign rs2_match_ex  = regfile_rs2_regid == id2ex_pipeline_data.reg_regid;
+    assign rs2_match_mem = regfile_rs2_regid == mem_reg_regid;
+    assign rs2_non_zero  = regfile_rs2_regid != 0;
+    assign id_stage_data.op1_forward_from_mem = rs2_match_ex  & regfile_rs2_read & id2ex_pipeline_ctrl.reg_write & rs2_non_zero;
+    assign id_stage_data.op1_forward_from_wb  = rs2_match_mem & regfile_rs2_read & mem_reg_write & rs2_non_zero;
+
+    // Load Dependence check
+    assign hdu_load_stall = id2ex_pipeline_ctrl.mem_read & id2ex_pipeline_ctrl.reg_write &
+                            (rs1_match_ex & regfile_rs1_read | rs2_match_ex & regfile_rs2_read);
+
+    // pipeline stage
+    assign stage_run = ~id_stall;
 
     always @(posedge clk) begin
         if (rst) begin
-            id2ex_reg_wen  <= 1'b0;
-            id2ex_exc_ill_instr <= 1'b0;
-            id2ex_mem_rd <= 1'b0;
-            id2ex_mem_wr <= 1'b0;
-            id2ex_br_instr <= 1'b0;
-            id2ex_jal_instr <= 1'b0;
-            id2ex_jalr_instr <= 1'b0;
-            id2ex_csr_rd <= 1'b0;
-            id2ex_csr_wr_op <= `CORE_CSR_NOP;
-            id2ex_mret <= 1'b0;
+            id2ex_pipeline_ctrl <= 0;
         end
-        else begin
-            id2ex_reg_wen <= reg_wen & id_stage_valid;
-            id2ex_mem_rd <= mem_rd & id_stage_valid;
-            id2ex_mem_wr <= mem_wr & id_stage_valid;
-            id2ex_br_instr <= br_instr & id_stage_valid;
-            id2ex_jal_instr <= jal_instr & id_stage_valid;
-            id2ex_jalr_instr <= jalr_instr & id_stage_valid;
-            id2ex_mret <= mret & id_stage_valid;
-            id2ex_csr_rd <= csr_rd & id_stage_valid;
-            id2ex_csr_wr_op <= id_stage_valid ? csr_wr_op : `CORE_CSR_NOP;
-            id2ex_exc_ill_instr <= exc_ill_instr & id_stage_valid_raw;
+        else if (!if2id_pipeline_ctrl.valid || id_flush || id_stage_ctrl.exception_ill_instr) begin
+            id2ex_pipeline_ctrl <= 0;
+        end
+        else if (stage_run) begin
+            id2ex_pipeline_ctrl <= id_stage_ctrl;
         end
     end
 
     always @(posedge clk) begin
-        id2ex_pc <= if2id_pc;
-        id2ex_instruction <= if2id_instruction;
-        id2ex_reg_waddr <= reg_waddr;
-        id2ex_op1_data <= reg_rs1_data;
-        id2ex_op2_data <= reg_rs2_data;
-        id2ex_imm_value <= imm_value;
-        id2ex_alu_op <= alu_op;
-        id2ex_sel_imm <= sel_imm;
-        id2ex_op1_sel_pc <= op1_sel_pc;
-        id2ex_op1_sel_zero <= op1_sel_zero;
-        id2ex_op2_sel_4 <= op2_sel_4;
-        id2ex_mem_op <= mem_op;
-        id2ex_branch_op <= branch_op;
-        id2ex_op1_forward_from_mem <= op1_forward_from_mem;
-        id2ex_op1_forward_from_wb <= op1_forward_from_wb;
-        id2ex_op2_forward_from_mem <= op2_forward_from_mem;
-        id2ex_op2_forward_from_wb <= op2_forward_from_wb;
-        id2ex_csr_addr <= csr_addr;
+        if (stage_run) id2ex_pipeline_data <= id_stage_data;
     end
 
-    assign id_stage_valid_raw = if2id_valid & ~id_flush;
-    assign id_stage_valid = id_stage_valid_raw & ~exc_ill_instr;
-
-    //////////////////////////////
-    // Forward check
-    //////////////////////////////
-    assign op1_forward_from_mem = (reg_rs1_addr == id2ex_reg_waddr) & id2ex_reg_wen & reg_rs1_rd & (reg_rs1_addr != 0);
-    assign op1_forward_from_wb  = (reg_rs1_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & reg_rs1_rd & (reg_rs1_addr != 0);
-    assign op2_forward_from_mem = (reg_rs2_addr == id2ex_reg_waddr) & id2ex_reg_wen & reg_rs2_rd & (reg_rs2_addr != 0);
-    assign op2_forward_from_wb  = (reg_rs2_addr == ex2mem_reg_waddr) & ex2mem_reg_wen & reg_rs2_rd & (reg_rs2_addr != 0);
-
-    //////////////////////////////
-    // Load Dependence check
-    //////////////////////////////
-    assign load_dependence = id2ex_mem_rd & id2ex_reg_wen &
-                             ((reg_rs1_addr == id2ex_reg_waddr) & reg_rs1_rd  |
-                              (reg_rs2_addr == id2ex_reg_waddr) & reg_rs2_rd);
-
-    //////////////////////////////
+    // ---------------------------------
     // Module instantiation
-    //////////////////////////////
+    // ---------------------------------
 
-    // register file
-    /* regfile AUTO_TEMPLATE (
-        .clk        (clk),
-        .rst        (rst),
-        .wen        (wb_reg_wen),
-        .waddr      (wb_reg_waddr),
-        .din        (wb_reg_wdata),
-        .addr_rs1   (reg_rs1_addr[`RF_RANGE]),
-        .dout_rs1   (reg_rs1_data[`DATA_RANGE]),
-        .addr_rs2   (reg_rs2_addr[`RF_RANGE]),
-        .dout_rs2   (reg_rs2_data[`DATA_RANGE]),
-        ); */
-    regfile
-    regfile (/*AUTOINST*/
-             // Outputs
-             .dout_rs1                  (reg_rs1_data[`DATA_RANGE]), // Templated
-             .dout_rs2                  (reg_rs2_data[`DATA_RANGE]), // Templated
-             // Inputs
-             .clk                       (clk),                   // Templated
-             .rst                       (rst),                   // Templated
-             .wen                       (wb_reg_wen),            // Templated
-             .waddr                     (wb_reg_waddr),          // Templated
-             .din                       (wb_reg_wdata),          // Templated
-             .addr_rs1                  (reg_rs1_addr[`RF_RANGE]), // Templated
-             .addr_rs2                  (reg_rs2_addr[`RF_RANGE])); // Templated
+    regfile u_regfile(
+        .clk            (clk),
+        .rst            (rst),
+        .reg_write      (wb_reg_write),
+        .reg_regid      (wb_reg_regid),
+        .reg_writedata  (wb_reg_writedata),
+        .rs1_regid      (regfile_rs1_regid),
+        .rs1_readdata   (regfile_rs1_readdata),
+        .rs2_regid      (regfile_rs2_regid),
+        .rs2_readdata   (regfile_rs2_readdata)
+    );
 
-    // decoder
-    /* decoder AUTO_TEMPLATE (
-        .instruction     (if2id_instruction),
-        ); */
-    decoder
-    decoder (/*AUTOINST*/
-             // Outputs
-             .reg_wen                   (reg_wen),
-             .reg_waddr                 (reg_waddr[`RF_RANGE]),
-             .reg_rs1_addr              (reg_rs1_addr[`RF_RANGE]),
-             .reg_rs2_addr              (reg_rs2_addr[`RF_RANGE]),
-             .reg_rs1_rd                (reg_rs1_rd),
-             .reg_rs2_rd                (reg_rs2_rd),
-             .br_instr                  (br_instr),
-             .jal_instr                 (jal_instr),
-             .jalr_instr                (jalr_instr),
-             .op1_sel_zero              (op1_sel_zero),
-             .op1_sel_pc                (op1_sel_pc),
-             .op2_sel_4                 (op2_sel_4),
-             .sel_imm                   (sel_imm),
-             .csr_rd                    (csr_rd),
-             .csr_wr_op                 (csr_wr_op[`CORE_CSR_OP_RANGE]),
-             .csr_addr                  (csr_addr[`CORE_CSR_ADDR_RANGE]),
-             .imm_value                 (imm_value[`DATA_RANGE]),
-             .alu_op                    (alu_op[`CORE_ALU_OP_RANGE]),
-             .branch_op                 (branch_op[`CORE_BRANCH_OP_RANGE]),
-             .mem_rd                    (mem_rd),
-             .mem_wr                    (mem_wr),
-             .mem_op                    (mem_op[`CORE_MEM_OP_RANGE]),
-             .mret                      (mret),
-             .exc_ill_instr             (exc_ill_instr),
-             // Inputs
-             .instruction               (if2id_instruction));     // Templated
+    decoder u_decoder (
+        .instruction            (id_stage_data.instruction),
+        .regfile_reg_write      (id_stage_ctrl.reg_write),
+        .regfile_reg_regid      (id_stage_data.reg_regid),
+        .regfile_rs1_regid      (regfile_rs1_regid),
+        .regfile_rs2_regid      (regfile_rs2_regid),
+        .regfile_rs1_read       (regfile_rs1_read),
+        .regfile_rs2_read       (regfile_rs2_read),
+        .branch                 (id_stage_ctrl.branch),
+        .branch_opcode          (id_stage_data.branch_opcode),
+        .jal                    (id_stage_ctrl.jal),
+        .jalr                   (id_stage_ctrl.jalr),
+        .alu_op1_sel_zero       (id_stage_data.alu_op1_sel_zero),
+        .alu_op1_sel_pc         (id_stage_data.alu_op1_sel_pc),
+        .alu_op2_sel_4          (id_stage_data.alu_op2_sel_4),
+        .alu_op2_sel_imm        (id_stage_data.alu_op2_sel_imm),
+        .alu_opcode             (id_stage_data.alu_opcode),
+        .imm_value              (id_stage_data.imm_value),
+        .csr_read               (id_stage_ctrl.csr_read),
+        .csr_write              (id_stage_ctrl.csr_write),
+        .csr_write_opcode       (id_stage_data.csr_write_opcode),
+        .csr_address            (id_stage_data.csr_address),
+        .mem_read               (id_stage_ctrl.mem_read),
+        .mem_write              (id_stage_ctrl.mem_write),
+        .mem_opcode             (id_stage_data.mem_opcode),
+        .mret                   (id_stage_ctrl.mret),
+        .exception_ill_instr    (id_stage_ctrl.exception_ill_instr)
+    );
+
 
 endmodule
-
-// Notes for the forwarding logic and ALU operand1 and ALU operand2 source
-// ALU operand 1 source:
-//  1. register rs1 data
-//  2. 0 (for LUI)
-//  3. PC (for AUIPC)
-// ALU operand 2 source:
-//  1. register rs2 data
-//  2. immediate value
-//  3. 4 (for JAL/JALR)
-
-// Register wdata source
-// 1. ALU result
-// 2. Memory read result
-// 3. PC + 4 (JAL/JALR)

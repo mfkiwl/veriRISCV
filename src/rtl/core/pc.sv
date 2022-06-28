@@ -15,7 +15,7 @@ module pc (
     input                   clk,
     input                   rst,
     input                   stall,
-    input                   branch,
+    input                   branch_take,
     input  [`PC_RANGE]      branch_pc,
     output [`PC_RANGE]      pc_out
 );
@@ -27,8 +27,8 @@ module pc (
             pc_value <= 0;
         end
         else begin
-            // branch has priority over stall
-            if (branch) pc_value <= branch_pc;
+            // branch_take has priority over stall
+            if (branch_take) pc_value <= branch_pc;
             else if (!stall) pc_value <= pc_value + 4;
         end
     end

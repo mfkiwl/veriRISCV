@@ -25,14 +25,6 @@
 `define REG_NUM         32
 `define RF_RANGE        $clog2(`REG_NUM)-1:0
 
-// Instruction  RAM
-`define INSTR_RAM_ADDR_WIDTH    16
-`define INSTR_RAM_ADDR_RANGE    15:0
-
-// Data RAM
-`define DATA_RAM_ADDR_WIDTH     16
-`define DATA_RAM_ADDR_RANGE     15:0
-
 // Immediate number size for pipeline stage
 `define CORE_IMM_RANGE          19:0
 

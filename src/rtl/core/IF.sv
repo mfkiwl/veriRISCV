@@ -21,10 +21,11 @@ module IF (
     output avalon_req_t     ibus_avalon_req,
     input  avalon_resp_t    ibus_avalon_resp,
     // branch control
-    input                   branch,
+    input                   branch_take,
     input [`PC_RANGE]       branch_pc,
-    // pipeline stage
-    output if2id_pipe_t     if2id
+    // pipelineline stage
+    output if2id_pipeline_ctrl_t if2id_pipeline_ctrl,
+    output if2id_pipeline_data_t if2id_pipeline_data
 );
 
     // ---------------------------------
@@ -62,7 +63,6 @@ module IF (
         end
     end
 
-
     assign ibus_avalon_req.write = 1'b0;
     assign ibus_avalon_req.writedata = 'b0;
     assign ibus_avalon_req.address = pc_out;
@@ -71,21 +71,19 @@ module IF (
 
     // FIXME: need to handle waitrequest
 
-    // ---------------------------------
-    // Pipeline Stage
-    // ---------------------------------
-
+    // -- Pipeline Stage -- //
     always @(posedge clk) begin
-        if (rst) if2id.valid <= 1'b0;
-        else if (!if_stall) if2id.valid <= ~if_flush;
+        if (rst)            if2id_pipeline_ctrl <= 0;
+        else if (if_flush)  if2id_pipeline_ctrl <= 0;
+        else                if2id_pipeline_ctrl.valid <= 1'b1;
     end
 
     always @(posedge clk) begin
-        if (!if_stall) if2id.pc <= pc_out;
+        if (!if_stall) if2id_pipeline_data.pc <= pc_out;
     end
 
-    // the memory has 1 hidden pipeline stage
-    assign if2id.instruction = use_backup_instruction ? instruction_backup : ibus_avalon_resp.readdata;
+    // the memory has 1 hidden pipelineline stage
+    assign if2id_pipeline_data.instruction = use_backup_instruction ? instruction_backup : ibus_avalon_resp.readdata;
 
     // ---------------------------------
     // Module instantiation
@@ -96,7 +94,7 @@ module IF (
        .clk         (clk),
        .rst         (rst),
        .stall       (stall)
-       .branch      (branch),
+       .branch_take      (branch_take),
        .branch_pc   (branch_pc),
        .pc_out      (pc_out));
 

@@ -31,13 +31,10 @@
 `define CORE_ALU_AND        4'b0111
 
 // Memory opcode
-// Encoding is same in instruction
+// Encoding is same in instruction func3 field
+// bit 2 indicate signed/unsigned
 `define CORE_MEM_OP_RANGE   2:0
-// One hot encoding for byte, half, and sign
-// which is the same as func3 field
-// Bit 0: 1- half word access
-// Bit 1: 1- word access
-// Bit 2: 1 - signed. 0 - unsigned
+`define CORE_MEM_BYTE       2'b00
 `define CORE_MEM_HALF       2'b01
 `define CORE_MEM_WORD       2'b10
 
@@ -55,6 +52,7 @@
 `define CORE_CSR_RC             2'b11
 
 // Decoder related defines
+
 // Instruction Field
 `define DEC_OPCODE_FIELD    6:0
 `define DEC_RD_FIELD        11:7
@@ -109,6 +107,5 @@
 
 // MRET
 `define DEC_SYSTEM_MRET     25'b0011000000100000000000000
-
 
 `endif

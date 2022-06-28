@@ -9,39 +9,62 @@
 // Instruction decoder
 // ------------------------------------------------------------------------------------------------
 
+// Notes for the forwarding logic and ALU operand 1 and ALU operand 2 source
+
+// ALU operand 1 source:
+//  1. register rs1 data
+//  2. 0 (for LUI)
+//  3. pc (for AUIPC)
+// ALU operand 2 source:
+//  1. register rs2 data
+//  2. immediate value
+//  3. 4 (for JAL/JALR)
+
+// Register writedata source
+// 1. ALU result
+// 2. Memory read result
+// 3. PC + 4 (JAL/JALR)
+
 `include "core.svh"
 
 module decoder (
 
     input [`DATA_RANGE]                     instruction,
 
-    // datapath signal
-    output logic                            regfile_write,
-    output logic [`RF_RANGE]                regfile_regid,
+    // register file
+    output logic                            regfile_reg_write,
+    output logic [`RF_RANGE]                regfile_reg_regid,
     output logic [`RF_RANGE]                regfile_rs1_regid,
     output logic [`RF_RANGE]                regfile_rs2_regid,
     output logic                            regfile_rs1_read,
     output logic                            regfile_rs2_read,
 
-    output logic                            br_instr,           // indicating branch instruction
-    output logic                            jal_instr,          // indicating jal instruction
-    output logic                            jalr_instr,         // indicating jalr instruction
+    // branch and jump
+    output logic                            branch,             // indicating branch instruction
+    output logic [`CORE_BRANCH_OP_RANGE]    branch_opcode,
+    output logic                            jal,                // indicating jal instruction
+    output logic                            jalr,               // indicating jalr instruction
+
+    // alu
     output logic                            alu_op1_sel_zero,   // for LUI
     output logic                            alu_op1_sel_pc,     // for AUIPC, JAL, JALR
     output logic                            alu_op2_sel_4,      // for JAL, JALR
     output logic                            alu_op2_sel_imm,
-
-    output logic                            csr_rd,             // indicating read csr
-    output logic [`CORE_CSR_OP_RANGE]       csr_wr_opcode,
-    output logic [`CORE_CSR_ADDR_RANGE]     csr_addr,
-
-    output logic [`DATA_RANGE]              imm_value,
     output logic [`CORE_ALU_OP_RANGE]       alu_opcode,
-    output logic [`CORE_BRANCH_OP_RANGE]    branch_opcode,
+    output logic [`DATA_RANGE]              imm_value,
+
+    // csr
+    output logic                            csr_read,             // indicating read csr
+    output logic                            csr_write,
+    output logic [`CORE_CSR_OP_RANGE]       csr_write_opcode,
+    output logic [`CORE_CSR_ADDR_RANGE]     csr_address,
+
+    // memory
     output logic                            mem_read,
     output logic                            mem_write,
     output logic [`CORE_MEM_OP_RANGE]       mem_opcode,
 
+    // other instruction
     output logic                            mret,
 
     // exception
@@ -64,14 +87,14 @@ module decoder (
 
     // Extract instruction field
 
-    assign regfile_regid = instruction[`DEC_RD_FIELD];
+    assign regfile_reg_regid = instruction[`DEC_RD_FIELD];
     assign regfile_rs1_regid = instruction[`DEC_RS1_FIELD];
     assign regfile_rs2_regid = instruction[`DEC_RS2_FIELD];
 
     assign opcode = instruction[`DEC_OPCODE_FIELD];
     assign func7 = instruction[`DEC_FUNC7_FIELD];
     assign func3 = instruction[`DEC_FUNC3_FIELD];
-    assign csr_addr = instruction[`DEC_CSR_ADDR_FIELD];
+    assign csr_address = instruction[`DEC_CSR_ADDR_FIELD];
 
 
     // Decode logic
@@ -80,8 +103,8 @@ module decoder (
         // Default value
         exception_ill_instr = 1'b0;
         alu_opcode = 0;
-        csr_wr_opcode = `CORE_CSR_NOP;
-        regfile_write = 1'b0;
+        csr_write_opcode = `CORE_CSR_NOP;
+        regfile_reg_write = 1'b0;
         regfile_rs1_read = 1'b0;
         regfile_rs2_read = 1'b0;
         alu_op2_sel_imm = 1'b0;
@@ -89,10 +112,11 @@ module decoder (
         mem_write = 1'b0;
         mem_opcode = func3;
         branch_opcode = func3;
-        csr_rd = 1'b0;
-        br_instr = 1'b0;
-        jal_instr = 1'b0;
-        jalr_instr = 1'b0;
+        csr_read = 1'b0;
+        csr_write = 1'b0;
+        branch = 1'b0;
+        jal = 1'b0;
+        jalr = 1'b0;
         alu_op1_sel_zero = 1'b0;
         alu_op1_sel_pc = 1'b0;
         alu_op2_sel_4 = 1'b0;
@@ -105,7 +129,7 @@ module decoder (
             `DEC_TYPE_LOGIC: begin
                 regfile_rs1_read = 1'b1;
                 regfile_rs2_read = 1'b1;
-                regfile_write = 1'b1;
+                regfile_reg_write = 1'b1;
                 // To simplifiy the decode logic, we use the same encoding as the instruction func3 field in ALU.
                 // For ADD/SUB, SRL/SRA which has the same func3 encoding, we use the 4th bit to distinguesh them.
                 // Note that bit 5 of func7 is set for SUB and SRA so we set the forth bit of SUB/SRA to fcun7[5]
@@ -119,7 +143,7 @@ module decoder (
                 // For SRLI/SRAI/SLLI, the format is different then regular immediate instruction.
                 // However, shamt field is located at lower 5 bit of the immediate value which is the same field ALU used for caluculation
                 regfile_rs1_read = 1'b1;
-                regfile_write = 1'b1;
+                regfile_reg_write = 1'b1;
                 alu_op2_sel_imm = 1'b1;
                 alu_opcode[2:0] = func3;
                 alu_opcode[3] = func7[5];
@@ -128,7 +152,7 @@ module decoder (
             // Load instruction
             `DEC_TYPE_LOAD: begin
                 regfile_rs1_read = 1'b1;
-                regfile_write = 1'b1;
+                regfile_reg_write = 1'b1;
                 alu_op2_sel_imm = 1'b1;
                 alu_opcode = `CORE_ALU_ADD;
                 mem_read = 1'b1;
@@ -149,7 +173,7 @@ module decoder (
             `DEC_TYPE_BRAHCN: begin
                 regfile_rs1_read = 1'b1;
                 regfile_rs2_read = 1'b1;
-                br_instr = 1'b1;
+                branch = 1'b1;
                 if (func3[2:1] == 2'b01) exception_ill_instr = 1'b1;
             end
 
@@ -158,7 +182,7 @@ module decoder (
                 alu_op2_sel_imm = 1'b1;
                 alu_op1_sel_zero = 1'b1;
                 alu_opcode = `CORE_ALU_ADD;
-                regfile_write = 1'b1;
+                regfile_reg_write = 1'b1;
             end
 
             // AUIPC
@@ -166,38 +190,40 @@ module decoder (
                 alu_op2_sel_imm = 1'b1;
                 alu_op1_sel_pc = 1'b1;
                 alu_opcode = `CORE_ALU_ADD;
-                regfile_write = 1'b1;
+                regfile_reg_write = 1'b1;
             end
 
             // JAL
             `DEC_TYPE_JAL: begin
-                jal_instr = 1'b1;
+                jal = 1'b1;
                 alu_op1_sel_pc = 1'b1;
                 alu_op2_sel_4 = 1'b1;
                 alu_opcode = `CORE_ALU_ADD;
-                regfile_write = 1'b1;
+                regfile_reg_write = 1'b1;
             end
 
             // JALR
             `DEC_TYPE_JALR: begin
                 regfile_rs1_read = 1'b1;
-                jalr_instr = 1'b1;
+                jalr = 1'b1;
                 alu_op1_sel_pc = 1'b1;
                 alu_op2_sel_4 = 1'b1;
                 alu_opcode = `CORE_ALU_ADD;
-                regfile_write = 1'b1;
+                regfile_reg_write = 1'b1;
             end
 
-            // SYSTEM - CHECK ME
+            // SYSTEM - CHECK ME - FIXME
             `DEC_TYPE_SYSTEM: begin
 
                 // CSR
                 if (func3 != 3'b000) begin
-                    // for CSRRW/CSRRWI, if rd=x0, then the instruction should not read the CSR
-                    csr_rd = (func3[1:0] != `CORE_CSR_RW) | (regfile_regid != 0);
-                    // for CSRRS, CSRRC, if rs1=x0, then the instruction should notwrite to the CSR
-                    csr_wr_opcode = (func3[1] && (regfile_rs1_regid == 0)) ? `CORE_CSR_NOP : func3[1:0];
-                    regfile_write = csr_rd;
+                    // From SPEC: for CSRRW/CSRRWI, if rd=x0, then the instruction should not read the CSR
+                    csr_read = (func3[1:0] != `CORE_CSR_RW) | (regfile_reg_regid != 0);
+                    // From SPEC: for CSRRS/CSRRC, if rs1=x0, then the instruction will not write to the CSR at all, and
+                    // so shall not cause any of the side effects that might otherwise occur on a CSR write
+                    csr_write = (func3[1:0] != `CORE_CSR_NOP) & (~func3[2] & (regfile_rs1_regid != 0));
+                    csr_write_opcode = func3[1:0];
+                    regfile_reg_write = csr_read;
                     regfile_rs1_read = ~func3[2];
                     alu_op2_sel_imm = func3[2];
                 end
