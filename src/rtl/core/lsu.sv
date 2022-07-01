@@ -37,8 +37,9 @@ module lsu (
 
     reg [1:0]                       prev_byte_addr;
     reg [`CORE_MEM_OP_RANGE]        prev_mem_opcode;
-
+    reg                             read_pending;
     reg                             sign_bit;
+
     wire                            sign_bit_final;
     wire                            sign_ext;
     wire                            word_aligned;
@@ -54,6 +55,11 @@ module lsu (
 
     // FIXME waitrequest
 
+    always @(posedge clk) begin
+        if (rst) read_pending <= 1'b0;
+        else read_pending <= lsu_mem_read;
+    end
+    assign lsu_readdatavalid = read_pending;
 
     // --  write data generation  -- //
     // The writedata should be aligned alrady
@@ -117,9 +123,9 @@ module lsu (
     // -- byte enable generation -- //
     always @(*) begin
         case(lsu_mem_opcode[1:0])
-            `CORE_MEM_HALF: dbus_avalon_req.byte_enable = prev_byte_addr[1] ? 4'b1100 : 4'b0011;    // LH
-            `CORE_MEM_WORD: dbus_avalon_req.byte_enable = 4'b1111;                                  // LW
-            default: dbus_avalon_req.byte_enable = (4'b1 << prev_byte_addr);                        // LW
+            `CORE_MEM_HALF: dbus_avalon_req.byte_enable = lsu_address[1] ? 4'b1100 : 4'b0011;   // LH
+            `CORE_MEM_WORD: dbus_avalon_req.byte_enable = 4'b1111;                              // LW
+            default: dbus_avalon_req.byte_enable = (4'b1 << lsu_address[1:0]);                  // LW
         endcase
     end
 

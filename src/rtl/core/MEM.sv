@@ -54,7 +54,22 @@ module MEM (
     // Main logic
     // ---------------------------------
 
+    assign mem_stage_ctrl.valid = ex2mem_pipeline_ctrl.valid;
+    assign mem_stage_ctrl.reg_write = ex2mem_pipeline_ctrl.reg_write;
+    assign mem_stage_ctrl.csr_read = ex2mem_pipeline_ctrl.csr_read;
+    assign mem_stage_ctrl.csr_write = ex2mem_pipeline_ctrl.csr_write;
+    assign mem_stage_ctrl.mret = ex2mem_pipeline_ctrl.mret;
+    assign mem_stage_ctrl.exception_ill_instr = ex2mem_pipeline_ctrl.exception_ill_instr;
+    assign mem_stage_ctrl.exception_instr_addr_misaligned = ex2mem_pipeline_ctrl.exception_instr_addr_misaligned;
+
+    assign mem_stage_data.pc = ex2mem_pipeline_data.pc;
+    assign mem_stage_data.instruction = ex2mem_pipeline_data.instruction;
+    assign mem_stage_data.reg_regid = ex2mem_pipeline_data.reg_regid;
     assign mem_stage_data.reg_writedata = lsu_readdatavalid ? lsu_readdata : ex2mem_pipeline_data.alu_out;
+    assign mem_stage_data.csr_write_opcode = ex2mem_pipeline_data.csr_write_opcode;
+    assign mem_stage_data.csr_writedata = ex2mem_pipeline_data.csr_writedata;
+    assign mem_stage_data.csr_address = ex2mem_pipeline_data.csr_address;
+    assign mem_stage_data.lsu_address = lsu_address;
 
     // Pipeline Stage
     assign stage_run = ~mem_stall;

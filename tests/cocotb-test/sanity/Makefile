@@ -3,8 +3,9 @@
 # -----------------------------------------
 
 # -----------------------------------------
-# Top level Language
+# Defaults
 # -----------------------------------------
+SIM ?= verilator
 TOPLEVEL_LANG = verilog
 
 # -----------------------------------------
@@ -12,22 +13,20 @@ TOPLEVEL_LANG = verilog
 # -----------------------------------------
 REPO_ROOT     	= $(shell git rev-parse --show-toplevel)
 CORE_PATH  		= $(REPO_ROOT)/src/rtl/core
-
+SOC_PATH  		= $(REPO_ROOT)/src/rtl/soc
 
 # -----------------------------------------
 # Source files
 # -----------------------------------------
 
-include ../filelists.mk
-
-VERILOG_SOURCES += $(RTL_FILES)
+include $(SOC_PATH)/veriRISCV_soc.mk
 
 # -----------------------------------------
 # Simulator config
 # -----------------------------------------
 
-TOPLEVEL = veririscv_core
-MODULE 	 = BasicTB
+TOPLEVEL = veriRISCV_soc
+MODULE 	 = tests
 
 # -----------------------------------------
 # Cocotb config
@@ -37,6 +36,19 @@ export COCOTB_REDUCED_LOG_FMT = 1
 # -----------------------------------------
 # Test config
 # -----------------------------------------
+
+DUMP ?= 0
+COVR ?= 0
+
+ifeq ($(SIM),verilator)
+EXTRA_ARGS += -I$(CORE_PATH)/include
+ifeq ($(COVR), 1)
+	EXTRA_ARGS += --coverage
+endif
+ifeq ($(DUMP), 1)
+	EXTRA_ARGS += --trace-fst --trace-structs
+endif
+endif
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 

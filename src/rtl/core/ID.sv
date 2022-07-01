@@ -44,11 +44,9 @@ module ID (
 
     logic                   regfile_rs1_read;
     logic [`RF_RANGE]       regfile_rs1_regid;
-    logic [`DATA_RANGE]     regfile_rs1_readdata;
 
     logic                   regfile_rs2_read;
     logic [`RF_RANGE]       regfile_rs2_regid;
-    logic [`DATA_RANGE]     regfile_rs2_readdata;
 
     logic                   rs1_match_ex;
     logic                   rs1_match_mem;
@@ -79,8 +77,8 @@ module ID (
     assign rs2_match_ex  = regfile_rs2_regid == id2ex_pipeline_data.reg_regid;
     assign rs2_match_mem = regfile_rs2_regid == mem_reg_regid;
     assign rs2_non_zero  = regfile_rs2_regid != 0;
-    assign id_stage_data.op1_forward_from_mem = rs2_match_ex  & regfile_rs2_read & id2ex_pipeline_ctrl.reg_write & rs2_non_zero;
-    assign id_stage_data.op1_forward_from_wb  = rs2_match_mem & regfile_rs2_read & mem_reg_write & rs2_non_zero;
+    assign id_stage_data.op2_forward_from_mem = rs2_match_ex  & regfile_rs2_read & id2ex_pipeline_ctrl.reg_write & rs2_non_zero;
+    assign id_stage_data.op2_forward_from_wb  = rs2_match_mem & regfile_rs2_read & mem_reg_write & rs2_non_zero;
 
     // Load Dependence check
     assign hdu_load_stall = id2ex_pipeline_ctrl.mem_read & id2ex_pipeline_ctrl.reg_write &
@@ -116,13 +114,13 @@ module ID (
         .reg_regid      (wb_reg_regid),
         .reg_writedata  (wb_reg_writedata),
         .rs1_regid      (regfile_rs1_regid),
-        .rs1_readdata   (regfile_rs1_readdata),
+        .rs1_readdata   (id_stage_data.rs1_readdata),
         .rs2_regid      (regfile_rs2_regid),
-        .rs2_readdata   (regfile_rs2_readdata)
+        .rs2_readdata   (id_stage_data.rs2_readdata)
     );
 
     decoder u_decoder (
-        .instruction            (id_stage_data.instruction),
+        .instruction            (if2id_pipeline_data.instruction),
         .regfile_reg_write      (id_stage_ctrl.reg_write),
         .regfile_reg_regid      (id_stage_data.reg_regid),
         .regfile_rs1_regid      (regfile_rs1_regid),

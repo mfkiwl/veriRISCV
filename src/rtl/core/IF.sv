@@ -52,7 +52,7 @@ module IF (
     assign if_stall_risedge = if_stall & ~if_stall_ff;
 
     always @(posedge clk) begin
-        if (if_stall_risedge) instruction_backup <= ibus_hrdata;
+        if (if_stall_risedge) instruction_backup <= ibus_avalon_resp.readdata;
     end
 
     always @(posedge clk) begin
@@ -78,12 +78,12 @@ module IF (
         else                if2id_pipeline_ctrl.valid <= 1'b1;
     end
 
-    always @(posedge clk) begin
-        if (!if_stall) if2id_pipeline_data.pc <= pc_out;
+    always_ff @(posedge clk) begin
+        if (!if_stall) if2id_pipeline_data.pc = pc_out; // have to use blocking here to bypass verilator error checking
     end
 
     // the memory has 1 hidden pipelineline stage
-    assign if2id_pipeline_data.instruction = use_backup_instruction ? instruction_backup : ibus_avalon_resp.readdata;
+    always @* if2id_pipeline_data.instruction = use_backup_instruction ? instruction_backup : ibus_avalon_resp.readdata;
 
     // ---------------------------------
     // Module instantiation
@@ -91,11 +91,11 @@ module IF (
 
     pc u_pc
     (
-       .clk         (clk),
-       .rst         (rst),
-       .stall       (stall)
-       .branch_take      (branch_take),
-       .branch_pc   (branch_pc),
-       .pc_out      (pc_out));
+       .clk             (clk),
+       .rst             (rst),
+       .stall           (if_stall),
+       .branch_take     (branch_take),
+       .branch_pc       (branch_pc),
+       .pc_out          (pc_out));
 
 endmodule

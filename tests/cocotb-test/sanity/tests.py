@@ -1,44 +1,33 @@
-###################################################################################################
-##
-## Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
-##
-## ~~~ veriRISCV ~~~
-##
-## Module Name: BasicTB.py
-##
-## Author: Heqing Huang
-## Date Created: 01/19/2022
-##
-## ================== Description ==================
-##
-## Basic Testbench.
-##
-## The sanity testbench read the instruction memory from a file and compares the final result
-## (register file or memory content) with golden file.
-##
-###################################################################################################
-
+# ------------------------------------------------------------------------------------------------
+# Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
+# Author: Heqing Huang
+#
+# Date Created: 01/19/2022
+# ------------------------------------------------------------------------------------------------
+# veriRISCV
+# ------------------------------------------------------------------------------------------------
+# Basic/Sanity checkes
+# ------------------------------------------------------------------------------------------------
 
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer, FallingEdge, RisingEdge
 
 import sys
-sys.path.append('../../lib/mem')
-sys.path.append('../../lib/common')
+sys.path.append('../../cocotb-library/common')
 
-from AHBLiteRAM_1rw import AHBLiteRAM_1rw
+
+from LoadMemory import loadFromFile, clearMemory
 from RegCheck import RegCheck
 
 async def reset(dut, time=50):
     """ Reset the design """
     dut.rst.value = 1
-    dut.rstn.value = 0
     await Timer(time, units="ns")
     await RisingEdge(dut.clk)
     await Timer(1, units="ns")
     dut.rst.value = 0
-    dut.rstn.value = 1
+
 
 async def RegCheckTest(dut, ram_file, golden_file, time=1):
     """
@@ -51,27 +40,15 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
     dut.debug_interrupt.value = 0
 
     # Instruction RAM
-    instrRAM = AHBLiteRAM_1rw(32,16,ram_file)
-    instrRAM.ahbPort.connect(dut.clk, dut.rstn,
-                             dut.ibus_hwrite, dut.ibus_hsize, dut.ibus_hburst, dut.ibus_hport,
-                             dut.ibus_htrans, dut.ibus_hmastlock, dut.ibus_haddr, dut.ibus_hwdata,
-                             dut.ibus_hready, dut.ibus_hresp, dut.ibus_hrdata)
-
-    # Data RAM
-    dataRAM = AHBLiteRAM_1rw(32,16)
-    dataRAM.ahbPort.connect(dut.clk, dut.rstn,
-                             dut.dbus_hwrite, dut.dbus_hsize, dut.dbus_hburst, dut.dbus_hport,
-                             dut.dbus_htrans, dut.dbus_hmastlock, dut.dbus_haddr, dut.dbus_hwdata,
-                             dut.dbus_hready, dut.dbus_hresp, dut.dbus_hrdata)
+    clearMemory(dut.u_instruction_ram.ram, 100)
+    loadFromFile(ram_file, dut.u_instruction_ram.ram)
 
     # Register checker
-    regCheck = RegCheck(dut.ID.regfile, golden_file)
+    regCheck = RegCheck(dut.u_veriRISCV_core.u_ID.u_regfile.register_file, golden_file)
 
     # Test start
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10 ns period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
-    instrRAM.run()  # Start memory
-    dataRAM.run() # Start memory
     await reset(dut)
     await Timer(time, "us")
     regCheck.checkRegister()

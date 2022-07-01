@@ -125,7 +125,7 @@ typedef struct packed {
     // csr
     logic [`CORE_CSR_OP_RANGE]     csr_write_opcode;
     logic [`DATA_RANGE]            csr_writedata;
-    logic [`CORE_CSR_ADDR_RANGE]   csr_addr;
+    logic [`CORE_CSR_ADDR_RANGE]   csr_address;
     // register file
     logic [`RF_RANGE]              reg_regid;
     // other
@@ -139,13 +139,13 @@ typedef struct packed {
     logic                          reg_write;
     // csr
     logic                          csr_read;
-    logic [`CORE_CSR_OP_RANGE]     csr_write;
+    logic                          csr_write;
     // other
     logic                          mret;
-    logic                          exc_ill_instr;
-    logic                          exc_instr_addr_misaligned;
-    logic                          exc_load_addr_misaligned;
-    logic                          exc_store_addr_misaligned;
+    logic                          exception_ill_instr;
+    logic                          exception_instr_addr_misaligned;
+    logic                          exception_load_addr_misaligned;
+    logic                          exception_store_addr_misaligned;
 } mem2wb_pipeline_ctrl_t;
 
 typedef struct packed {
@@ -157,7 +157,7 @@ typedef struct packed {
     // csr
     logic [`CORE_CSR_OP_RANGE]     csr_write_opcode;
     logic [`DATA_RANGE]            csr_writedata;
-    logic [`CORE_CSR_ADDR_RANGE]   csr_addr;
+    logic [`CORE_CSR_ADDR_RANGE]   csr_address;
     // other
     logic [`DATA_RANGE]            lsu_address;
 } mem2wb_pipeline_data_t;

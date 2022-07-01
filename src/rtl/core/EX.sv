@@ -81,9 +81,19 @@ module EX (
     assign lsu_address    = op1_forwarded + id2ex_pipeline_data.imm_value;
 
     // pipelien stge signal
-    assign ex_stage_ctrl.valid       = id2ex_pipeline_ctrl.valid;
+    assign ex_stage_ctrl.valid = id2ex_pipeline_ctrl.valid;
+    assign ex_stage_ctrl.csr_read = id2ex_pipeline_ctrl.csr_read;
+    assign ex_stage_ctrl.csr_write = id2ex_pipeline_ctrl.csr_write;
+    assign ex_stage_ctrl.reg_write = id2ex_pipeline_ctrl.reg_write;
+    assign ex_stage_ctrl.mret = id2ex_pipeline_ctrl.mret;
+    assign ex_stage_ctrl.exception_ill_instr = id2ex_pipeline_ctrl.exception_ill_instr;
+
+    assign ex_stage_data.pc = id2ex_pipeline_data.pc;
     assign ex_stage_data.instruction = id2ex_pipeline_data.instruction;
-    assign ex_stage_data.pc          = id2ex_pipeline_data.pc;
+    assign ex_stage_data.csr_write_opcode = id2ex_pipeline_data.csr_write_opcode;
+    assign ex_stage_data.csr_writedata = id2ex_pipeline_data.alu_op2_sel_imm ? id2ex_pipeline_data.imm_value : op1_forwarded;
+    assign ex_stage_data.csr_address = id2ex_pipeline_data.csr_address;
+    assign ex_stage_data.reg_regid = id2ex_pipeline_data.reg_regid;
 
     // pipeline stage
     assign stage_run = ~ex_stall;

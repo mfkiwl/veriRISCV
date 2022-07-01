@@ -6,6 +6,7 @@ sim_build
 results.xml
 *.vcd
 *.log
+*.fst
 
 # riscv-test
 *.dump

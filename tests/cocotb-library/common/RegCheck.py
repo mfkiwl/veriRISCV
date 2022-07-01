@@ -1,19 +1,13 @@
-###################################################################################################
-##
-## Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
-##
-## ~~~ veriRISCV ~~~
-##
-## Module Name: RegCheck.py
-##
-## Author: Heqing Huang
-## Date Created: 01/20/2022
-##
-## ================== Description ==================
-##
-## Check Register Content against golden file
-##
-###################################################################################################
+# ------------------------------------------------------------------------------------------------
+# Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
+# Author: Heqing Huang
+#
+# Date Created: 01/20/2022
+# ------------------------------------------------------------------------------------------------
+# veriRISCV
+# ------------------------------------------------------------------------------------------------
+# Check Register Content against golden file
+# ------------------------------------------------------------------------------------------------
 
 import logging
 import sys
@@ -67,9 +61,8 @@ class RegCheck:
         self._log.info(f"Register read: {self.recoded_reg}")
 
     def checkRegister(self):
-        regValue = self.reg.register.value
         for reg in self.recoded_reg:
-            value = regValue[reg].value
+            value = self.reg[reg].value
             if value != self.register[reg]:
                 raise ValueError(f"Wrong register data on register {reg}. Expected: {hex(self.register[reg])}, Actual: {hex(value)}")
         self._log.info("*** Register Check PASS ***")
