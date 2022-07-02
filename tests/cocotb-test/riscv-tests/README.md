@@ -6,7 +6,7 @@ This directory contains cocotb functions to run **riscv-tests** and check the re
 
 The riscv-tests needs to be compiled to generate the content for instruction memory and data memory.
 
-Go to `veriRISCV/tests/riscv-tests` to figure out how to compile and generate the memory contents. Check the README.md file there.
+Go to `veriRISCV/tests/riscv-isa/riscv-tests` to figure out how to compile and generate the memory contents. Check the README.md file there.
 
 ## Usage
 

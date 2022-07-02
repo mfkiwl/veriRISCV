@@ -5,6 +5,7 @@
 # -----------------------------------------
 # Top level Language
 # -----------------------------------------
+SIM ?= verilator
 TOPLEVEL_LANG = verilog
 
 # -----------------------------------------
@@ -12,22 +13,34 @@ TOPLEVEL_LANG = verilog
 # -----------------------------------------
 REPO_ROOT     	= $(shell git rev-parse --show-toplevel)
 CORE_PATH  		= $(REPO_ROOT)/src/rtl/core
+SOC_PATH  		= $(REPO_ROOT)/src/rtl/soc
 
 
 # -----------------------------------------
 # Source files
 # -----------------------------------------
 
-include ../filelists.mk
-
-VERILOG_SOURCES += $(RTL_FILES)
+include $(SOC_PATH)/veriRISCV_soc.mk
 
 # -----------------------------------------
 # Simulator config
 # -----------------------------------------
 
-TOPLEVEL = veririscv_core
+TOPLEVEL = veriRISCV_soc
 MODULE 	 = RVTests
+
+DUMP ?= 0
+COVR ?= 0
+
+ifeq ($(SIM),verilator)
+EXTRA_ARGS += -I$(CORE_PATH)/include
+ifeq ($(COVR), 1)
+	EXTRA_ARGS += --coverage
+endif
+ifeq ($(DUMP), 1)
+	EXTRA_ARGS += --trace-fst --trace-structs
+endif
+endif
 
 # -----------------------------------------
 # Cocotb config
@@ -47,3 +60,6 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 clean_all: clean
 	rm -rf __pycache__
 	rm -rf results.xml *.vcd
+
+gen_test:
+	python3 GenTests.py

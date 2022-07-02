@@ -146,7 +146,7 @@ module decoder (
                 regfile_reg_write = 1'b1;
                 alu_op2_sel_imm = 1'b1;
                 alu_opcode[2:0] = func3;
-                alu_opcode[3] = func7[5];
+                alu_opcode[3] = (func3 == `DEC_LOGIC_SRA) & func7[5];   // for SRAI, we need to use alu_opcode[3] to distinguesh between SRLI/SRAI
             end
 
             // Load instruction

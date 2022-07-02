@@ -1,19 +1,13 @@
-###################################################################################################
-##
-## Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
-##
-## ~~~ veriRISCV ~~~
-##
-## Module Name: RVTestsUtils.py
-##
-## Author: Heqing Huang
-## Date Created: 01/26/2022
-##
-## ================== Description ==================
-##
-## Testbench using riscv-tests
-##
-###################################################################################################
+# ------------------------------------------------------------------------------------------------
+# Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
+# Author: Heqing Huang
+#
+# Date Created: 01/26/2022
+# ------------------------------------------------------------------------------------------------
+# veriRISCV
+# ------------------------------------------------------------------------------------------------
+# Testbench using riscv-tests
+# ------------------------------------------------------------------------------------------------
 
 
 import cocotb
@@ -22,23 +16,20 @@ from cocotb.triggers import Timer, FallingEdge, RisingEdge
 from cocotb.regression import TestFactory
 
 import sys
-sys.path.append('../../lib/mem')
-sys.path.append('../../lib/common')
+sys.path.append('../../cocotb-library/common')
 
-from AHBLiteRAM_1rw import AHBLiteRAM_1rw
-from RegCheck import RegCheck
+
+from LoadMemory import loadFromFile, loadFromVerilog, clearMemory
 
 import subprocess
 
 async def reset(dut, time=50):
     """ Reset the design """
     dut.rst.value = 1
-    dut.rstn.value = 0
     await Timer(time, units="ns")
     await RisingEdge(dut.clk)
     await Timer(1, units="ns")
     dut.rst.value = 0
-    dut.rstn.value = 1
 
 def checkRegResult(dut):
     """
@@ -46,9 +37,9 @@ def checkRegResult(dut):
         PASSED: x1: 1, x2: 2, x3: 3
         FAILED: x1: f, x2: f, x3: f
     """
-    regValue = dut.ID.regfile.register.value
+    register_file = dut.u_veriRISCV_core.u_ID.u_regfile.register_file
     try:
-        (reg1, reg2, reg3) = (regValue[1].integer, regValue[2].integer, regValue[3].integer)
+        (reg1, reg2, reg3) = (register_file[1].value.integer, register_file[2].value.integer, register_file[3].value.integer)
     except ValueError:
         (reg1, reg2, reg3) = (0, 0, 0)
     passed = (reg1 == 1   and reg2 == 2   and reg3 == 3)
@@ -66,24 +57,14 @@ async def test(dut, ram_file, timeout=10):
     DELTA = 0.1
 
     # Instruction RAM
-    instrRAM = AHBLiteRAM_1rw(32,32,ram_file)
-    instrRAM.ahbPort.connect(dut.clk, dut.rstn,
-                             dut.ibus_hwrite, dut.ibus_hsize, dut.ibus_hburst, dut.ibus_hport,
-                             dut.ibus_htrans, dut.ibus_hmastlock, dut.ibus_haddr, dut.ibus_hwdata,
-                             dut.ibus_hready, dut.ibus_hresp, dut.ibus_hrdata)
+    loadFromVerilog(ram_file, dut.u_instruction_ram.ram)
 
     # Data RAM
-    dataRAM = AHBLiteRAM_1rw(32,32, ram_file)
-    dataRAM.ahbPort.connect(dut.clk, dut.rstn,
-                             dut.dbus_hwrite, dut.dbus_hsize, dut.dbus_hburst, dut.dbus_hport,
-                             dut.dbus_htrans, dut.dbus_hmastlock, dut.dbus_haddr, dut.dbus_hwdata,
-                             dut.dbus_hready, dut.dbus_hresp, dut.dbus_hrdata)
+    # FIXME
 
     # Test start
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10 ns period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
-    instrRAM.run()  # Start memory
-    dataRAM.run() # Start memory
     await reset(dut)
     time = 0
     passed = False
@@ -98,9 +79,9 @@ async def test(dut, ram_file, timeout=10):
 
 async def testVerilog(dut, name, timeout=10):
     REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')
-    RV_TEST_PATH = '/tests/riscv-tests/generated/'
+    RV_TEST_PATH = '/tests/riscv-isa/riscv-tests/generated/'
     VERILOG_EXTENSION = '.verilog_reversed_4byte'
     file = REPO_ROOT + RV_TEST_PATH + name + VERILOG_EXTENSION
     await test(dut, file, timeout)
 
-###########################################################
+

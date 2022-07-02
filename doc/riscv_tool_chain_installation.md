@@ -19,12 +19,18 @@ For Arch Linux:
 sudo pacman -S nodejs npm
 ```
 
+For Debian Linux:
+
+```shell
+sudo apt-get install npm
+```
+
 2. xpm
 
 Installation guide can be found at <https://xpack.github.io/xpm/install/>
 
 ```shell
-sudo npm install --global xpm@latest
+sudo npm install --global xpm@latest --no-audit
 ```
 
 ## Installation
@@ -34,7 +40,7 @@ Installation guide can be found at <https://xpack.github.io/riscv-none-embed-gcc
 **xpm** is required for the installation. See **Prerequisites** to install **xpm** if it is not installed
 
 ```shell
-sudo xpm install --global @xpack-dev-tools/riscv-none-embed-gcc@latest --verbose
+xpm install --global @xpack-dev-tools/riscv-none-embed-gcc@latest --verbose
 ```
 
 The tool chain is installed in the following path: `~/.local/xPacks/@xpack-dev-tools/riscv-none-embed-gcc/10.2.0-1.2.1/.content/`. You might have a different version or path `10.2.0-1.2.1` depending on your installation.

@@ -42,7 +42,7 @@ TBD
 **GNU MCU Eclipse RISC-V Embedded GCC** is used to compile the C code into RISC-V ISA using newlib as the C standard library.
 
 - GNU MCU Eclipse RISC-V Embedded GCC: <https://gnu-mcu-eclipse.github.io/blog/2019/05/21/riscv-none-gcc-v8-2-0-2-2-20190521-released>
-- Check [riscv_tool_chain_installation](doc/riscv_tool_chain_installation.md) for more detail on how to install the tool chain.
+- Check [riscv_tool_chain_installation](doc/riscv_tool_chain_installation.md) for details on how to install the tool chain.
 
 ### Python3, Cocotb, Icarus Verilog
 

@@ -1,5 +1,5 @@
 
-tests = basic riscv-tests
+tests = sanity riscv-tests
 
 .PHONY: $(tests)
 
@@ -11,8 +11,11 @@ $(tests):
 summary: $(tests)
 	@echo ""
 	@echo ""
-	@echo "******** SUMMARY ********"
-	@grep -o "TESTS=.* PASS=.* FAIL=.* SKIP=.?*" *.log
+	@echo "---------------------------------"
+	@echo "------------ SUMMARY ------------"
+	@echo "---------------------------------"
+	@grep -o "TESTS=.* PASS=.* FAIL=.* SKIP=.?*" *.log --color
+	@echo "---------------------------------"
 
 
 clean:

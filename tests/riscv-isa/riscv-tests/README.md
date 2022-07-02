@@ -7,13 +7,21 @@
 
 ## Introduction
 
-The tests code use used here are copied from the [riscv-tests](https://github.com/riscv/riscv-tests) repo from riscv organization. See LICENSE for the original license requirement.
+The tests code used here are copied from the [riscv-tests](https://github.com/riscv/riscv-tests) repo from riscv organization. See LICENSE for the original license requirement.
 
 I modified the code for my CPU design verification.
 
 ## How to Build the Instruction RAM file used for simulation
 
-Just run `make` in the linux shell and it will generate the asm dump (\*.dump) and the instruction memory content file (\*.verilog) for each tests.
+1. update the git submodule
+
+    ```shell
+    git submodule update --init
+    ```
+
+2. run make to generate verilog dump
+
+    Just run `make` in the linux shell and it will generate the asm dump (\*.dump) and the instruction memory content file (\*.verilog) for each tests.
 
 ## Modifications on the original contents
 
