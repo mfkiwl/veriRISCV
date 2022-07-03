@@ -184,6 +184,8 @@ module veriRISCV_core (
     hdu u_hdu(
         .branch_take (branch_take),
         .load_stall  (hdu_load_stall),
+        .ex_csr_read (id2ex_pipeline_ctrl.csr_read),
+        .mem_csr_read(ex2mem_pipeline_ctrl.csr_read),
         .if_flush    (if_flush),
         .if_stall    (if_stall),
         .id_flush    (id_flush),

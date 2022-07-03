@@ -221,7 +221,7 @@ module decoder (
                     csr_read = (func3[1:0] != `CORE_CSR_RW) | (regfile_reg_regid != 0);
                     // From SPEC: for CSRRS/CSRRC, if rs1=x0, then the instruction will not write to the CSR at all, and
                     // so shall not cause any of the side effects that might otherwise occur on a CSR write
-                    csr_write = (func3[1:0] != `CORE_CSR_NOP) & (~func3[2] & (regfile_rs1_regid != 0));
+                    csr_write = (func3[1:0] == `CORE_CSR_RW) | ((func3[1:0] != `CORE_CSR_NOP) & (regfile_rs1_regid != 0));
                     csr_write_opcode = func3[1:0];
                     regfile_reg_write = csr_read;
                     regfile_rs1_read = ~func3[2];
