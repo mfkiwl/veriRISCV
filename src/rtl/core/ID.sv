@@ -61,6 +61,8 @@ module ID (
     id2ex_pipeline_data_t   id_stage_data;
     logic                   stage_run;
 
+    logic                   exception_ill_instr;
+
     // ---------------------------------
     // Main logic
     // ---------------------------------
@@ -68,6 +70,8 @@ module ID (
     assign id_stage_ctrl.valid       = if2id_pipeline_ctrl.valid;
     assign id_stage_data.instruction = if2id_pipeline_data.instruction;
     assign id_stage_data.pc          = if2id_pipeline_data.pc;
+
+    assign id_stage_exc.exception_ill_instr = if2id_pipeline_ctrl.valid & exception_ill_instr;
 
     // Forward check on ID stage for better timing performance
     assign rs1_match_ex  = regfile_rs1_regid == id2ex_pipeline_data.reg_regid;
@@ -147,7 +151,7 @@ module ID (
         .mem_write              (id_stage_ctrl.mem_write),
         .mem_opcode             (id_stage_data.mem_opcode),
         .mret                   (id_stage_ctrl.mret),
-        .exception_ill_instr    (id_stage_exc.exception_ill_instr)
+        .exception_ill_instr    (exception_ill_instr)
     );
 
 

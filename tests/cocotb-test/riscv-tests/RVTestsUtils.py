@@ -55,12 +55,9 @@ async def test(dut, ram_file, timeout=10):
     """
 
     DELTA = 0.1
-
-    # Instruction RAM
-    loadFromVerilog(ram_file, dut.u_instruction_ram.ram)
-
-    # Data RAM
-    # FIXME
+    UNIFIED_RAM = True
+    if UNIFIED_RAM:
+        loadFromVerilog(ram_file, dut.u_memory.ram)
 
     # Test start
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10 ns period clock on port clk

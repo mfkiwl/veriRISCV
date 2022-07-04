@@ -23,12 +23,35 @@ module avalon_ram_1rw #(
     output              waitrequest
 );
 
+    localparam BYTE_WIDTH = 8;
+    localparam NUM_BYTES = DW / BYTE_WIDTH;
+
+`ifdef QUARTUS_RAM
+
+    reg [NUM_BYTES-1:0][BYTE_WIDTH-1:0] ram[0:(1<<AW)-1];
+
+    always @(posedge clk) begin
+        if(write) begin
+            for (int i = 0; i < NUM_BYTES; i = i + 1) begin
+                if(byte_enable[i]) ram[address][i] <= writedata[i*BYTE_WIDTH +: BYTE_WIDTH];
+            end
+        end
+        if (read) readdata <= ram[address];
+    end
+
+`else
 
     reg [DW-1:0] ram[0:(1<<AW)-1];
 
     always @(posedge clk) begin
-        if (write) ram[address] <= writedata;
+        if(write) begin
+            for (int i = 0; i < NUM_BYTES; i = i + 1) begin
+                if(byte_enable[i]) ram[address][i*BYTE_WIDTH +: BYTE_WIDTH] <= writedata[i*BYTE_WIDTH +: BYTE_WIDTH];
+            end
+        end
         if (read) readdata <= ram[address];
     end
+
+`endif
 
 endmodule

@@ -41,7 +41,7 @@ module hdu (
     assign id_flush = branch_take | load_stall | csr_stall | trap_take;
     assign ex_flush = trap_take;
     assign mem_flush = trap_take;
-    assign wb_flush = trap_take;
+    assign wb_flush = 0;
 
     assign if_stall = load_stall | csr_stall;
     assign id_stall = 1'b0;

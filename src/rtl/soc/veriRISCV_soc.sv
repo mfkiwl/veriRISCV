@@ -43,6 +43,8 @@ module veriRISCV_soc #(
         .debug_interrupt
     );
 
+`ifdef SAPERATE_RAM
+
     avalon_ram_1rw
     #(
         .AW       (IAW-2),
@@ -59,7 +61,7 @@ module veriRISCV_soc #(
         .waitrequest (ibus_avalon_resp.waitrequest)
     );
 
-    avalon_ram_1rw_be
+    avalon_ram_1rw
     #(
         .AW       (DAW-2),
         .DW       (32)
@@ -74,5 +76,34 @@ module veriRISCV_soc #(
         .readdata    (dbus_avalon_resp.readdata),
         .waitrequest (dbus_avalon_resp.waitrequest)
     );
+
+`else
+
+    localparam AW = IAW > DAW ? IAW : DAW;
+
+    avalon_ram_2rw
+    #(
+        .AW       (AW-2),
+        .DW       (32)
+    )
+    u_memory(
+        .clk            (clk),
+        .p1_read        (ibus_avalon_req.read),
+        .p1_write       (ibus_avalon_req.write),
+        .p1_address     (ibus_avalon_req.address[IAW-1:2]),    // word size
+        .p1_byte_enable (ibus_avalon_req.byte_enable),
+        .p1_writedata   (ibus_avalon_req.writedata),
+        .p1_readdata    (ibus_avalon_resp.readdata),
+        .p1_waitrequest (ibus_avalon_resp.waitrequest),
+        .p2_read        (dbus_avalon_req.read),
+        .p2_write       (dbus_avalon_req.write),
+        .p2_address     (dbus_avalon_req.address[DAW-1:2]),    // word size
+        .p2_byte_enable (dbus_avalon_req.byte_enable),
+        .p2_writedata   (dbus_avalon_req.writedata),
+        .p2_readdata    (dbus_avalon_resp.readdata),
+        .p2_waitrequest (dbus_avalon_resp.waitrequest)
+    );
+
+`endif
 
 endmodule
