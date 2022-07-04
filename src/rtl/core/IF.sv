@@ -23,6 +23,9 @@ module IF (
     // branch control
     input                   branch_take,
     input [`PC_RANGE]       branch_pc,
+    // trap control
+    input                   trap_take,
+    input [`PC_RANGE]       trap_pc,
     // pipelineline stage
     output if2id_pipeline_ctrl_t if2id_pipeline_ctrl,
     output if2id_pipeline_data_t if2id_pipeline_data
@@ -96,6 +99,8 @@ module IF (
        .stall           (if_stall),
        .branch_take     (branch_take),
        .branch_pc       (branch_pc),
+       .trap_take       (trap_take),
+       .trap_pc         (trap_pc),
        .pc_out          (pc_out));
 
 endmodule

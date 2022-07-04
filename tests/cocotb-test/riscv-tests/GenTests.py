@@ -39,7 +39,7 @@ rv32ui_p_instruction = CONTROL + INTEGER
 rv32ui_p = ['rv32ui', 'p', rv32ui_p_instruction]
 
 # Instruction for csr
-rv32mi_p_csr_instruction = ['mcsr', 'csr']
+rv32mi_p_csr_instruction = ['mcsr', 'csr', 'illegal', 'ma_addr']
 rv32mi_p_csr = ['rv32mi', 'p', rv32mi_p_csr_instruction]
 
 all_instructions = [rv32ui_p, rv32mi_p_csr]

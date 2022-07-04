@@ -70,7 +70,7 @@
 `define DEC_RS2_RANGE       4:0
 `define DEC_FUNC7_RANGE     6:0
 `define DEC_CSR_ADDR_FIELD  31:20
-`define DEC_SYSTEM_31_7     31:7
+`define DEC_SYSTEM_31_7_FIELD 31:7
 
 // Instruction Type
 `define DEC_TYPE_LOGIC      7'b0110011

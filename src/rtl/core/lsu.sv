@@ -18,7 +18,7 @@
 module lsu (
     input                           clk,
     input                           rst,
-    // input from core logic
+    // input from core logic in EX stage
     input                           lsu_mem_read,
     input                           lsu_mem_write,
     input [`CORE_MEM_OP_RANGE]      lsu_mem_opcode,
@@ -31,8 +31,8 @@ module lsu (
     output logic [`DATA_RANGE]      lsu_readdata,
     output logic                    lsu_readdatavalid,
     // exception
-    output logic                    exception_load_addr_misaligned,
-    output logic                    exception_store_addr_misaligned
+    output logic                    lsu_exception_load_addr_misaligned,
+    output logic                    lsu_exception_store_addr_misaligned
 );
 
     reg [1:0]                       prev_byte_addr;
@@ -40,18 +40,21 @@ module lsu (
     reg                             read_pending;
     reg                             sign_bit;
 
-    wire                            sign_bit_final;
-    wire                            sign_ext;
-    wire                            word_aligned;
-    wire                            halfword_aligned;
+    logic                           sign_bit_final;
+    logic                           sign_ext;
+    logic                           word_aligned;
+    logic                           halfword_aligned;
+
+    logic                           addr_misaligned;
+
 
     // ---------------------------------
     // logic
     // ---------------------------------
 
-    assign dbus_avalon_req.write = lsu_mem_write;
-    assign dbus_avalon_req.read = lsu_mem_read;
-    assign dbus_avalon_req.address = lsu_address;
+    assign dbus_avalon_req.write = lsu_mem_write & ~addr_misaligned;
+    assign dbus_avalon_req.read = lsu_mem_read & ~addr_misaligned;
+    assign dbus_avalon_req.address = {lsu_address[`DATA_WIDTH-1:2], 2'b00}; // make it aligned to word boundary
 
     // FIXME waitrequest
 
@@ -136,44 +139,13 @@ module lsu (
 
     always @(*) begin
         case(lsu_mem_opcode[1:0])
-            `CORE_MEM_WORD: exception_store_addr_misaligned = ~word_aligned;
-            `CORE_MEM_HALF: exception_store_addr_misaligned = ~halfword_aligned;
-            default: exception_store_addr_misaligned = 1'b0;
+            `CORE_MEM_WORD: addr_misaligned = ~word_aligned;
+            `CORE_MEM_HALF: addr_misaligned = ~halfword_aligned;
+            default: addr_misaligned = 1'b0;
         endcase
     end
-    always @(*) begin
-        case(lsu_mem_opcode[1:0])
-            `CORE_MEM_WORD: exception_load_addr_misaligned = ~word_aligned;
-            `CORE_MEM_HALF: exception_load_addr_misaligned = ~halfword_aligned;
-            default: exception_store_addr_misaligned = 1'b0;
-        endcase
-    end
+
+    assign lsu_exception_load_addr_misaligned = addr_misaligned & lsu_mem_read;
+    assign lsu_exception_store_addr_misaligned = addr_misaligned & lsu_mem_write;
 
 endmodule
-
-// backup:
-
-    /*
-    // align the data with address
-    always @(posedge clk) begin
-        case(lsu_mem_opcode[1:0])
-            `CORE_MEM_WORD: begin   // SW
-                dbus_avalon_req.writedata = lsu_writedata;
-            end
-            `CORE_MEM_HALF: begin   // SH
-                case(prev_byte_addr[1])
-                    1'b0: dbus_avalon_req.writedata <= {2{lsu_writedata[15:0]}};
-                    1'b1: dbus_avalon_req.writedata <= {2{lsu_writedata[31:16]}};
-                endcase
-            end
-            default: begin          // SB
-                case(lsu_address[1:0])
-                    2'b00: dbus_avalon_req.writedata <= {4{lsu_writedata[7:0]}};
-                    2'b01: dbus_avalon_req.writedata <= {4{lsu_writedata[15:8]}};
-                    2'b10: dbus_avalon_req.writedata <= {4{lsu_writedata[23:16]}};
-                    2'b11: dbus_avalon_req.writedata <= {4{lsu_writedata[31:24]}};
-                endcase
-            end
-        endcase
-    end
-    */

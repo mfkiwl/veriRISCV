@@ -19,6 +19,8 @@ module hdu (
     input       ex_csr_read,
     input       mem_csr_read,
 
+    input       trap_take,
+
     output      if_flush,
     output      if_stall,
     output      id_flush,
@@ -26,7 +28,8 @@ module hdu (
     output      ex_flush,
     output      ex_stall,
     output      mem_flush,
-    output      mem_stall
+    output      mem_stall,
+    output      wb_flush
 );
 
     logic   csr_stall;
@@ -34,10 +37,11 @@ module hdu (
     // For simplicity, we just let csr complete before excuting the next instruction
     assign csr_stall = ex_csr_read | mem_csr_read;
 
-    assign if_flush = branch_take;
-    assign id_flush = branch_take | load_stall | csr_stall;
-    assign ex_flush = 1'b0;
-    assign mem_flush = 1'b0;
+    assign if_flush = branch_take | trap_take;
+    assign id_flush = branch_take | load_stall | csr_stall | trap_take;
+    assign ex_flush = trap_take;
+    assign mem_flush = trap_take;
+    assign wb_flush = trap_take;
 
     assign if_stall = load_stall | csr_stall;
     assign id_stall = 1'b0;

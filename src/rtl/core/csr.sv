@@ -21,7 +21,7 @@ module csr (
     input [`DATA_RANGE]             csr_writedata,
     output [`DATA_RANGE]            csr_readdata,
 
-    input                           trap,
+    input                           trap_take,
 
     input [30:0]                    i_mcause_exception_code,
     input                           i_mcause_interrupt,
@@ -61,7 +61,7 @@ module csr (
     // mcsr
     /* mcsr AUTO_TEMPLATE (
         .csr_writedata          (csr_writedata_final[`DATA_RANGE]),
-        .\(.*\)_wen             (trap),
+        .\(.*\)_wen             (trap_take),
         ); */
     mcsr
     mcsr (/*AUTOINST*/
@@ -81,27 +81,27 @@ module csr (
           .csr_address                  (csr_address[11:0]),
           .csr_writedata                (csr_writedata_final[`DATA_RANGE]), // Templated
           .i_mstatus_mpp                (i_mstatus_mpp[1:0]),
-          .i_mstatus_mpp_wen            (trap),                  // Templated
+          .i_mstatus_mpp_wen            (trap_take),                  // Templated
           .i_mstatus_mpie               (i_mstatus_mpie),
-          .i_mstatus_mpie_wen           (trap),                  // Templated
+          .i_mstatus_mpie_wen           (trap_take),                  // Templated
           .i_mstatus_mie                (i_mstatus_mie),
-          .i_mstatus_mie_wen            (trap),                  // Templated
-          .i_misa_mxl_wen               (trap),                  // Templated
-          .i_misa_extensions_wen        (trap),                  // Templated
-          .i_mtvec_base_wen             (trap),                  // Templated
-          .i_mtvec_mode_wen             (trap),                  // Templated
-          .i_mscratch_value_wen         (trap),                  // Templated
+          .i_mstatus_mie_wen            (trap_take),                  // Templated
+          .i_misa_mxl_wen               (trap_take),                  // Templated
+          .i_misa_extensions_wen        (trap_take),                  // Templated
+          .i_mtvec_base_wen             (trap_take),                  // Templated
+          .i_mtvec_mode_wen             (trap_take),                  // Templated
+          .i_mscratch_value_wen         (trap_take),                  // Templated
           .i_mepc_value                 (i_mepc_value[31:0]),
-          .i_mepc_value_wen             (trap),                  // Templated
+          .i_mepc_value_wen             (trap_take),                  // Templated
           .i_mcause_interrupt           (i_mcause_interrupt),
-          .i_mcause_interrupt_wen       (trap),                  // Templated
+          .i_mcause_interrupt_wen       (trap_take),                  // Templated
           .i_mcause_exception_code      (i_mcause_exception_code[30:0]),
-          .i_mcause_exception_code_wen  (trap),                  // Templated
+          .i_mcause_exception_code_wen  (trap_take),                  // Templated
           .i_mtval_value                (i_mtval_value[31:0]),
-          .i_mtval_value_wen            (trap),                  // Templated
-          .i_mvendorid_value_wen        (trap),                  // Templated
-          .i_marchid_value_wen          (trap),                  // Templated
-          .i_mimpid_value_wen           (trap),                  // Templated
-          .i_mhartid_value_wen          (trap));                  // Templated
+          .i_mtval_value_wen            (trap_take),                  // Templated
+          .i_mvendorid_value_wen        (trap_take),                  // Templated
+          .i_marchid_value_wen          (trap_take),                  // Templated
+          .i_mimpid_value_wen           (trap_take),                  // Templated
+          .i_mhartid_value_wen          (trap_take));                  // Templated
 
 endmodule

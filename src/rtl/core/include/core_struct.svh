@@ -43,12 +43,12 @@ typedef struct packed {
 
 // IF/ID
 typedef struct packed {
-    logic [`PC_RANGE]       pc;
-    logic [`DATA_RANGE]     instruction;
+    logic [`PC_RANGE]               pc;
+    logic [`DATA_RANGE]             instruction;
 } if2id_pipeline_data_t;
 
 typedef struct packed {
-    logic                   valid;
+    logic                           valid;
 } if2id_pipeline_ctrl_t;
 
 // ID/EX
@@ -66,10 +66,13 @@ typedef struct packed {
     // memory
     logic                          mem_read;
     logic                          mem_write;
-    // other instruction and exception
+    // other instruction
     logic                          mret;
-    logic                          exception_ill_instr;
 } id2ex_pipeline_ctrl_t;
+
+typedef struct packed {
+    logic                          exception_ill_instr;
+} id2ex_pipeline_exc_t;
 
 typedef struct packed {
     // general info
@@ -97,12 +100,7 @@ typedef struct packed {
     logic [`DATA_RANGE]            rs1_readdata;
     logic [`DATA_RANGE]            rs2_readdata;
     // memory
-    logic                          mem_read;
-    logic                          mem_write;
     logic [`CORE_MEM_OP_RANGE]     mem_opcode;
-    // other instruction and exception
-    logic                          mret;
-    logic                          exception_ill_instr;
 } id2ex_pipeline_data_t;
 
 // EX/MEM
@@ -115,9 +113,14 @@ typedef struct packed {
     logic                          reg_write;
     // other
     logic                          mret;
+} ex2mem_pipeline_ctrl_t;
+
+typedef struct packed {
     logic                          exception_ill_instr;
     logic                          exception_instr_addr_misaligned;
-} ex2mem_pipeline_ctrl_t;
+    logic                          exception_load_addr_misaligned;
+    logic                          exception_store_addr_misaligned;
+} ex2mem_pipeline_exc_t;
 
 typedef struct packed {
     logic [`PC_RANGE]              pc;
@@ -130,6 +133,7 @@ typedef struct packed {
     logic [`RF_RANGE]              reg_regid;
     // other
     logic [`DATA_RANGE]            alu_out;
+    logic [`DATA_RANGE]            lsu_address;
 } ex2mem_pipeline_data_t;
 
 // MEM/WB
@@ -142,11 +146,15 @@ typedef struct packed {
     logic                          csr_write;
     // other
     logic                          mret;
+} mem2wb_pipeline_ctrl_t;
+
+typedef struct packed {
     logic                          exception_ill_instr;
     logic                          exception_instr_addr_misaligned;
     logic                          exception_load_addr_misaligned;
     logic                          exception_store_addr_misaligned;
-} mem2wb_pipeline_ctrl_t;
+} mem2wb_pipeline_exc_t;
+
 
 typedef struct packed {
     logic [`PC_RANGE]              pc;

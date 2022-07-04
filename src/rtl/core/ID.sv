@@ -34,6 +34,7 @@ module ID (
     output                              hdu_load_stall,
     // to ID/EX pipelineline stage
     output id2ex_pipeline_ctrl_t        id2ex_pipeline_ctrl,
+    output id2ex_pipeline_exc_t         id2ex_pipeline_exc,
     output id2ex_pipeline_data_t        id2ex_pipeline_data
 );
 
@@ -56,6 +57,7 @@ module ID (
     logic                   rs2_non_zero;
 
     id2ex_pipeline_ctrl_t   id_stage_ctrl;
+    id2ex_pipeline_exc_t    id_stage_exc;
     id2ex_pipeline_data_t   id_stage_data;
     logic                   stage_run;
 
@@ -88,15 +90,15 @@ module ID (
     assign stage_run = ~id_stall;
 
     always @(posedge clk) begin
-        if (rst) begin
-            id2ex_pipeline_ctrl <= 0;
-        end
-        else if (!if2id_pipeline_ctrl.valid || id_flush || id_stage_ctrl.exception_ill_instr) begin
-            id2ex_pipeline_ctrl <= 0;
-        end
-        else if (stage_run) begin
-            id2ex_pipeline_ctrl <= id_stage_ctrl;
-        end
+        if (rst) id2ex_pipeline_ctrl <= 0;
+        else if (!if2id_pipeline_ctrl.valid || id_flush || id_stage_exc.exception_ill_instr) id2ex_pipeline_ctrl <= 0;
+        else if (stage_run) id2ex_pipeline_ctrl <= id_stage_ctrl;
+    end
+
+    always @(posedge clk) begin
+        if (rst) id2ex_pipeline_exc <= 0;
+        else if (id_flush) id2ex_pipeline_exc <= 0;
+        else if (stage_run) id2ex_pipeline_exc <= id_stage_exc;
     end
 
     always @(posedge clk) begin
@@ -145,7 +147,7 @@ module ID (
         .mem_write              (id_stage_ctrl.mem_write),
         .mem_opcode             (id_stage_data.mem_opcode),
         .mret                   (id_stage_ctrl.mret),
-        .exception_ill_instr    (id_stage_ctrl.exception_ill_instr)
+        .exception_ill_instr    (id_stage_exc.exception_ill_instr)
     );
 
 

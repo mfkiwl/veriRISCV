@@ -75,10 +75,10 @@ module decoder (
     // Signal Declaration
     // ---------------------------------
 
-    wire [`DEC_OPCODE_RANGE]    opcode;
-    wire [`DEC_FUNC7_RANGE]     func7;
-    wire [`DEC_FUNC3_RANGE]     func3;
-    wire [`DEC_SYSTEM_31_7]     instr_31_7;
+    logic [`DEC_OPCODE_RANGE]    opcode;
+    logic [`DEC_FUNC7_RANGE]     func7;
+    logic [`DEC_FUNC3_RANGE]     func3;
+    logic [`DEC_SYSTEM_31_7_FIELD] instr_31_7;
 
 
     // ---------------------------------
@@ -95,6 +95,7 @@ module decoder (
     assign func7 = instruction[`DEC_FUNC7_FIELD];
     assign func3 = instruction[`DEC_FUNC3_FIELD];
     assign csr_address = instruction[`DEC_CSR_ADDR_FIELD];
+    assign instr_31_7 = instruction[`DEC_SYSTEM_31_7_FIELD];
 
 
     // Decode logic

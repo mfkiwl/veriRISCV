@@ -56,7 +56,7 @@ module mcsr
 );
 
     logic [31:0]    mstatus;
-    reg [1:0]       mstatus_mpp;
+    logic [1:0]     mstatus_mpp;    // we only supprot M mode
     reg             mstatus_mpie;
     reg             mstatus_mie;
 
@@ -110,12 +110,19 @@ module mcsr
 
     // -- Assign constant field with its value -- //
 
+    assign mstatus_mpp = 2'b11;
+
     assign misa_mxl = 2'h1;
     assign misa_extensions = 26'h100;
+
     assign mvendorid_value = 32'h0;
+
     assign marchid_value = 32'h0;
+
     assign mimpid_value = 32'h0;
+
     assign mhartid_value = 32'h0;
+
 
     // -- Assign output with its field -- //
 
@@ -147,9 +154,8 @@ module mcsr
     // -- Write Logic -- //
     always @(posedge clk) begin
         if (rst) begin
-            mstatus_mpp <= 2'h0;
             mstatus_mpie <= 1'h0;
-            mstatus_mie <= 1'h0;
+            mstatus_mie <= 1'h1;        // set to 1 ?
             mtvec_base <= 30'h0;
             mtvec_mode <= 2'h0;
             mscratch_value <= 32'h0;
@@ -159,7 +165,6 @@ module mcsr
             mtval_value <= 32'h0;
         end
         else begin
-            if (i_mstatus_mpp_wen) mstatus_mpp <= i_mstatus_mpp;
             if (i_mstatus_mpie_wen) mstatus_mpie <= i_mstatus_mpie;
             if (i_mstatus_mie_wen) mstatus_mie <= i_mstatus_mie;
             if (i_mepc_value_wen) mepc_value <= i_mepc_value;
@@ -170,7 +175,6 @@ module mcsr
             if (csr_write) begin
                 case(csr_address)
                     12'h300: begin
-                        mstatus_mpp <= csr_writedata[12:11];
                         mstatus_mpie <= csr_writedata[7:7];
                         mstatus_mie <= csr_writedata[3:3];
                     end

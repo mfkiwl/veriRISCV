@@ -3,7 +3,7 @@
 # Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 # Author: Heqing Huang
 #
-# Date Created: 2022-07-02
+# Date Created: 2022-07-04
 # ------------------------------------------------------------------------------------------------
 # veriRISCV
 # ------------------------------------------------------------------------------------------------
@@ -135,4 +135,12 @@ async def MCSR(dut):
 @cocotb.test()
 async def CSR(dut):
     await testVerilog(dut, 'rv32mi-p-csr')
+
+@cocotb.test()
+async def ILLEGAL(dut):
+    await testVerilog(dut, 'rv32mi-p-illegal')
+
+@cocotb.test()
+async def MA_ADDR(dut):
+    await testVerilog(dut, 'rv32mi-p-ma_addr')
 
