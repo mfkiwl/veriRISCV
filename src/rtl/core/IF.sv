@@ -72,8 +72,6 @@ module IF (
     assign ibus_avalon_req.byte_enable = 4'b1111;
     assign ibus_avalon_req.read = 1'b1; // always read
 
-    // FIXME: need to handle waitrequest
-
     // -- Pipeline Stage -- //
     always @(posedge clk) begin
         if (rst)            if2id_pipeline_ctrl <= 0;

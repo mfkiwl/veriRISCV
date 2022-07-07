@@ -204,6 +204,7 @@ module veriRISCV_core (
         .branch_take (branch_take),
         .trap_take   (trap_take),
         .load_stall  (hdu_load_stall),
+        .ibus_waitrequest(ibus_avalon_resp.waitrequest),
         .ex_csr_read (id2ex_pipeline_ctrl.csr_read),
         .mem_csr_read(ex2mem_pipeline_ctrl.csr_read),
         .if_flush    (if_flush),
