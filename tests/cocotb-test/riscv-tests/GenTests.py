@@ -32,7 +32,8 @@ from RVTestsUtils import *
 CONTROL = ['jal', 'jalr', 'beq', 'bne', 'blt', 'bge', 'bltu', 'bgeu']
 INTEGER = ['lui', 'auipc', \
            'addi', 'slti', 'sltiu', 'xori', 'ori', 'andi', 'slli', 'srli', 'srai', \
-           'add', 'sub', 'sll', 'slt', 'sltu', 'xor', 'srl', 'sra', 'or', 'and']
+           'add', 'sub', 'sll', 'slt', 'sltu', 'xor', 'srl', 'sra', 'or', 'and', \
+            'lb', 'lbu', 'lh', 'lhu', 'lw', 'sb', 'sh', 'sw']
 
 # Instruction for rv32ui, p architecture
 rv32ui_p_instruction = CONTROL + INTEGER

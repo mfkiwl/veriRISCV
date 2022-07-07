@@ -40,8 +40,8 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
     dut.debug_interrupt.value = 0
 
     # Instruction RAM
-    clearMemory(dut.u_instruction_ram.ram, 100)
-    loadFromFile(ram_file, dut.u_instruction_ram.ram)
+    clearMemory(dut.u_memory.ram, 1024)
+    loadFromFile(ram_file, dut.u_memory.ram)
 
     # Register checker
     regCheck = RegCheck(dut.u_veriRISCV_core.u_ID.u_regfile.register_file, golden_file)

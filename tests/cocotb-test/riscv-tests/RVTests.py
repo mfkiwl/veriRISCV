@@ -3,7 +3,7 @@
 # Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 # Author: Heqing Huang
 #
-# Date Created: 2022-07-03
+# Date Created: 2022-07-06
 # ------------------------------------------------------------------------------------------------
 # veriRISCV
 # ------------------------------------------------------------------------------------------------
@@ -127,6 +127,38 @@ async def OR(dut):
 @cocotb.test()
 async def AND(dut):
     await testVerilog(dut, 'rv32ui-p-and')
+
+@cocotb.test()
+async def LB(dut):
+    await testVerilog(dut, 'rv32ui-p-lb')
+
+@cocotb.test()
+async def LBU(dut):
+    await testVerilog(dut, 'rv32ui-p-lbu')
+
+@cocotb.test()
+async def LH(dut):
+    await testVerilog(dut, 'rv32ui-p-lh')
+
+@cocotb.test()
+async def LHU(dut):
+    await testVerilog(dut, 'rv32ui-p-lhu')
+
+@cocotb.test()
+async def LW(dut):
+    await testVerilog(dut, 'rv32ui-p-lw')
+
+@cocotb.test()
+async def SB(dut):
+    await testVerilog(dut, 'rv32ui-p-sb')
+
+@cocotb.test()
+async def SH(dut):
+    await testVerilog(dut, 'rv32ui-p-sh')
+
+@cocotb.test()
+async def SW(dut):
+    await testVerilog(dut, 'rv32ui-p-sw')
 
 @cocotb.test()
 async def MCSR(dut):

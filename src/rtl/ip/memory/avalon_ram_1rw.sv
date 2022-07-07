@@ -41,7 +41,7 @@ module avalon_ram_1rw #(
 
 `else
 
-    reg [DW-1:0] ram[0:(1<<AW)-1];
+    reg [DW-1:0] ram[(1<<AW)-1:0];
 
     always @(posedge clk) begin
         if(write) begin

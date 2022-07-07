@@ -65,8 +65,15 @@ module lsu (
     assign lsu_readdatavalid = read_pending;
 
     // --  write data generation  -- //
-    // The writedata should be aligned alrady
-    assign dbus_avalon_req.writedata = lsu_writedata;
+    always @* begin
+        dbus_avalon_req.writedata = lsu_writedata;
+        case(lsu_mem_opcode[1:0])
+            `CORE_MEM_WORD: dbus_avalon_req.writedata = lsu_writedata;
+            `CORE_MEM_HALF: dbus_avalon_req.writedata = {2{lsu_writedata[15:0]}};
+            default:        dbus_avalon_req.writedata = {4{lsu_writedata[7:0]}};
+
+        endcase
+    end
 
     // --  Read data generation  -- //
 

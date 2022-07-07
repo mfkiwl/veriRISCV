@@ -89,3 +89,6 @@ BGEU1:
 NOP
 NOP
 NOP
+
+END:
+	BEQ x0, x0 END
