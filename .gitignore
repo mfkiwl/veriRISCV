@@ -12,3 +12,6 @@ results.xml
 *.dump
 *.verilog
 *.verilog_reversed_4byte
+
+# c
+*.o
