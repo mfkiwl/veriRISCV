@@ -12,9 +12,14 @@
 `include "core.svh"
 `include "veriRISCV_soc.svh"
 
-module veriRISCV_soc (
+module veriRISCV_soc #(
+    parameter GPIO_WIDTH = 32
+) (
     input           clk,
-    input           rst
+    input           rst,
+
+    inout [GPIO_WIDTH-1:0] gpio0,
+    inout [GPIO_WIDTH-1:0] gpio1
 );
 
     avalon_req_t    ibus_avalon_req;
@@ -158,14 +163,6 @@ module veriRISCV_soc (
     assign aon_avn_readdata = 0;
     assign aon_avn_waitrequest = 0;
 
-    // GPIO0
-    assign gpio0_avn_readdata = 0;
-    assign gpio0_avn_waitrequest = 0;
-
-    // GPIO1
-    assign gpio1_avn_readdata = 0;
-    assign gpio1_avn_waitrequest = 0;
-
     // UART
     assign uart0_avn_readdata = 0;
     assign uart0_avn_waitrequest = 0;
@@ -189,6 +186,34 @@ module veriRISCV_soc (
         .waitrequest (ram_avn_waitrequest)
     );
 
+    // GPIO0
+    avalon_gpio #(.W(GPIO_WIDTH))
+    gpio_0 (
+        .clk            (clk),
+        .rst            (rst),
+        .gpio           (gpio0),
+        .avn_read       (gpio0_avn_read),
+        .avn_write      (gpio0_avn_write),
+        .avn_address    (gpio0_avn_address[6:0]),
+        .avn_byte_enable(gpio0_avn_byte_enable),
+        .avn_writedata  (gpio0_avn_writedata),
+        .avn_readdata   (gpio0_avn_readdata),
+        .avn_waitrequest(gpio0_avn_waitrequest)
+    );
 
+    // GPIO1
+    avalon_gpio #(.W(GPIO_WIDTH))
+    gpio_1 (
+        .clk            (clk),
+        .rst            (rst),
+        .gpio           (gpio1),
+        .avn_read       (gpio1_avn_read),
+        .avn_write      (gpio1_avn_write),
+        .avn_address    (gpio1_avn_address[6:0]),
+        .avn_byte_enable(gpio1_avn_byte_enable),
+        .avn_writedata  (gpio1_avn_writedata),
+        .avn_readdata   (gpio1_avn_readdata),
+        .avn_waitrequest(gpio1_avn_waitrequest)
+    );
 
 endmodule
