@@ -11,4 +11,5 @@ VERILOG_SOURCES += $(AVN_BUS_PATH)/avalon_s_crossbar.sv
 
 VERILOG_SOURCES += $(REPO_ROOT)/src/rtl/ip/memory/avalon_ram_1rw.sv
 VERILOG_SOURCES += $(REPO_ROOT)/src/rtl/ip/memory/avalon_ram_2rw.sv
+VERILOG_SOURCES += $(REPO_ROOT)/src/rtl/soc/veriRISCV_avalon_bus.sv
 VERILOG_SOURCES += $(REPO_ROOT)/src/rtl/soc/veriRISCV_soc.sv

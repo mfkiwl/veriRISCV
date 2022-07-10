@@ -76,8 +76,8 @@ module avalon_s_crossbar #(
                 assign arbiter_avn_byte_enable[i][j]  = decoder_avn_byte_enable[j][i];
                 assign arbiter_avn_writedata[i][j]    = decoder_avn_writedata[j][i];
 
-                assign decoder_avn_readdata[i][j]     = arbiter_avn_readdata[j][i];
-                assign decoder_avn_waitrequest[i][j]  = arbiter_avn_waitrequest[j][i];
+                assign decoder_avn_readdata[j][i]     = arbiter_avn_readdata[i][j];
+                assign decoder_avn_waitrequest[j][i]  = arbiter_avn_waitrequest[i][j];
             end
         end
     endgenerate
@@ -112,7 +112,7 @@ module avalon_s_crossbar #(
 
     genvar d;
     generate
-        for (d = 0; d < NH; d++) begin
+        for (d = 0; d < ND; d++) begin
             avalon_s_arbiter #(.NH(NH), .DW(DW), .AW (AW))
             u_avalon_s_arbiter (
                 .clk                        (clk),
