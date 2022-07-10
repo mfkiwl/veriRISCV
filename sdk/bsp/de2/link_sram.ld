@@ -9,7 +9,7 @@ MEMORY
 
 SECTIONS
 {
-    /*__stack_size = DEFINED(__stack_size) ? __stack_size : 2K; */
+    __stack_size = DEFINED(__stack_size) ? __stack_size : 2K;
 
     .init :
     {
@@ -19,6 +19,7 @@ SECTIONS
 
     .text :
     {
+        _stext = .;
         *(.text)
         *(.text.*)
         *(.rodata)
@@ -32,7 +33,9 @@ SECTIONS
         _sdata = .;
         *(.data)
         *(.data.*)
-        . = ALIGN(4);
+        . = ALIGN(8);
+        PROVIDE( __global_pointer$ = . + 0x800);
+        /**(.sdata .sdata.*)*/
         _edata = .;
     } >ram
 
@@ -44,5 +47,16 @@ SECTIONS
         . = ALIGN(4);
         _ebss = .;
     } >ram
+
+    . = ALIGN(8);
+    PROVIDE( _end = . );
+    PROVIDE( end = . );
+
+  .stack ORIGIN(ram) + LENGTH(ram) - __stack_size :
+  {
+    PROVIDE( _heap_end = . );
+    . = __stack_size;
+    PROVIDE( _sp = . );
+  } >ram AT>ram
 
 }

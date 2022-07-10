@@ -7,12 +7,17 @@
 # veriRISCV
 #############################################################
 
-REPO_ROOT   = $(shell git rev-parse --show-toplevel)
-DRIVER_PATH = $(REPO_ROOT)/sdk/driver
-BOOT_PATH   = $(DRIVER_PATH)/boot
+REPO_ROOT = $(shell git rev-parse --show-toplevel)
+LIB_PATH  = $(REPO_ROOT)/sdk/lib
+BOOT_PATH = $(LIB_PATH)/boot
+NELIB_PATH = $(LIB_PATH)/newlib
 
 # C include directory
-C_INCS += $(DRIVER_PATH)/system
+C_INCS += $(LIB_PATH)/system
 
 # C source file
-C_SRCS += $(BOOT_PATH)/_start.c
+C_SRCS += $(BOOT_PATH)/init.c
+C_SRCS += $(NELIB_PATH)/syscalls.c
+
+# ASM source file
+ASM_SRCS += $(BOOT_PATH)/start.S

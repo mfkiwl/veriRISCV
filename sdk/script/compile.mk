@@ -35,8 +35,10 @@ AR   = $(RISCV_AR)
 # Compilation Flag
 #############################################################
 
-LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl,--gc-sections  -Wl,--check-sections --specs=nano.specs
-CFLAGS  += -g -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI) # -ffunction-sections -fdata-sections -fno-common
+#LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl,--gc-sections  -Wl,--check-sections --specs=nano.specs, -Map=$(TARGET).map
+LDFLAGS += -T $(LINKER_SCRIPT)  -nostartfiles --specs=nano.specs -Wl,-Map=$(TARGET).map
+#CFLAGS  += -g -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI) -ffunction-sections -fdata-sections -fno-common
+CFLAGS  += -g -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI)
 
 #############################################################
 # Board and source files
@@ -44,11 +46,11 @@ CFLAGS  += -g -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI) # -ffunction-sections -fda
 
 REPO_ROOT   = $(shell git rev-parse --show-toplevel)
 BSP_PATH    = $(REPO_ROOT)/sdk/bsp
-DRV_PATH    = $(REPO_ROOT)/sdk/driver
+LIB_PATH    = $(REPO_ROOT)/sdk/lib
 BOARD		?= de2
 
 include $(BSP_PATH)/$(BOARD)/$(BOARD).mk
-include $(DRV_PATH)/driver.mk
+include $(LIB_PATH)/lib.mk
 
 
 # additional C include files
@@ -80,7 +82,7 @@ $(ASM_OBJS): %.o: %.S
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 $(C_OBJS): %.o: %.c
-	$(CC) $(CFLAGS) $(INCLUDES) -include sys/cdefs.h -c -o $@ $<
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 clean:
 	rm -f $(TARGET) $(CLEAN_OBJS)
@@ -91,7 +93,7 @@ clean:
 
 software: $(TARGET)
 
-dasm: software
+dumpasm: software
 	$(RISCV_OBJDUMP) -D $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
 	$(RISCV_OBJCOPY) $(PROGRAM_ELF) -O verilog $(PROGRAM_ELF).verilog
 	sed -i 's/@800/@000/g' $(PROGRAM_ELF).verilog
