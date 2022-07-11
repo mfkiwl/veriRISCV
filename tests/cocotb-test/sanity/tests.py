@@ -40,7 +40,7 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
     dut.debug_interrupt.value = 0
 
     # Instruction RAM
-    clearMemory(dut.u_memory.ram, 1024)
+    clearMemory(dut.u_memory.ram, 128)
     loadFromFile(ram_file, dut.u_memory.ram)
 
     # Register checker
