@@ -13,13 +13,19 @@
 `include "veriRISCV_soc.svh"
 
 module veriRISCV_soc #(
-    parameter GPIO_WIDTH = 32
+    parameter GPIO_WIDTH = 32,
+    parameter UART_BAUD_RATE = 115200,
+    parameter CLK_FREQ_MHZ = 50
 ) (
     input           clk,
     input           rst,
 
     inout [GPIO_WIDTH-1:0] gpio0,
-    inout [GPIO_WIDTH-1:0] gpio1
+    inout [GPIO_WIDTH-1:0] gpio1,
+
+    input   uart_debug_en,
+    output  uart_txd,
+    input   uart_rxd
 );
 
     avalon_req_t    ibus_avalon_req;
@@ -127,24 +133,6 @@ module veriRISCV_soc #(
     assign external_interrupt = 0;
     assign debug_interrupt = 0;
 
-    // ----------------------------------------
-    //  avalon bus
-    // ----------------------------------------
-
-    veriRISCV_avalon_bus u_veriRISCV_avalon_bus (.*);
-
-    // ----------------------------------------
-    //  SoC Component
-    // ----------------------------------------
-
-    // debug bus
-    assign debug_avn_read = 0;
-    assign debug_avn_write = 0;
-    assign debug_avn_address = 0;
-    assign debug_avn_byte_enable = 0;
-    assign debug_avn_writedata = 0;
-
-
     // instruction bus
     assign ibus_avn_read = ibus_avalon_req.read;
     assign ibus_avn_write = ibus_avalon_req.write;
@@ -163,13 +151,55 @@ module veriRISCV_soc #(
     assign dbus_avalon_resp.readdata = dbus_avn_readdata;
     assign dbus_avalon_resp.waitrequest = dbus_avn_waitrequest;
 
+    // ----------------------------------------
+    //  avalon bus
+    // ----------------------------------------
+
+    veriRISCV_avalon_bus u_veriRISCV_avalon_bus (.*);
+
+    // ----------------------------------------
+    //  SoC Component
+    // ----------------------------------------
+
+    // uart debug host
+    localparam UART_DIV = CLK_FREQ_MHZ * 1000_0000 / UART_BAUD_RATE;
+
+    avalon_uart_host
+    u_uart_debug (
+        .clk                (clk),
+        .rst                (rst),
+        .avn_read           (debug_avn_read),
+        .avn_write          (debug_avn_write),
+        .avn_address        (debug_avn_address),
+        .avn_writedata      (debug_avn_writedata),
+        .avn_byte_enable    (debug_avn_byte_enable),
+        .avn_readdata       (debug_avn_readdata),
+        .avn_waitrequest    (debug_avn_waitrequest),
+        .cfg_div            (UART_DIV[15:0]),
+        .cfg_rxen           (uart_debug_en),
+        .uart_rxd           (uart_rxd)
+    );
+
     // AON domain
     assign aon_avn_readdata = 0;
     assign aon_avn_waitrequest = 0;
 
-    // UART
-    assign uart0_avn_readdata = 0;
-    assign uart0_avn_waitrequest = 0;
+    // UART0
+    avalon_uart
+    uart_0 (
+        .clk                (clk),
+        .rst                (rst),
+        .avn_read           (uart0_avn_read),
+        .avn_write          (uart0_avn_write),
+        .avn_address        (uart0_avn_address[4:0]),
+        .avn_writedata      (uart0_avn_writedata),
+        .avn_readdata       (uart0_avn_readdata),
+        .avn_waitrequest    (uart0_avn_waitrequest),
+        .int_txwm           (),
+        .int_rxwm           (),
+        .uart_txd           (uart_txd),
+        .uart_rxd           (uart_rxd)
+    );
 
     // SRAM
     // use FPGA internal ram for now. will switch to sram later.

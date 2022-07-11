@@ -9,11 +9,16 @@
 
 module de2_top (
     // Clock Input
-    input         CLOCK_50,     // 50 MHz
+    input         CLOCK_50,
     // Push Button
-    input  [3:0]  KEY,          // Pushbutton[3:0]
+    input  [3:0]  KEY,
     // LEDR
-    output [17:0] LEDR          // LED Red[17:0] - mapped to GPIO0
+    output [17:0] LEDR,
+    // DPDT Switch
+    input  [17:0] SW,
+    // UART
+    output        UART_TXD,
+    input         UART_RXD
 );
 
     wire [31:0] gpio0;
@@ -22,10 +27,13 @@ module de2_top (
 
     veriRISCV_soc
     veriRISCV_soc (
-        .clk    (CLOCK_50),
-        .rst    (~KEY[0]),
-        .gpio0  (gpio0),
-        .gpio1  ()
+        .clk            (CLOCK_50),
+        .rst            (~KEY[0]),
+        .gpio0          (gpio0),
+        .gpio1          (),
+        .uart_debug_en  (SW[0]),
+        .uart_txd       (UART_TXD),
+        .uart_rxd       (UART_RXD)
     );
 
 endmodule

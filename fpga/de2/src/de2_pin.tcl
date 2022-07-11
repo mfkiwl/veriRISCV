@@ -26,3 +26,27 @@ set_location_assignment PIN_G26 -to KEY[0]
 set_location_assignment PIN_N23 -to KEY[1]
 set_location_assignment PIN_P23 -to KEY[2]
 set_location_assignment PIN_W26 -to KEY[3]
+
+# SW
+set_location_assignment PIN_N25 -to SW[0]
+set_location_assignment PIN_N26 -to SW[1]
+set_location_assignment PIN_P25 -to SW[2]
+set_location_assignment PIN_AE14 -to SW[3]
+set_location_assignment PIN_AF14 -to SW[4]
+set_location_assignment PIN_AD13 -to SW[5]
+set_location_assignment PIN_AC13 -to SW[6]
+set_location_assignment PIN_C13 -to SW[7]
+set_location_assignment PIN_B13 -to SW[8]
+set_location_assignment PIN_A13 -to SW[9]
+set_location_assignment PIN_N1 -to SW[10]
+set_location_assignment PIN_P1 -to SW[11]
+set_location_assignment PIN_P2 -to SW[12]
+set_location_assignment PIN_T7 -to SW[13]
+set_location_assignment PIN_U3 -to SW[14]
+set_location_assignment PIN_U4 -to SW[15]
+set_location_assignment PIN_V1 -to SW[16]
+set_location_assignment PIN_V2 -to SW[17]
+
+# UART
+set_location_assignment PIN_C25 -to UART_RXD
+set_location_assignment PIN_B25 -to UART_TXD
