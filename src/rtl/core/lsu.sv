@@ -38,8 +38,8 @@ module lsu (
     reg [1:0]                       prev_byte_addr;
     reg [`CORE_MEM_OP_RANGE]        prev_mem_opcode;
     reg                             read_pending;
-    reg                             sign_bit;
 
+    logic                           sign_bit;
     logic                           sign_bit_final;
     logic                           sign_ext;
     logic                           word_aligned;
@@ -97,6 +97,7 @@ module lsu (
     // we assume that the memory does not align the read data with the address.
     // so we need to re-align the data with address here.
     always @(*) begin
+        sign_bit = 0;
         case(prev_mem_opcode[1:0])
             `CORE_MEM_WORD: begin // LW
                 lsu_readdata = dbus_avalon_resp.readdata;

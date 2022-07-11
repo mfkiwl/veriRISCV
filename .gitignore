@@ -16,3 +16,6 @@ results.xml
 # c
 *.o
 *.map
+
+# fpga
+output

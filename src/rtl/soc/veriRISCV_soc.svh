@@ -12,6 +12,9 @@
 `ifndef _VERIRISCV_SOC_
 `define _VERIRISCV_SOC_
 
+// Memory Configuration
+`define MAIN_MEMORY_AW     (12)
+
 // Memory Map
 
 // 0x0000_0000 - 0x7FFF_FFFF: instruction ram and data ram

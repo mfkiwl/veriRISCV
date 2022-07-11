@@ -122,6 +122,10 @@ module veriRISCV_soc #(
         .debug_interrupt
     );
 
+    assign software_interrupt = 0;
+    assign timer_interrupt = 0;
+    assign external_interrupt = 0;
+    assign debug_interrupt = 0;
 
     // ----------------------------------------
     //  avalon bus
@@ -169,17 +173,17 @@ module veriRISCV_soc #(
 
     // SRAM
     // use FPGA internal ram for now. will switch to sram later.
-    localparam MAIN_MEMORY_AW = 20;
+    localparam MM_AW = `MAIN_MEMORY_AW;
     avalon_ram_1rw
     #(
-        .AW       (MAIN_MEMORY_AW-2),
+        .AW       (MM_AW-2),
         .DW       (32)
     )
     u_memory(
         .clk         (clk),
         .read        (ram_avn_read),
         .write       (ram_avn_write),
-        .address     (ram_avn_address[MAIN_MEMORY_AW-1:2]),
+        .address     (ram_avn_address[MM_AW-1:2]),
         .byte_enable (ram_avn_byte_enable),
         .writedata   (ram_avn_writedata),
         .readdata    (ram_avn_readdata),

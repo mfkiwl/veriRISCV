@@ -68,8 +68,8 @@ module avalon_s_crossbar #(
 
     genvar i, j;
     generate
-        for (i = 0; i < ND; i++) begin  // device
-            for (j = 0; j < NH; j++) begin // host
+        for (i = 0; i < ND; i++) begin: device  // device
+            for (j = 0; j < NH; j++) begin: host // host
                 assign arbiter_avn_read[i][j]         = decoder_avn_read[j][i];
                 assign arbiter_avn_write[i][j]        = decoder_avn_write[j][i];
                 assign arbiter_avn_address[i][j]      = decoder_avn_address[j][i];
@@ -84,7 +84,7 @@ module avalon_s_crossbar #(
 
     genvar h;
     generate
-        for (h = 0; h < NH; h++) begin
+        for (h = 0; h < NH; h++) begin: decoder_inst
             avalon_s_decoder #(.ND(ND), .DW(DW), .AW (AW))
             u_avalon_s_decoder (
                 .clk                        (clk),
@@ -112,7 +112,7 @@ module avalon_s_crossbar #(
 
     genvar d;
     generate
-        for (d = 0; d < ND; d++) begin
+        for (d = 0; d < ND; d++) begin: arbiter_inst
             avalon_s_arbiter #(.NH(NH), .DW(DW), .AW (AW))
             u_avalon_s_arbiter (
                 .clk                        (clk),

@@ -61,7 +61,7 @@ module avalon_s_decoder #(
 
     genvar i;
     generate
-        for (i = 0; i < ND; i++) begin
+        for (i = 0; i < ND; i++) begin: decode
             // check which device hit
             assign devices_hit[i] = (host_avn_address >= devices_address_low[i]) & (host_avn_address <= devices_address_high[i]);
 

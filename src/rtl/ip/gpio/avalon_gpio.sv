@@ -85,8 +85,9 @@ module avalon_gpio #(
 
     genvar i;
     generate
-        for (i = 0; i < 31; i++)
+        for (i = 0; i < W; i++) begin: gpio_out
             assign gpio[i] = output_en[i] ? port[i] : 1'bz;
+        end
     endgenerate
 
 endmodule

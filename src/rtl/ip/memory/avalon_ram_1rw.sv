@@ -11,10 +11,10 @@
 
 module avalon_ram_1rw #(
     parameter AW = 10,
-    parameter DW = 32
+    parameter DW = 32   // only support DW = 32 for now
 ) (
     input               clk,
-    input               read,
+    input               read,           // not used
     input               write,
     input [AW-1:0]      address,        // this is the word size
     input [DW/8-1:0]    byte_enable,
@@ -23,25 +23,15 @@ module avalon_ram_1rw #(
     output              waitrequest
 );
 
+    localparam DEPTH = 2 ** AW;
     localparam BYTE_WIDTH = 8;
     localparam NUM_BYTES = DW / BYTE_WIDTH;
 
-`ifdef QUARTUS_RAM
+    assign waitrequest = 1'b0;
 
-    reg [NUM_BYTES-1:0][BYTE_WIDTH-1:0] ram[0:(1<<AW)-1];
+`ifdef COCOTB_SIM
 
-    always @(posedge clk) begin
-        if(write) begin
-            for (int i = 0; i < NUM_BYTES; i = i + 1) begin
-                if(byte_enable[i]) ram[address][i] <= writedata[i*BYTE_WIDTH +: BYTE_WIDTH];
-            end
-        end
-        if (read) readdata <= ram[address];
-    end
-
-`else
-
-    reg [DW-1:0] ram[(1<<AW)-1:0];
+    reg [DW-1:0] ram[DEPTH-1:0];
 
     always @(posedge clk) begin
         if(write) begin
@@ -49,7 +39,21 @@ module avalon_ram_1rw #(
                 if(byte_enable[i]) ram[address][i*BYTE_WIDTH +: BYTE_WIDTH] <= writedata[i*BYTE_WIDTH +: BYTE_WIDTH];
             end
         end
-        if (read) readdata <= ram[address];
+        readdata <= ram[address];
+    end
+
+`else
+
+    reg [NUM_BYTES-1:0][BYTE_WIDTH-1:0] ram[DEPTH-1:0];
+
+    always @(posedge clk) begin
+        if(write) begin
+            if(byte_enable[0]) ram[address][0] <= writedata[7:0];
+            if(byte_enable[1]) ram[address][1] <= writedata[15:8];
+            if(byte_enable[2]) ram[address][2] <= writedata[23:16];
+            if(byte_enable[3]) ram[address][3] <= writedata[31:24];
+        end
+        readdata <= ram[address];
     end
 
 `endif
