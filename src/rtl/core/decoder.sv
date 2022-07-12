@@ -250,6 +250,9 @@ module decoder (
             `DEC_TYPE_BRAHCN: begin
                 imm_value = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:7]};
             end
+            `DEC_TYPE_JAL: begin
+                imm_value = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
+            end
             `DEC_TYPE_LUI, `DEC_TYPE_AUIPC: begin
                 imm_value = {instruction[31:12], 12'b0};
             end

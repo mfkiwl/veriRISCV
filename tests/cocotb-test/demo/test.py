@@ -52,3 +52,7 @@ async def testVerilog(dut, name, timeout=10):
 @cocotb.test()
 async def blink(dut, timeout=100):
     await testVerilog(dut, 'blink', timeout)
+
+@cocotb.test()
+async def uart(dut, timeout=100):
+    await testVerilog(dut, 'uart', timeout)

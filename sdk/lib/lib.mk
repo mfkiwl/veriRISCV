@@ -14,10 +14,12 @@ NELIB_PATH = $(LIB_PATH)/newlib
 
 # C include directory
 C_INCS += $(LIB_PATH)/system
+C_INCS += $(LIB_PATH)/driver/uart
 
 # C source file
 C_SRCS += $(BOOT_PATH)/init.c
 C_SRCS += $(NELIB_PATH)/syscalls.c
+C_SRCS += $(LIB_PATH)/driver/uart/avalon_uart.c
 
 # ASM source file
 ASM_SRCS += $(BOOT_PATH)/start.S

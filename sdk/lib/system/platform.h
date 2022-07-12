@@ -16,5 +16,6 @@
 
 // SOC component address mapping
 #define GPIO0_BASE      (0x80001000)
+#define UART0_BASE      (0x80003000)
 
 #endif

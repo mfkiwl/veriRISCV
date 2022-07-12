@@ -15,6 +15,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "platform.h"
+#include "peripheral.h"
 
 /**
  * @brief Exit a program
@@ -55,7 +57,7 @@ int _close (int fd)
  * @param st
  * @return int
  */
-int fstat(int file, struct stat *st) {
+int _fstat(int file, struct stat *st) {
     if ((STDOUT_FILENO == file) || (STDERR_FILENO == file)) {
         st->st_mode = S_IFCHR;
         return  0;
@@ -104,8 +106,7 @@ int _read (int file, char *ptr, int len) {
     // if the file is tty, we read from uart
     if (isatty(file)) {
         for (i = 0; i < len; i++) {
-            // ptr[i] = _uart_getc(UART0_BASE);
-            ptr[i] = 0; // TBD
+            ptr[i] = avalon_uart_read_byte_blocking(UART0_BASE);
             // return partial value if we get EOL
             if ('\n' == ptr[i]) {
                 return i;
@@ -173,8 +174,7 @@ clock_t _times (struct tms *buf) {
 int _write (int file, char *buf, size_t nbytes) {
 
   if (isatty(file)) {
-    // _uart_putnc(UART0_BASE, buf, nbytes);
-    // TBD
+    avalon_uart_putnc_blocking(UART0_BASE, buf, nbytes);
     return nbytes;
   }
 

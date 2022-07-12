@@ -13,7 +13,9 @@
 `define _VERIRISCV_SOC_
 
 // Memory Configuration
-`define MAIN_MEMORY_AW     (12)
+
+// Memory address width (bytes address)
+`define MAIN_MEMORY_AW     (14)
 
 // Memory Map
 

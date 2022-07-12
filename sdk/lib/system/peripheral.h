@@ -2,15 +2,16 @@
 // Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 // Author: Heqing Huang
 //
-// Date Created: 07/10/2022
+// Date Created: 07/11/2022
 // ------------------------------------------------------------------------------------------------
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
+// Peripheral
+// ------------------------------------------------------------------------------------------------
 
-#ifndef __BOARD_DE2_H__
-#define __BOARD_DE2_H__
+#ifndef __PERIPHERAL_H__
+#define __PERIPHERAL_H__
 
-// Clock Frequency in MHz
-#define CLK_FREQ_MHZ     50
+#include "avalon_uart.h"
 
 #endif
