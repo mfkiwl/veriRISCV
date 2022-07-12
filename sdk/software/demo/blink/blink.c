@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     while(1) {
         *((uint32_t *) (GPIO0_BASE + 0xC)) = value;
         value = ~value;
-        for (int i = 0; i < 10000000; i++);
+        for (int i = 0; i < 500000; i++);
     }
     return 0;
 }

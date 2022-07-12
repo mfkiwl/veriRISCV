@@ -162,7 +162,7 @@ module veriRISCV_soc #(
     // ----------------------------------------
 
     // uart debug host
-    localparam UART_DIV = CLK_FREQ_MHZ * 1000_0000 / UART_BAUD_RATE;
+    localparam UART_DIV = CLK_FREQ_MHZ * 1000000 / UART_BAUD_RATE;
 
     avalon_uart_host
     u_uart_debug (

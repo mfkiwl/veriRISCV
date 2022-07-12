@@ -73,6 +73,12 @@ LINK_DEPS  += $(LINKER_SCRIPT)
 
 CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(DUMP_OBJS) $(VERILOG_OBJS)
 
+dumpasm: software
+	$(RISCV_OBJDUMP) -D $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
+	$(RISCV_OBJCOPY) $(PROGRAM_ELF) -O verilog $(PROGRAM_ELF).verilog
+	sed -i 's/@800/@000/g' $(PROGRAM_ELF).verilog
+
+software: $(TARGET)
 
 $(TARGET): $(LINK_OBJS) $(LINK_DEPS)
 	$(CC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)
@@ -86,14 +92,3 @@ $(C_OBJS): %.o: %.c
 
 clean:
 	rm -f $(TARGET) $(CLEAN_OBJS)
-
-#############################################################
-# This Section is for Software Compilation
-#############################################################
-
-software: $(TARGET)
-
-dumpasm: software
-	$(RISCV_OBJDUMP) -D $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
-	$(RISCV_OBJCOPY) $(PROGRAM_ELF) -O verilog $(PROGRAM_ELF).verilog
-	sed -i 's/@800/@000/g' $(PROGRAM_ELF).verilog
