@@ -63,10 +63,12 @@ all: $(tests_dump)
 # Note:
 # --verilog-data-width=4 makes the each data 4 bytes since my memory model read 4 bytes at a time
 # --reverse-bytes=4 is to make the word in the verilog file little endiness
+# $(RISCV_OBJCOPY) --reverse-bytes=4 --verilog-data-width 4 -O verilog generated/$< generated/$<.verilog_reversed_4byte
+
 
 %.dump: %
 	$(RISCV_OBJDUMP) generated/$< > generated/$@
-	$(RISCV_OBJCOPY) --reverse-bytes=4 --verilog-data-width 4 -O verilog generated/$< generated/$<.verilog_reversed_4byte
+	$(RISCV_OBJCOPY) -O verilog generated/$< generated/$<.verilog_reversed_4byte
 	rm -r generated/$<
 
 clean:

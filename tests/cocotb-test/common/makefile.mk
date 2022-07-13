@@ -38,12 +38,16 @@ export COCOTB_REDUCED_LOG_FMT = 1
 
 DUMP ?= 0
 COVR ?= 0
+SRAM ?= 0
 
 ifeq ($(SIM),verilator)
 EXTRA_ARGS += -I$(CORE_PATH)/include
 EXTRA_ARGS += -I$(SOC_PATH)
 ifeq ($(COVR), 1)
 	EXTRA_ARGS += --coverage
+endif
+ifeq ($(SRAM), 1)
+	EXTRA_ARGS += -DSRAM
 endif
 ifeq ($(DUMP), 1)
 	EXTRA_ARGS += --trace-fst --trace-structs

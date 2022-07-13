@@ -21,7 +21,7 @@ ADDI x19, x0, 0x0
 ADDI x20, x0, 0x0
 ADDI x21, x0, 0x0
 
-BEQ x1, x2 BEQ1
+BEQ x1, x2, BEQ1
 ADDI x4, x0, 0x2
 ADDI x4, x0, 0x2
 ADDI x4, x0, 0x2
@@ -33,7 +33,7 @@ NOP
 NOP
 NOP
 
-BNE x1, x0 BNE1
+BNE x1, x0, BNE1
 ADDI x7, x0, 0x3
 ADDI x7, x0, 0x3
 ADDI x7, x0, 0x3
@@ -45,7 +45,7 @@ NOP
 NOP
 NOP
 
-BLT x3, x1 BLT1
+BLT x3, x1, BLT1
 ADDI x10, x0, 0x4
 ADDI x10, x0, 0x4
 ADDI x10, x0, 0x4
@@ -57,7 +57,7 @@ NOP
 NOP
 NOP
 
-BLTU x0, x1 BLTU1
+BLTU x0, x1, BLTU1
 ADDI x13, x0, 0x5
 ADDI x13, x0, 0x5
 ADDI x13, x0, 0x5
@@ -69,7 +69,7 @@ NOP
 NOP
 NOP
 
-BGE x1, x3 BGE1
+BGE x1, x3, BGE1
 ADDI x16, x0, 0x6
 ADDI x17, x0, 0x6
 BGE1:
@@ -78,7 +78,7 @@ NOP
 NOP
 NOP
 
-BGEU x1, x0 BGEU1
+BGEU x1, x0, BGEU1
 ADDI x19, x0, 0x7
 ADDI x19, x0, 0x7
 ADDI x19, x0, 0x7
@@ -91,4 +91,4 @@ NOP
 NOP
 
 END:
-	BEQ x0, x0 END
+	BEQ x0, x0, END

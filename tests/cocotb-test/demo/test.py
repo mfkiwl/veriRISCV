@@ -18,7 +18,7 @@ from cocotb.regression import TestFactory
 import sys
 sys.path.append('../../cocotb-library/common')
 
-from LoadMemory import loadFromVerilogByte
+from LoadMemory import loadFromVerilogDump
 import subprocess
 
 async def reset(dut, time=50):
@@ -31,9 +31,7 @@ async def reset(dut, time=50):
 
 async def test(dut, ram_file, timeout=10):
     DELTA = 0.1
-    UNIFIED_RAM = True
-    if UNIFIED_RAM:
-        loadFromVerilogByte(ram_file, dut.u_memory.ram)
+    loadFromVerilogDump(ram_file, dut.u_memory.ram, 4)
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10 ns period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     await reset(dut)

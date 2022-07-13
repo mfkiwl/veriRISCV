@@ -17,7 +17,7 @@ import sys
 sys.path.append('../../cocotb-library/common')
 
 
-from LoadMemory import loadFromFile, clearMemory
+from LoadMemory import clearMemory, loadFromVerilogDump
 from RegCheck import RegCheck
 
 async def reset(dut, time=50):
@@ -41,7 +41,7 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
 
     # Instruction RAM
     clearMemory(dut.u_memory.ram, 128)
-    loadFromFile(ram_file, dut.u_memory.ram)
+    loadFromVerilogDump(ram_file, dut.u_memory.ram, 4)
 
     # Register checker
     regCheck = RegCheck(dut.u_veriRISCV_core.u_ID.u_regfile.register_file, golden_file)
@@ -56,34 +56,34 @@ async def RegCheckTest(dut, ram_file, golden_file, time=1):
 @cocotb.test()
 async def logic_simple(dut):
     """ Simple logic instruction test, no forwarding """
-    await RegCheckTest(dut, "tests/logic_simple/mem", "tests/logic_simple/register_golden")
+    await RegCheckTest(dut, "tests/logic_simple.verilog", "tests/logic_simple.register_golden")
 
 @cocotb.test()
 async def logic_forward(dut):
     """ Immediate/Logic type instruction with data forward test """
-    await RegCheckTest(dut, "tests/logic_forward/mem", "tests/logic_forward/register_golden")
+    await RegCheckTest(dut, "tests/logic_forward.verilog", "tests/logic_forward.register_golden")
 
 @cocotb.test()
 async def load_store(dut):
     """ load load type instruction """
-    await RegCheckTest(dut, "tests/load_store/mem", "tests/load_store/register_golden")
+    await RegCheckTest(dut, "tests/load_store.verilog", "tests/load_store.register_golden")
 
 @cocotb.test()
 async def branch(dut):
     """ load store type instruction """
-    await RegCheckTest(dut, "tests/branch/mem", "tests/branch/register_golden")
+    await RegCheckTest(dut, "tests/branch.verilog", "tests/branch.register_golden")
 
 @cocotb.test()
 async def lui_auipc(dut):
     """ LUI/AUIPC instruction """
-    await RegCheckTest(dut, "tests/lui_auipc/mem", "tests/lui_auipc/register_golden")
+    await RegCheckTest(dut, "tests/lui_auipc.verilog", "tests/lui_auipc.register_golden")
 
 @cocotb.test()
 async def load_stall(dut):
     """ LUI/AUIPC instruction """
-    await RegCheckTest(dut, "tests/load_stall/mem", "tests/load_stall/register_golden")
+    await RegCheckTest(dut, "tests/load_stall.verilog", "tests/load_stall.register_golden")
 
 @cocotb.test()
 async def jal_jalr(dut):
     """ LUI/AUIPC instruction """
-    await RegCheckTest(dut, "tests/jal_jalr/mem", "tests/jal_jalr/register_golden")
+    await RegCheckTest(dut, "tests/jal_jalr.verilog", "tests/jal_jalr.register_golden")
