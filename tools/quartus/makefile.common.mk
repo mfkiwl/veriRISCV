@@ -65,6 +65,9 @@ $(QIP):
 qsys-edit:
 	qsys-edit $(QSYS_DIR)/$(QSYS).qsys --search-path="$(QSYS_SEARCH)"
 
+sta:
+	cd $(OUT_DIR) && quartus_sta --64bit -t $(SCRIPT_DIR)/quartus_sta.tcl
+
 pgm: $(SOF)
 	quartus_pgm --mode JTAG -o "p;$(SOF)"
 

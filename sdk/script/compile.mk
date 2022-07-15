@@ -47,6 +47,7 @@ CFLAGS  += -g -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI)
 REPO_ROOT   = $(shell git rev-parse --show-toplevel)
 BSP_PATH    = $(REPO_ROOT)/sdk/bsp
 LIB_PATH    = $(REPO_ROOT)/sdk/lib
+TOOL_PATH   = $(REPO_ROOT)/sdk/tool
 BOARD		?= de2
 
 include $(BSP_PATH)/$(BOARD)/$(BOARD).mk
@@ -79,6 +80,9 @@ dumpasm: software
 	sed -i 's/@800/@000/g' $(PROGRAM_ELF).verilog
 
 software: $(TARGET)
+
+download: $(TARGET).verilog
+	$(TOOL_PATH)/UartDownload.py -f $< -b $(BOARD)
 
 $(TARGET): $(LINK_OBJS) $(LINK_DEPS)
 	$(CC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)

@@ -47,6 +47,13 @@ set_input_delay -clock clk 10 [get_ports SRAM_DQ[*]]
 # Set Output Delay
 #**************************************************************
 
+set_output_delay -clock clk 10 [get_ports SRAM_DQ[*] ]
+set_output_delay -clock clk 10 [get_ports SRAM_ADDR[*] ]
+set_output_delay -clock clk 10 [get_ports SRAM_UB_N ]
+set_output_delay -clock clk 10 [get_ports SRAM_LB_N ]
+set_output_delay -clock clk 10 [get_ports SRAM_WE_N ]
+set_output_delay -clock clk 10 [get_ports SRAM_CE_N ]
+set_output_delay -clock clk 10 [get_ports SRAM_OE_N ]
 
 #**************************************************************
 # Set Clock Groups
