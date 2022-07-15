@@ -14,6 +14,7 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer, FallingEdge, RisingEdge
 from cocotb.regression import TestFactory
+import os
 
 import sys
 sys.path.append('../../cocotb-library/common')
@@ -37,7 +38,7 @@ def checkRegResult(dut):
         PASSED: x1: 1, x2: 2, x3: 3
         FAILED: x1: f, x2: f, x3: f
     """
-    register_file = dut.u_veriRISCV_core.u_ID.u_regfile.register_file
+    register_file = dut.u_veriRISCV_soc.u_veriRISCV_core.u_ID.u_regfile.register_file
     try:
         (reg1, reg2, reg3) = (register_file[1].value.integer, register_file[2].value.integer, register_file[3].value.integer)
     except ValueError:
@@ -55,7 +56,16 @@ async def test(dut, ram_file, timeout=10):
     """
 
     DELTA = 0.1
-    loadFromVerilogDump(ram_file, dut.u_memory.ram, 4)
+
+    if 'SRAM' in os.environ and os.environ['SRAM']:
+        RAM_PATH = dut.SRAM.sram_mem
+        DUMP_SIZE = 2
+    else:
+        RAM_PATH = dut.u_veriRISCV_soc.u_memory.ram
+        DUMP_SIZE = 4
+
+    # Instruction RAM
+    loadFromVerilogDump(ram_file, RAM_PATH, DUMP_SIZE)
 
     # Test start
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10 ns period clock on port clk
@@ -72,7 +82,7 @@ async def test(dut, ram_file, timeout=10):
     if not passed:
         raise Exception("Test timeout")
 
-async def testVerilog(dut, name, timeout=10):
+async def testVerilog(dut, name, timeout=100):
     REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')
     RV_TEST_PATH = '/tests/riscv-isa/riscv-tests/generated/'
     VERILOG_EXTENSION = '.verilog_reversed_4byte'

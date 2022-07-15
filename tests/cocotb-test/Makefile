@@ -1,12 +1,14 @@
 
 tests = sanity riscv-tests
 
+SRAM ?=
+
 .PHONY: $(tests)
 
 all: summary
 
-$(tests):
-	cd $@ && $(MAKE) | tee ../$@.log
+$(tests): clean
+	cd $@ && $(MAKE) SRAM=$(SRAM) | tee ../$@.log
 
 summary: $(tests)
 	@echo ""

@@ -12,6 +12,7 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer, FallingEdge, RisingEdge
+import os
 
 import sys
 sys.path.append('../../cocotb-library/common')
@@ -29,22 +30,23 @@ async def reset(dut, time=50):
     dut.rst.value = 0
 
 
-async def RegCheckTest(dut, ram_file, golden_file, time=1):
+async def RegCheckTest(dut, ram_file, golden_file, time=2):
     """
         Run test the checks register file as golden result
     """
-
-    dut.software_interrupt.value = 0
-    dut.timer_interrupt.value = 0
-    dut.external_interrupt.value = 0
-    dut.debug_interrupt.value = 0
+    if 'SRAM' in os.environ and os.environ['SRAM']:
+        RAM_PATH = dut.SRAM.sram_mem
+        DUMP_SIZE = 2
+    else:
+        RAM_PATH = dut.u_veriRISCV_soc.u_memory.ram
+        DUMP_SIZE = 4
 
     # Instruction RAM
-    clearMemory(dut.u_memory.ram, 128)
-    loadFromVerilogDump(ram_file, dut.u_memory.ram, 4)
+    clearMemory(RAM_PATH, 128)
+    loadFromVerilogDump(ram_file, RAM_PATH, DUMP_SIZE)
 
     # Register checker
-    regCheck = RegCheck(dut.u_veriRISCV_core.u_ID.u_regfile.register_file, golden_file)
+    regCheck = RegCheck(dut.u_veriRISCV_soc.u_veriRISCV_core.u_ID.u_regfile.register_file, golden_file)
 
     # Test start
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10 ns period clock on port clk

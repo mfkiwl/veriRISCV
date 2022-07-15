@@ -4,6 +4,7 @@ CPU_CORE_PATH 	= $(REPO_ROOT)/src/rtl/core
 IP_PATH 		= $(REPO_ROOT)/src/rtl/ip
 AVN_BUS_PATH 	= $(IP_PATH)/bus/avalon_standard
 GPIO_PATH 		= $(IP_PATH)/gpio
+SRAM_PATH 		= $(IP_PATH)/sram_controller
 UART_PATH 		= $(IP_PATH)/uart
 UART_HOST_PATH 	= $(IP_PATH)/uart_host
 
@@ -14,6 +15,9 @@ VERILOG_SOURCES += $(AVN_BUS_PATH)/bus_arbiter.sv
 VERILOG_SOURCES += $(AVN_BUS_PATH)/avalon_s_arbiter.sv
 VERILOG_SOURCES += $(AVN_BUS_PATH)/avalon_s_decoder.sv
 VERILOG_SOURCES += $(AVN_BUS_PATH)/avalon_s_crossbar.sv
+
+# SRAM CONTROLLER
+VERILOG_SOURCES += $(SRAM_PATH)/avalon_sram_controller.sv
 
 # GPIO
 VERILOG_SOURCES += $(GPIO_PATH)/avalon_gpio.sv

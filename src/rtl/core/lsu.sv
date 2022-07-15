@@ -30,6 +30,7 @@ module lsu (
     // port to MEM stage
     output logic [`DATA_RANGE]      lsu_readdata,
     output logic                    lsu_readdatavalid,
+    output logic                    lsu_stall_req,
     // exception
     output logic                    lsu_exception_load_addr_misaligned,
     output logic                    lsu_exception_store_addr_misaligned
@@ -38,6 +39,7 @@ module lsu (
     reg [1:0]                       prev_byte_addr;
     reg [`CORE_MEM_OP_RANGE]        prev_mem_opcode;
     reg                             read_pending;
+    reg                             wait_memory;
 
     logic                           sign_bit;
     logic                           sign_bit_final;
@@ -51,12 +53,11 @@ module lsu (
     // ---------------------------------
     // logic
     // ---------------------------------
+    assign lsu_stall_req = (dbus_avalon_req.read | dbus_avalon_req.write) & dbus_avalon_resp.waitrequest;
 
     assign dbus_avalon_req.write = lsu_mem_write & ~addr_misaligned;
     assign dbus_avalon_req.read = lsu_mem_read & ~addr_misaligned;
     assign dbus_avalon_req.address = {lsu_address[`DATA_WIDTH-1:2], 2'b00}; // make it aligned to word boundary
-
-    // FIXME waitrequest
 
     always @(posedge clk) begin
         if (rst) read_pending <= 1'b0;

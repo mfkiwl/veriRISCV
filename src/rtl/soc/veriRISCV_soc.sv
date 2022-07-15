@@ -13,19 +13,32 @@
 `include "veriRISCV_soc.svh"
 
 module veriRISCV_soc #(
+`ifdef SRAM
+    parameter SRAM_AW = 18,
+    parameter SRAM_DW = 16,
+`endif
     parameter GPIO_WIDTH = 32,
     parameter UART_BAUD_RATE = 115200,
     parameter CLK_FREQ_MHZ = 50
 ) (
-    input           clk,
-    input           rst,
+    input                   clk,
+    input                   rst,
 
-    inout [GPIO_WIDTH-1:0] gpio0,
-    inout [GPIO_WIDTH-1:0] gpio1,
+    inout [GPIO_WIDTH-1:0]  gpio0,
+    inout [GPIO_WIDTH-1:0]  gpio1,
 
-    input   uart_debug_en,
-    output  uart_txd,
-    input   uart_rxd
+`ifdef SRAM
+    output                  sram_ce_n,
+    output                  sram_oe_n,
+    output                  sram_we_n,
+    output [SRAM_DW/8-1:0]  sram_be_n,
+    output [SRAM_AW-1:0]    sram_addr,
+    inout  [SRAM_DW-1:0]    sram_dq,
+`endif
+
+    input                   uart_debug_en,
+    output                  uart_txd,
+    input                   uart_rxd
 );
 
     avalon_req_t    ibus_avalon_req;
@@ -45,7 +58,7 @@ module veriRISCV_soc #(
     logic [31:0]    debug_avn_address;
     logic [3:0]     debug_avn_byte_enable;
     logic [31:0]    debug_avn_writedata;
-    logic  [31:0]   debug_avn_readdata;
+    logic [31:0]    debug_avn_readdata;
     logic           debug_avn_waitrequest;
 
     // instruction bus
@@ -54,7 +67,7 @@ module veriRISCV_soc #(
     logic [31:0]    ibus_avn_address;
     logic [3:0]     ibus_avn_byte_enable;
     logic [31:0]    ibus_avn_writedata;
-    logic  [31:0]   ibus_avn_readdata;
+    logic [31:0]    ibus_avn_readdata;
     logic           ibus_avn_waitrequest;
 
     // data bus
@@ -63,51 +76,51 @@ module veriRISCV_soc #(
     logic [31:0]    dbus_avn_address;
     logic [3:0]     dbus_avn_byte_enable;
     logic [31:0]    dbus_avn_writedata;
-    logic  [31:0]   dbus_avn_readdata;
+    logic [31:0]    dbus_avn_readdata;
     logic           dbus_avn_waitrequest;
 
     // main memory (sram) port
     logic           ram_avn_read;
     logic           ram_avn_write;
-    logic  [31:0]   ram_avn_address;
-    logic  [3:0]    ram_avn_byte_enable;
-    logic  [31:0]   ram_avn_writedata;
+    logic [31:0]    ram_avn_address;
+    logic [3:0]     ram_avn_byte_enable;
+    logic [31:0]    ram_avn_writedata;
     logic [31:0]    ram_avn_readdata;
     logic           ram_avn_waitrequest;
 
     // AON domain
     logic           aon_avn_read;
     logic           aon_avn_write;
-    logic  [31:0]   aon_avn_address;
-    logic  [3:0]    aon_avn_byte_enable;
-    logic  [31:0]   aon_avn_writedata;
+    logic [31:0]    aon_avn_address;
+    logic [3:0]     aon_avn_byte_enable;
+    logic [31:0]    aon_avn_writedata;
     logic [31:0]    aon_avn_readdata;
     logic           aon_avn_waitrequest;
 
     // GPIO0
     logic           gpio0_avn_read;
     logic           gpio0_avn_write;
-    logic  [31:0]   gpio0_avn_address;
-    logic  [3:0]    gpio0_avn_byte_enable;
-    logic  [31:0]   gpio0_avn_writedata;
+    logic [31:0]    gpio0_avn_address;
+    logic [3:0]     gpio0_avn_byte_enable;
+    logic [31:0]    gpio0_avn_writedata;
     logic [31:0]    gpio0_avn_readdata;
     logic           gpio0_avn_waitrequest;
 
     // GPIO1
     logic           gpio1_avn_read;
     logic           gpio1_avn_write;
-    logic  [31:0]   gpio1_avn_address;
-    logic  [3:0]    gpio1_avn_byte_enable;
-    logic  [31:0]   gpio1_avn_writedata;
+    logic [31:0]    gpio1_avn_address;
+    logic [3:0]     gpio1_avn_byte_enable;
+    logic [31:0]    gpio1_avn_writedata;
     logic [31:0]    gpio1_avn_readdata;
     logic           gpio1_avn_waitrequest;
 
     // UART
     logic           uart0_avn_read;
     logic           uart0_avn_write;
-    logic  [31:0]   uart0_avn_address;
-    logic  [3:0]    uart0_avn_byte_enable;
-    logic  [31:0]   uart0_avn_writedata;
+    logic [31:0]    uart0_avn_address;
+    logic [3:0]     uart0_avn_byte_enable;
+    logic [31:0]    uart0_avn_writedata;
     logic [31:0]    uart0_avn_readdata;
     logic           uart0_avn_waitrequest;
 
@@ -161,6 +174,45 @@ module veriRISCV_soc #(
     //  SoC Component
     // ----------------------------------------
 
+    // Main memory
+
+`ifdef SRAM
+    avalon_sram_controller #(
+        .AVN_AW     (SRAM_AW),
+        .AVN_DW     (32),
+        .SRAM_AW    (SRAM_AW),
+        .SRAM_DW    (SRAM_DW)
+    )
+    u_avalon_sram_controller (
+        .clk                (clk),
+        .avn_read           (ram_avn_read),
+        .avn_write          (ram_avn_write),
+        .avn_address        (ram_avn_address[SRAM_AW+2-1:2]), // sram take word address instead of byte address
+        .avn_byteenable     (ram_avn_byte_enable),
+        .avn_writedata      (ram_avn_writedata),
+        .avn_readdata       (ram_avn_readdata),
+        .avn_waitrequest    (ram_avn_waitrequest),
+        .* // sram port
+    );
+`else
+    localparam MM_AW = `MAIN_MEMORY_AW;
+    avalon_ram_1rw
+    #(
+        .AW       (MM_AW-2),
+        .DW       (32)
+    )
+    u_memory(
+        .clk         (clk),
+        .read        (ram_avn_read),
+        .write       (ram_avn_write),
+        .address     (ram_avn_address[MM_AW-1:2]),  // bram take word address instead of byte address
+        .byte_enable (ram_avn_byte_enable),
+        .writedata   (ram_avn_writedata),
+        .readdata    (ram_avn_readdata),
+        .waitrequest (ram_avn_waitrequest)
+    );
+`endif
+
     // uart debug host
     localparam UART_DIV = CLK_FREQ_MHZ * 1000000 / UART_BAUD_RATE;
 
@@ -199,25 +251,6 @@ module veriRISCV_soc #(
         .int_rxwm           (),
         .uart_txd           (uart_txd),
         .uart_rxd           (uart_rxd)
-    );
-
-    // SRAM
-    // use FPGA internal ram for now. will switch to sram later.
-    localparam MM_AW = `MAIN_MEMORY_AW;
-    avalon_ram_1rw
-    #(
-        .AW       (MM_AW-2),
-        .DW       (32)
-    )
-    u_memory(
-        .clk         (clk),
-        .read        (ram_avn_read),
-        .write       (ram_avn_write),
-        .address     (ram_avn_address[MM_AW-1:2]),
-        .byte_enable (ram_avn_byte_enable),
-        .writedata   (ram_avn_writedata),
-        .readdata    (ram_avn_readdata),
-        .waitrequest (ram_avn_waitrequest)
     );
 
     // GPIO0

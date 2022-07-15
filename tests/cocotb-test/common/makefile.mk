@@ -11,21 +11,24 @@ TOPLEVEL_LANG = verilog
 # -----------------------------------------
 # Path Variable
 # -----------------------------------------
-REPO_ROOT     	= $(shell git rev-parse --show-toplevel)
-CORE_PATH  		= $(REPO_ROOT)/src/rtl/core
-SOC_PATH  		= $(REPO_ROOT)/src/rtl/soc
+REPO_ROOT = $(shell git rev-parse --show-toplevel)
+CORE_PATH = $(REPO_ROOT)/src/rtl/core
+SOC_PATH = $(REPO_ROOT)/src/rtl/soc
+TB_PATH = $(REPO_ROOT)/tests/cocotb-test/tb
 
 # -----------------------------------------
 # Source files
 # -----------------------------------------
 
 include $(SOC_PATH)/veriRISCV_soc.mk
+VERILOG_SOURCES += $(TB_PATH)/SRAM.sv
+VERILOG_SOURCES += $(TB_PATH)/tb_top.sv
 
 # -----------------------------------------
 # Simulator config
 # -----------------------------------------
 
-TOPLEVEL = veriRISCV_soc
+TOPLEVEL = tb_top
 
 # -----------------------------------------
 # Cocotb config

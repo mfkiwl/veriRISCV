@@ -76,7 +76,7 @@ module IF (
     always @(posedge clk) begin
         if (rst)            if2id_pipeline_ctrl <= 0;
         else if (if_flush)  if2id_pipeline_ctrl <= 0;
-        else                if2id_pipeline_ctrl.valid <= 1'b1;
+        else if (!if_stall) if2id_pipeline_ctrl.valid <= 1'b1;
     end
 
     always_ff @(posedge clk) begin

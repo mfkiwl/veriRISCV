@@ -51,6 +51,7 @@ module EX (
     logic [`DATA_RANGE] alu_op1;
 
     logic               stage_run;
+    logic               stage_flush;
 
     ex2mem_pipeline_ctrl_t   ex_stage_ctrl;
     ex2mem_pipeline_exc_t    ex_stage_exc;
@@ -107,10 +108,11 @@ module EX (
 
     // pipeline stage
     assign stage_run = ~ex_stall;
+    assign stage_flush = ex_flush | ~id2ex_pipeline_ctrl.valid & stage_run;
 
     always @(posedge clk) begin
         if (rst) ex2mem_pipeline_ctrl <= 0;
-        else if (!id2ex_pipeline_ctrl.valid || ex_flush) ex2mem_pipeline_ctrl <= 0;
+        else if (stage_flush) ex2mem_pipeline_ctrl <= 0;
         else if (stage_run) ex2mem_pipeline_ctrl <= ex_stage_ctrl;
     end
 

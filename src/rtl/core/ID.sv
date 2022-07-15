@@ -60,6 +60,7 @@ module ID (
     id2ex_pipeline_exc_t    id_stage_exc;
     id2ex_pipeline_data_t   id_stage_data;
     logic                   stage_run;
+    logic                   stage_flush;
 
     logic                   exception_ill_instr;
 
@@ -87,16 +88,17 @@ module ID (
     assign id_stage_data.op2_forward_from_wb  = rs2_match_mem & regfile_rs2_read & mem_reg_write & rs2_non_zero;
 
     // Load dependence check
-    assign hdu_load_stall = id2ex_pipeline_ctrl.mem_read & id2ex_pipeline_ctrl.reg_write &
+    assign hdu_load_stall = id2ex_pipeline_ctrl.mem_read & id_stage_ctrl.reg_write & if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr &
                             (rs1_match_ex & regfile_rs1_read | rs2_match_ex & regfile_rs2_read);
 
     // pipeline stage
     assign stage_run = ~id_stall;
+    assign stage_flush = id_flush | (~if2id_pipeline_ctrl.valid | id_stage_exc.exception_ill_instr) & stage_run; // flush has priority over stall
 
     always @(posedge clk) begin
         if (rst) id2ex_pipeline_ctrl <= 0;
-        else if (!if2id_pipeline_ctrl.valid || id_flush || id_stage_exc.exception_ill_instr) id2ex_pipeline_ctrl <= 0;
-        else if (stage_run) id2ex_pipeline_ctrl <= id_stage_ctrl;
+        else if (stage_flush) id2ex_pipeline_ctrl <= 0;
+        else if (stage_run) id2ex_pipeline_ctrl <= id_stage_ctrl;   // then
     end
 
     always @(posedge clk) begin

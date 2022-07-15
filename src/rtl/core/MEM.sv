@@ -41,9 +41,8 @@ module MEM (
     mem2wb_pipeline_exc_t       mem_stage_exc;
     mem2wb_pipeline_data_t      mem_stage_data;
 
-
-
     logic                       stage_run;
+    logic                       stage_flush;
 
     // ---------------------------------
     // Main logic
@@ -71,10 +70,11 @@ module MEM (
 
     // Pipeline Stage
     assign stage_run = ~mem_stall;
+    assign stage_flush = mem_flush | ~ex2mem_pipeline_ctrl.valid & stage_run;
 
     always @(posedge clk) begin
         if (rst) mem2wb_pipeline_ctrl <= 0;
-        else if (!ex2mem_pipeline_ctrl.valid || mem_flush) mem2wb_pipeline_ctrl <= 0;
+        else if (stage_flush) mem2wb_pipeline_ctrl <= 0;
         else if (stage_run) mem2wb_pipeline_ctrl <= mem_stage_ctrl;
     end
 
