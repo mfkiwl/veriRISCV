@@ -70,13 +70,13 @@ module IF (
     assign ibus_avalon_req.writedata = 'b0;
     assign ibus_avalon_req.address = pc_out;
     assign ibus_avalon_req.byte_enable = 4'b1111;
-    assign ibus_avalon_req.read = 1'b1; // always read
+    assign ibus_avalon_req.read = ~rst;
 
     // -- Pipeline Stage -- //
     always @(posedge clk) begin
         if (rst)            if2id_pipeline_ctrl <= 0;
         else if (if_flush)  if2id_pipeline_ctrl <= 0;
-        else if (!if_stall) if2id_pipeline_ctrl.valid <= 1'b1;
+        else if (!if_stall) if2id_pipeline_ctrl.valid <= ibus_avalon_req.read;
     end
 
     always_ff @(posedge clk) begin

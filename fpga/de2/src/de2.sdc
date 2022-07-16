@@ -16,7 +16,11 @@
 # Create Clock
 #**************************************************************
 
-create_clock -name {clk} -period 20.000 -waveform { 0.000 10.000 } [get_ports {CLOCK_50}]
+create_clock -name {CLOCK_50} -period 20.000 -waveform { 0.000 10.000 } [get_ports {CLOCK_50}]
+
+derive_pll_clocks -create_base_clocks
+set clk "pll|altpll_component|pll|clk[0]"
+
 
 
 #**************************************************************
@@ -41,19 +45,19 @@ create_clock -name {clk} -period 20.000 -waveform { 0.000 10.000 } [get_ports {C
 # Set Input Delay
 #**************************************************************
 
-set_input_delay -clock clk 10 [get_ports SRAM_DQ[*]]
+set_input_delay -clock $clk 10 [get_ports SRAM_DQ[*]]
 
 #**************************************************************
 # Set Output Delay
 #**************************************************************
 
-set_output_delay -clock clk 10 [get_ports SRAM_DQ[*] ]
-set_output_delay -clock clk 10 [get_ports SRAM_ADDR[*] ]
-set_output_delay -clock clk 10 [get_ports SRAM_UB_N ]
-set_output_delay -clock clk 10 [get_ports SRAM_LB_N ]
-set_output_delay -clock clk 10 [get_ports SRAM_WE_N ]
-set_output_delay -clock clk 10 [get_ports SRAM_CE_N ]
-set_output_delay -clock clk 10 [get_ports SRAM_OE_N ]
+set_output_delay -clock $clk 10 [get_ports SRAM_DQ[*] ]
+set_output_delay -clock $clk 10 [get_ports SRAM_ADDR[*] ]
+set_output_delay -clock $clk 10 [get_ports SRAM_UB_N ]
+set_output_delay -clock $clk 10 [get_ports SRAM_LB_N ]
+set_output_delay -clock $clk 10 [get_ports SRAM_WE_N ]
+set_output_delay -clock $clk 10 [get_ports SRAM_CE_N ]
+set_output_delay -clock $clk 10 [get_ports SRAM_OE_N ]
 
 #**************************************************************
 # Set Clock Groups

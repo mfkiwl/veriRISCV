@@ -31,6 +31,8 @@ module de2_top (
 
     wire [31:0] gpio0;
 
+    logic       clk;
+
     assign LEDR = gpio0[17:0];
 
     `ifndef SRAM
@@ -44,9 +46,15 @@ module de2_top (
         assign SRAM_WE_N = 1'b1;
     `endif
 
-    veriRISCV_soc
+    pll
+    pll (
+        .inclk0 (CLOCK_50),
+        .c0     (clk)
+    );
+
+    veriRISCV_soc #(.CLK_FREQ_MHZ(25))
     veriRISCV_soc (
-        .clk            (CLOCK_50),
+        .clk            (clk),
         .rst            (~KEY[0]),
         .gpio0          (gpio0),
         .gpio1          (),

@@ -27,6 +27,7 @@ PIN = $(PWD)/src/de2_pin.tcl
 
 include $(GIT_ROOT)/src/rtl/soc/veriRISCV_soc.mk
 
+VERILOG += $(PWD)/src/pll.v
 VERILOG += $(PWD)/src/de2_top.sv
 VERILOG += $(VERILOG_SOURCES)
 

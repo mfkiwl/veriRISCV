@@ -14,6 +14,7 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer, FallingEdge, RisingEdge
 from cocotb.regression import TestFactory
+import os
 
 import sys
 sys.path.append('../../cocotb-library/common')
@@ -31,7 +32,15 @@ async def reset(dut, time=50):
 
 async def test(dut, ram_file, timeout=10):
     DELTA = 0.1
-    loadFromVerilogDump(ram_file, dut.u_memory.ram, 4)
+
+    if 'SRAM' in os.environ and os.environ['SRAM']:
+        RAM_PATH = dut.SRAM.sram_mem
+        DUMP_SIZE = 2
+    else:
+        RAM_PATH = dut.u_veriRISCV_soc.u_memory.ram
+        DUMP_SIZE = 4
+    loadFromVerilogDump(ram_file, RAM_PATH, DUMP_SIZE)
+
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10 ns period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     await reset(dut)
@@ -52,5 +61,5 @@ async def blink(dut, timeout=100):
     await testVerilog(dut, 'blink', timeout)
 
 @cocotb.test()
-async def uart(dut, timeout=100):
+async def uart(dut, timeout=1000):
     await testVerilog(dut, 'uart', timeout)

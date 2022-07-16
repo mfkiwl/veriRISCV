@@ -124,13 +124,17 @@ module veriRISCV_soc #(
     logic [31:0]    uart0_avn_readdata;
     logic           uart0_avn_waitrequest;
 
+    logic           sys_rst; // sys reset
+
+    // when uart_debug_en is set, reset rest of the system
+    assign sys_rst = rst | uart_debug_en;
 
     // -------------------------------
     // veriRISCV Core
     // --------------------------------
     veriRISCV_core u_veriRISCV_core(
         .clk,
-        .rst,
+        .rst    (sys_rst),
         .ibus_avalon_req,
         .ibus_avalon_resp,
         .dbus_avalon_req,
@@ -240,7 +244,7 @@ module veriRISCV_soc #(
     avalon_uart
     uart_0 (
         .clk                (clk),
-        .rst                (rst),
+        .rst                (sys_rst),
         .avn_read           (uart0_avn_read),
         .avn_write          (uart0_avn_write),
         .avn_address        (uart0_avn_address[4:0]),
@@ -257,7 +261,7 @@ module veriRISCV_soc #(
     avalon_gpio #(.W(GPIO_WIDTH))
     gpio_0 (
         .clk            (clk),
-        .rst            (rst),
+        .rst            (sys_rst),
         .gpio           (gpio0),
         .avn_read       (gpio0_avn_read),
         .avn_write      (gpio0_avn_write),
@@ -272,7 +276,7 @@ module veriRISCV_soc #(
     avalon_gpio #(.W(GPIO_WIDTH))
     gpio_1 (
         .clk            (clk),
-        .rst            (rst),
+        .rst            (sys_rst),
         .gpio           (gpio1),
         .avn_read       (gpio1_avn_read),
         .avn_write      (gpio1_avn_write),

@@ -88,7 +88,7 @@ module ID (
     assign id_stage_data.op2_forward_from_wb  = rs2_match_mem & regfile_rs2_read & mem_reg_write & rs2_non_zero;
 
     // Load dependence check
-    assign hdu_load_stall = id2ex_pipeline_ctrl.mem_read & id_stage_ctrl.reg_write & if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr &
+    assign hdu_load_stall = id2ex_pipeline_ctrl.mem_read & id2ex_pipeline_ctrl.reg_write & if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr &
                             (rs1_match_ex & regfile_rs1_read | rs2_match_ex & regfile_rs2_read);
 
     // pipeline stage
