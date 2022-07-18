@@ -114,10 +114,10 @@ module avalon_uart (
     assign ip = {30'b0, ip_rxwm, ip_txwm};
 
     // div 0x18
-    logic [31:0]    div;
+    //logic [31:0]    div;
     reg [15:0]      div_div;    // div = (fin / fbaud - 1)
     logic           div_write;
-    assign div = {16'b0, div_div};
+    //assign div = {16'b0, div_div};
 
     // -- read logic -- //
     always @(posedge clk) begin
@@ -190,6 +190,8 @@ module avalon_uart (
     // --------------------------------------------
     //  Glue logic
     // --------------------------------------------
+
+    assign avn_waitrequest = 1'b0;
 
     assign int_txwm = ip_txwm;
     assign int_rxwm = ip_rxwm;

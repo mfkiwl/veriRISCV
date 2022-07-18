@@ -108,7 +108,7 @@ module avalon_s_arbiter #(
     bus_arbiter #(.WIDTH(NH))
     u_bus_arbiter (
         .req    (arbiter_request),
-        .base   ('b1),
+        .base   (1),
         .grant  (grant)
     );
 

@@ -19,7 +19,10 @@
  */
 
 
-module avalon_uart_host (
+module avalon_uart_host #(
+    parameter START_KEY = 64'hABABABAB05050505,
+    parameter END_KEY   = 64'h05050505ABABABAB
+) (
     input               clk,
     input               rst,
 
@@ -33,7 +36,8 @@ module avalon_uart_host (
 
     input [15:0]        cfg_div,
     input               cfg_rxen,
-    input               uart_rxd
+    input               uart_rxd,
+    output reg          uart_download
 );
 
     // --------------------------------------------
@@ -47,7 +51,7 @@ module avalon_uart_host (
     logic               rx_valid;
     logic [7:0]         rx_data;
 
-    logic               fifo_push;
+    reg                 fifo_push;
     logic               fifo_pop;
     logic               fifo_full;
     logic               fifo_empty;
@@ -58,23 +62,26 @@ module avalon_uart_host (
     reg [3:0]           data_count;
     reg                 cmd_cmpl;
 
+    logic               start_cmd;
+    logic               end_cmd;
     logic               data_count_fire;
 
     // --------------------------------------------
     //  Glue logic
     // --------------------------------------------
 
-    // Uart configuration
-    assign cfg_nstop = 0;
 
+    assign cfg_nstop = 0;
     assign data_count_fire = data_count == 7;
+    assign start_cmd = (cmd == START_KEY);
+    assign end_cmd = (cmd == END_KEY);
 
     always @(posedge clk) begin
         if (rst) data_count <= 0;
         else begin
             if (rx_valid) begin
                 if (data_count_fire) data_count <= 0;
-                else data_count <= data_count + 1;
+                else data_count <= data_count + 1'b1;
             end
         end
     end
@@ -87,7 +94,19 @@ module avalon_uart_host (
         end
     end
 
-    assign fifo_push = cmd_cmpl & ~fifo_full;
+    always @(posedge clk) begin
+        if (rst) uart_download <= 1'b0;
+        else begin
+            if (cmd_cmpl && start_cmd) uart_download <= 1'b1;
+            else if (cmd_cmpl && end_cmd) uart_download <= 1'b0;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (rst) fifo_push <= 1'b0;
+        else fifo_push <= cmd_cmpl & ~fifo_full & uart_download & ~end_cmd;
+    end
+
     assign fifo_din = cmd;
     assign fifo_pop = avn_write & ~avn_waitrequest;
 

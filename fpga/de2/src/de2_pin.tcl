@@ -1,6 +1,17 @@
 # Clock
 set_location_assignment PIN_N2 -to CLOCK_50
 
+# LEDG
+set_location_assignment PIN_AE22 -to LEDG[0]
+set_location_assignment PIN_AF22 -to LEDG[1]
+set_location_assignment PIN_W19 -to LEDG[2]
+set_location_assignment PIN_V18 -to LEDG[3]
+set_location_assignment PIN_U18 -to LEDG[4]
+set_location_assignment PIN_U17 -to LEDG[5]
+set_location_assignment PIN_AA20 -to LEDG[6]
+set_location_assignment PIN_Y18 -to LEDG[7]
+set_location_assignment PIN_Y12 -to LEDG[8]
+
 # LEDR
 set_location_assignment PIN_AE23 -to LEDR[0]
 set_location_assignment PIN_AF23 -to LEDR[1]

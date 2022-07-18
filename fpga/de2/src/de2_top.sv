@@ -13,6 +13,7 @@ module de2_top (
     // Push Button
     input  [3:0]  KEY,
     // LEDR
+    output [8:0]  LEDG,
     output [17:0] LEDR,
     // DPDT Switch
     input  [17:0] SW,
@@ -34,6 +35,7 @@ module de2_top (
     logic       clk;
 
     assign LEDR = gpio0[17:0];
+    assign LEDG[8:1] = 0;
 
     `ifndef SRAM
         //Disable SRAM.
@@ -59,6 +61,7 @@ module de2_top (
         .gpio0          (gpio0),
         .gpio1          (),
         .uart_debug_en  (SW[0]),
+        .uart_download  (LEDG[0]),
     `ifdef SRAM
         .sram_ce_n      (SRAM_CE_N),
         .sram_oe_n      (SRAM_OE_N),

@@ -17,15 +17,16 @@ module veriRISCV_soc #(
     parameter SRAM_AW = 18,
     parameter SRAM_DW = 16,
 `endif
-    parameter GPIO_WIDTH = 32,
+    parameter GPIO0_WIDTH = 32,
+    parameter GPIO1_WIDTH = 32,
     parameter UART_BAUD_RATE = 115200,
     parameter CLK_FREQ_MHZ = 50
 ) (
     input                   clk,
     input                   rst,
 
-    inout [GPIO_WIDTH-1:0]  gpio0,
-    inout [GPIO_WIDTH-1:0]  gpio1,
+    inout [GPIO0_WIDTH-1:0] gpio0,
+    inout [GPIO1_WIDTH-1:0] gpio1,
 
 `ifdef SRAM
     output                  sram_ce_n,
@@ -37,6 +38,7 @@ module veriRISCV_soc #(
 `endif
 
     input                   uart_debug_en,
+    output                  uart_download,
     output                  uart_txd,
     input                   uart_rxd
 );
@@ -124,10 +126,15 @@ module veriRISCV_soc #(
     logic [31:0]    uart0_avn_readdata;
     logic           uart0_avn_waitrequest;
 
-    logic           sys_rst; // sys reset
+    reg             sys_rst; // sys reset
 
-    // when uart_debug_en is set, reset rest of the system
-    assign sys_rst = rst | uart_debug_en;
+    always @(posedge clk) begin
+        if (rst) sys_rst <= 1'b1;
+        else begin
+            if (uart_download) sys_rst <= 1'b1;
+            else sys_rst <= 1'b0;
+        end
+    end
 
     // -------------------------------
     // veriRISCV Core
@@ -233,7 +240,8 @@ module veriRISCV_soc #(
         .avn_waitrequest    (debug_avn_waitrequest),
         .cfg_div            (UART_DIV[15:0]),
         .cfg_rxen           (uart_debug_en),
-        .uart_rxd           (uart_rxd)
+        .uart_rxd           (uart_rxd),
+        .uart_download      (uart_download),
     );
 
     // AON domain
@@ -258,7 +266,7 @@ module veriRISCV_soc #(
     );
 
     // GPIO0
-    avalon_gpio #(.W(GPIO_WIDTH))
+    avalon_gpio #(.W(GPIO0_WIDTH))
     gpio_0 (
         .clk            (clk),
         .rst            (sys_rst),
@@ -273,7 +281,7 @@ module veriRISCV_soc #(
     );
 
     // GPIO1
-    avalon_gpio #(.W(GPIO_WIDTH))
+    avalon_gpio #(.W(GPIO1_WIDTH))
     gpio_1 (
         .clk            (clk),
         .rst            (sys_rst),
