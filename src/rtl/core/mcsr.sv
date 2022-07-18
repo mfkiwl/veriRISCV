@@ -93,6 +93,11 @@ module mcsr
     logic [31:0]    mhartid;
     logic [31:0]    mhartid_value;
 
+    logic [31:0]    mcycle;
+    reg [31:0]      mcycle_value;
+
+    logic [31:0]    mcycleh;
+    reg [31:0]      mcycleh_value;
 
     // -- Assign register with its field -- //
 
@@ -107,6 +112,8 @@ module mcsr
     assign marchid = {marchid_value};
     assign mimpid = {mimpid_value};
     assign mhartid = {mhartid_value};
+    assign mcycle = mcycle_value;
+    assign mcycleh = mcycleh_value;
 
     // -- Assign constant field with its value -- //
 
@@ -143,6 +150,8 @@ module mcsr
             12'h341: csr_readdata = mepc;
             12'h342: csr_readdata = mcause;
             12'h343: csr_readdata = mtval;
+            12'hB00: csr_readdata = mcycle;
+            12'hB80: csr_readdata = mcycleh;
             12'hf11: csr_readdata = mvendorid;
             12'hf12: csr_readdata = marchid;
             12'hf13: csr_readdata = mimpid;
@@ -165,6 +174,7 @@ module mcsr
             mtval_value <= 32'h0;
         end
         else begin
+
             if (i_mstatus_mpie_wen) mstatus_mpie <= i_mstatus_mpie;
             if (i_mstatus_mie_wen) mstatus_mie <= i_mstatus_mie;
             if (i_mepc_value_wen) mepc_value <= i_mepc_value;
@@ -182,22 +192,22 @@ module mcsr
                         mtvec_base <= csr_writedata[31:2];
                         mtvec_mode <= csr_writedata[1:0];
                     end
-                    12'h340: begin
-                        mscratch_value <= csr_writedata[31:0];
-                    end
-                    12'h341: begin
-                        mepc_value <= csr_writedata[31:0];
-                    end
+                    12'h340:mscratch_value <= csr_writedata[31:0];
+                    12'h341:mepc_value <= csr_writedata[31:0];
                     12'h342: begin
                         mcause_interrupt <= csr_writedata[31:31];
                         mcause_exception_code <= csr_writedata[30:0];
                     end
-                    12'h343: begin
-                        mtval_value <= csr_writedata[31:0];
-                    end
+                    12'h343: mtval_value <= csr_writedata[31:0];
+                    12'hB00: mcycle_value <= csr_writedata[31:0];
+                    12'hB80: mcycleh_value <= csr_writedata[31:0];
+
                     default: begin end
                 endcase
             end
+
+            // other hardware logic
+            {mcycleh_value, mcycle_value} <= {mcycleh_value, mcycle_value} + 1'b1;
         end
     end
 

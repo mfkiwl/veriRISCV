@@ -16,6 +16,9 @@ results.xml
 # c
 *.o
 *.map
+sdk/software/demo/uart/uart
+sdk/software/benchmark/coremark/coremark
+sdk/software/demo/blink/blink
 
 # fpga
 output
