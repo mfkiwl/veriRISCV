@@ -1,7 +1,6 @@
 REPO_ROOT = $(shell git rev-parse --show-toplevel)
 
 TARGET = uart
-#CFLAGS += -O2
 
 PROGRAM     = $(TARGET)
 PROGRAM_ELF = $(PROGRAM)

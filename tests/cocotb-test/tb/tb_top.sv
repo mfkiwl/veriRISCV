@@ -36,12 +36,14 @@ module tb_top (
         SRAM SRAM(.*);
     `endif
 
+    logic                       uart_download;
+
     veriRISCV_soc #(
     `ifdef SRAM
         .SRAM_AW    (SRAM_AW),
         .SRAM_DW    (SRAM_DW),
     `endif
-        .GPIO_WIDTH     (32),
+        .GPIO0_WIDTH    (32),
         .UART_BAUD_RATE (115200),
         .CLK_FREQ_MHZ   (50)
     ) u_veriRISCV_soc (.*);

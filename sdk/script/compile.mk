@@ -35,9 +35,7 @@ AR   = $(RISCV_AR)
 # Compilation Flag
 #############################################################
 
-#LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl,--gc-sections  -Wl,--check-sections --specs=nano.specs, -Map=$(TARGET).map
-LDFLAGS += -T $(LINKER_SCRIPT)  -nostartfiles --specs=nano.specs -Wl,-Map=$(TARGET).map
-#CFLAGS  += -g -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI) -ffunction-sections -fdata-sections -fno-common
+LDFLAGS += -T $(LINKER_SCRIPT)  -nostartfiles --specs=nano.specs -Wl,-Map=$(TARGET).map -Wl,--gc-sections  -Wl,--check-sections
 CFLAGS  += -g -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI)
 
 #############################################################
@@ -77,7 +75,6 @@ CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(DUMP_OBJS) $(VERILOG_OBJS)
 dumpasm: software
 	$(RISCV_OBJDUMP) -D $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
 	$(RISCV_OBJCOPY) $(PROGRAM_ELF) -O verilog $(PROGRAM_ELF).verilog
-	sed -i 's/@800/@000/g' $(PROGRAM_ELF).verilog
 
 software: $(TARGET)
 

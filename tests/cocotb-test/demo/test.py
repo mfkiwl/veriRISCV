@@ -49,9 +49,12 @@ async def test(dut, ram_file, timeout=10):
         await Timer(DELTA, "us")
         time += DELTA
 
-async def testVerilog(dut, name, timeout=10):
+async def testVerilog(dut, name, timeout=10, file=None):
     REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')
-    FILE = f"/sdk/software/demo/{name}/{name}.verilog"
+    if file:
+        FILE = file
+    else:
+        FILE = f"/sdk/software/demo/{name}/{name}.verilog"
     file = REPO_ROOT + FILE
     await test(dut, file, timeout)
 
@@ -63,3 +66,8 @@ async def blink(dut, timeout=100):
 @cocotb.test()
 async def uart(dut, timeout=1000):
     await testVerilog(dut, 'uart', timeout)
+
+@cocotb.test()
+async def coremark(dut, timeout=1000):
+    file = '/sdk/software/benchmark/coremark/coremark.verilog'
+    await testVerilog(dut, 'coremark', timeout, file)

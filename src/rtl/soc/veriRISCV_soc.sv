@@ -241,7 +241,7 @@ module veriRISCV_soc #(
         .cfg_div            (UART_DIV[15:0]),
         .cfg_rxen           (uart_debug_en),
         .uart_rxd           (uart_rxd),
-        .uart_download      (uart_download),
+        .uart_download      (uart_download)
     );
 
     // AON domain

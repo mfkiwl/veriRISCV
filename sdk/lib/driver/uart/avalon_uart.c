@@ -12,7 +12,7 @@
 
 #include "avalon_uart.h"
 
-#define AVALON_UART_REG2POINTER(base, reg)   ((uint32_t *) (base + reg))
+#define AVALON_UART_REG2POINTER(base, reg)   ((volatile uint32_t *) (base + reg))
 
 static avalon_uart_txdata_s _txdata;
 static avalon_uart_rxdata_s _rxdata;

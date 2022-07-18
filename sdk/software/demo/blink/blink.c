@@ -11,16 +11,17 @@
 
 #include <stdint.h>
 #include "platform.h"
+#include "peripheral.h"
 
 int main(int argc, char **argv)
 {
-    volatile uint32_t value = 0xFFFFFFFF;
+    uint32_t value = 0xFFFFFFFF;
 
     // enable output
-    *((uint32_t *) (GPIO0_BASE + 0x8)) = 0xFFFFFFFF;
+    avalon_gpio_write_en(GPIO0_BASE, 0xFFFFFFFF);
 
     while(1) {
-        *((uint32_t *) (GPIO0_BASE + 0xC)) = value;
+        avalon_gpio_write(GPIO0_BASE, value);
         value = ~value;
         for (int i = 0; i < 500000; i++);
     }

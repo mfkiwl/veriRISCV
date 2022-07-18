@@ -12,6 +12,7 @@
 #ifndef __PERIPHERAL_H__
 #define __PERIPHERAL_H__
 
+#include "avalon_gpio.h"
 #include "avalon_uart.h"
 
 #endif
