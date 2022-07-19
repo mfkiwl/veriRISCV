@@ -26,7 +26,7 @@ C_INCS += $(PWD)
 #CFLAGS := -O2 -fno-common -finline-functions --param max-inline-insns-auto=20 -falign-functions=4 -falign-jumps=4 -falign-loops=4
 CFLAGS :=
 CFLAGS += -DFLAGS_STR=\""$(CFLAGS)"\"
-CFLAGS += -DITERATIONS=40
+CFLAGS += -DITERATIONS=1
 
 #############################################################
 # Command

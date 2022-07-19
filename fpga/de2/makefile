@@ -14,7 +14,7 @@ OUT_DIR  = $(PWD)/output
 
 # Default using SRAM
 SRAM ?= 1
-
+BRAM2C ?= 0
 
 #########################################################
 # Configure variable
@@ -36,6 +36,10 @@ SEARCH += $(GIT_ROOT)/src/rtl/soc
 
 ifeq ($(SRAM), 1)
 	DEFINE += SRAM
+endif
+
+ifeq ($(BRAM2C), 1)
+	DEFINE += BRAM2C
 endif
 
 include $(GIT_ROOT)/tools/quartus/makefile.nonqsys.mk

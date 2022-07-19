@@ -66,11 +66,12 @@ C_OBJS 			:= $(C_SRCS:.c=.o)
 ASM_OBJS 		:= $(ASM_SRCS:.S=.o)
 DUMP_OBJS 		:= $(C_SRCS:.c=.dump)
 VERILOG_OBJS 	:= $(C_SRCS:.c=.verilog)
+MAP_OBJS 		:= $(C_SRCS:.c=.map)
 
 LINK_OBJS  += $(ASM_OBJS) $(C_OBJS)
 LINK_DEPS  += $(LINKER_SCRIPT)
 
-CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(DUMP_OBJS) $(VERILOG_OBJS)
+CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(DUMP_OBJS) $(VERILOG_OBJS) $(MAP_OBJS)
 
 dumpasm: software
 	$(RISCV_OBJDUMP) -D $(PROGRAM_ELF) > $(PROGRAM_ELF).dump

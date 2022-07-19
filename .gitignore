@@ -19,6 +19,7 @@ results.xml
 sdk/software/demo/uart/uart
 sdk/software/benchmark/coremark/coremark
 sdk/software/demo/blink/blink
+sdk/software/demo/fibonacci/fib
 
 # fpga
 output

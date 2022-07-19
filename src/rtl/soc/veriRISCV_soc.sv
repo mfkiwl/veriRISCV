@@ -127,18 +127,13 @@ module veriRISCV_soc #(
     logic           uart0_avn_waitrequest;
 
     reg             sys_rst; // sys reset
-
-    always @(posedge clk) begin
-        if (rst) sys_rst <= 1'b1;
-        else begin
-            if (uart_download) sys_rst <= 1'b1;
-            else sys_rst <= 1'b0;
-        end
-    end
+    reg [1:0]       rst_sync; // synchronize the reset input
+    reg             rst_synced;
 
     // -------------------------------
     // veriRISCV Core
     // --------------------------------
+
     veriRISCV_core u_veriRISCV_core(
         .clk,
         .rst    (sys_rst),
@@ -175,15 +170,31 @@ module veriRISCV_soc #(
     assign dbus_avalon_resp.readdata = dbus_avn_readdata;
     assign dbus_avalon_resp.waitrequest = dbus_avn_waitrequest;
 
-    // ----------------------------------------
-    //  avalon bus
-    // ----------------------------------------
+    // -------------------------------
+    // Reset logic
+    // --------------------------------
 
-    veriRISCV_avalon_bus u_veriRISCV_avalon_bus (.*);
+    always @(posedge clk) begin
+        rst_sync[0] <= rst;
+        rst_sync[1] <= rst_sync[0];
+        rst_synced  <= rst_sync[1];
+    end
+
+    always @(posedge clk) begin
+        if (rst_synced) sys_rst <= 1'b1;
+        else begin
+            if (uart_download) sys_rst <= 1'b1;
+            else sys_rst <= 1'b0;
+        end
+    end
 
     // ----------------------------------------
     //  SoC Component
     // ----------------------------------------
+
+    // avalon bus
+
+    veriRISCV_avalon_bus u_veriRISCV_avalon_bus (.*);
 
     // Main memory
 
@@ -206,13 +217,22 @@ module veriRISCV_soc #(
         .* // sram port
     );
 `else
+
     localparam MM_AW = `MAIN_MEMORY_AW;
+
+    `ifdef BRAM2C
+    avalon_ram_1rw_2c
+    `else
     avalon_ram_1rw
+    `endif
     #(
         .AW       (MM_AW-2),
         .DW       (32)
     )
     u_memory(
+        `ifdef BRAM2C
+        .rst        (sys_rst),
+        `endif
         .clk         (clk),
         .read        (ram_avn_read),
         .write       (ram_avn_write),
@@ -230,7 +250,7 @@ module veriRISCV_soc #(
     avalon_uart_host
     u_uart_debug (
         .clk                (clk),
-        .rst                (rst),
+        .rst                (rst_synced),
         .avn_read           (debug_avn_read),
         .avn_write          (debug_avn_write),
         .avn_address        (debug_avn_address),
