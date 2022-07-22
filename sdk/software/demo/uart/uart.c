@@ -19,8 +19,6 @@ int main(int argc, char **argv)
 {
     char * msg1 = "Hello, world!\n";
     char * msg2 = "Hello, veriRISCV!\n";
-    avalon_gpio_set_0(GPIO0_BASE);
-    // send uart message
     printf("%s", msg1);
     avalon_uart_putnc_blocking(UART0_BASE, msg2, strlen(msg2));
     return 0;

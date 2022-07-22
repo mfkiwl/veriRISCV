@@ -38,7 +38,9 @@ module veriRISCV_soc #(
 `endif
 
     input                   uart_debug_en,
-    output                  uart_download,
+    input                   core_en,
+    output                  uart_host_writing,
+    output                  uart_host_reading,
     output                  uart_txd,
     input                   uart_rxd
 );
@@ -126,9 +128,18 @@ module veriRISCV_soc #(
     logic [31:0]    uart0_avn_readdata;
     logic           uart0_avn_waitrequest;
 
-    reg             sys_rst; // sys reset
-    reg [1:0]       rst_sync; // synchronize the reset input
-    reg             rst_synced;
+    logic           uart0_uart_txd;
+    logic           uart0_uart_rxd;
+
+    logic           uart_host_uart_txd;
+    logic           uart_host_uart_rxd;
+
+    // reset signals
+    reg             uart_host_rst;
+    reg             core_rst;
+    reg             uart0_rst;
+    reg             gpio0_rst;
+    reg             gpio1_rst;
 
     // -------------------------------
     // veriRISCV Core
@@ -136,7 +147,7 @@ module veriRISCV_soc #(
 
     veriRISCV_core u_veriRISCV_core(
         .clk,
-        .rst    (sys_rst),
+        .rst(core_rst),
         .ibus_avalon_req,
         .ibus_avalon_resp,
         .dbus_avalon_req,
@@ -175,16 +186,19 @@ module veriRISCV_soc #(
     // --------------------------------
 
     always @(posedge clk) begin
-        rst_sync[0] <= rst;
-        rst_sync[1] <= rst_sync[0];
-        rst_synced  <= rst_sync[1];
-    end
-
-    always @(posedge clk) begin
-        if (rst_synced) sys_rst <= 1'b1;
+        if (rst) begin
+            uart_host_rst <= 1'b1;
+            core_rst  <= 1'b1;
+            uart0_rst <= 1'b1;
+            gpio0_rst <= 1'b1;
+            gpio1_rst <= 1'b1;
+        end
         else begin
-            if (uart_download) sys_rst <= 1'b1;
-            else sys_rst <= 1'b0;
+            uart_host_rst <= 1'b0;
+            core_rst  <= uart_host_reading | uart_host_writing | ~core_en;
+            uart0_rst <= uart_host_writing;
+            gpio0_rst <= uart_host_writing;
+            gpio1_rst <= uart_host_writing;
         end
     end
 
@@ -231,7 +245,7 @@ module veriRISCV_soc #(
     )
     u_memory(
         `ifdef BRAM2C
-        .rst        (sys_rst),
+        .rst         (rst),
         `endif
         .clk         (clk),
         .read        (ram_avn_read),
@@ -248,9 +262,9 @@ module veriRISCV_soc #(
     localparam UART_DIV = CLK_FREQ_MHZ * 1000000 / UART_BAUD_RATE;
 
     avalon_uart_host
-    u_uart_debug (
+    u_avalon_uart_host (
         .clk                (clk),
-        .rst                (rst_synced),
+        .rst                (uart_host_rst),
         .avn_read           (debug_avn_read),
         .avn_write          (debug_avn_write),
         .avn_address        (debug_avn_address),
@@ -258,10 +272,12 @@ module veriRISCV_soc #(
         .avn_byte_enable    (debug_avn_byte_enable),
         .avn_readdata       (debug_avn_readdata),
         .avn_waitrequest    (debug_avn_waitrequest),
-        .cfg_div            (UART_DIV[15:0]),
-        .cfg_rxen           (uart_debug_en),
-        .uart_rxd           (uart_rxd),
-        .uart_download      (uart_download)
+        .uart_div           (UART_DIV[15:0]),
+        .uart_debug_en      (uart_debug_en),
+        .uart_rxd           (uart_host_uart_rxd),
+        .uart_txd           (uart_host_uart_txd),
+        .uart_host_writing  (uart_host_writing),
+        .uart_host_reading  (uart_host_reading)
     );
 
     // AON domain
@@ -272,7 +288,7 @@ module veriRISCV_soc #(
     avalon_uart
     uart_0 (
         .clk                (clk),
-        .rst                (sys_rst),
+        .rst                (uart0_rst),
         .avn_read           (uart0_avn_read),
         .avn_write          (uart0_avn_write),
         .avn_address        (uart0_avn_address[4:0]),
@@ -281,15 +297,15 @@ module veriRISCV_soc #(
         .avn_waitrequest    (uart0_avn_waitrequest),
         .int_txwm           (),
         .int_rxwm           (),
-        .uart_txd           (uart_txd),
-        .uart_rxd           (uart_rxd)
+        .uart_txd           (uart0_uart_txd),
+        .uart_rxd           (uart0_uart_rxd)
     );
 
     // GPIO0
     avalon_gpio #(.W(GPIO0_WIDTH))
     gpio_0 (
         .clk            (clk),
-        .rst            (sys_rst),
+        .rst            (gpio0_rst),
         .gpio           (gpio0),
         .avn_read       (gpio0_avn_read),
         .avn_write      (gpio0_avn_write),
@@ -304,7 +320,7 @@ module veriRISCV_soc #(
     avalon_gpio #(.W(GPIO1_WIDTH))
     gpio_1 (
         .clk            (clk),
-        .rst            (sys_rst),
+        .rst            (gpio1_rst),
         .gpio           (gpio1),
         .avn_read       (gpio1_avn_read),
         .avn_write      (gpio1_avn_write),
@@ -314,5 +330,11 @@ module veriRISCV_soc #(
         .avn_readdata   (gpio1_avn_readdata),
         .avn_waitrequest(gpio1_avn_waitrequest)
     );
+
+
+    // glue logic
+    assign uart0_uart_rxd = uart_rxd;
+    assign uart_host_uart_rxd = uart_rxd;
+    assign uart_txd = uart0_uart_txd & uart_host_uart_txd;
 
 endmodule

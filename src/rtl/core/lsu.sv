@@ -29,7 +29,6 @@ module lsu (
     input  avalon_resp_t            dbus_avalon_resp,
     // port to MEM stage
     output logic [`DATA_RANGE]      lsu_readdata,
-    output logic                    lsu_readdatavalid,
     output logic                    lsu_stall_req,
     // exception
     output logic                    lsu_exception_load_addr_misaligned,
@@ -63,7 +62,6 @@ module lsu (
         if (rst) read_pending <= 1'b0;
         else read_pending <= lsu_mem_read;
     end
-    assign lsu_readdatavalid = read_pending;
 
     // --  write data generation  -- //
     always @* begin

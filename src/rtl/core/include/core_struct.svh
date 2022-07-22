@@ -109,6 +109,8 @@ typedef struct packed {
     // csr
     logic                          csr_read;
     logic                          csr_write;
+    // memory
+    logic                          mem_read;
     // register file
     logic                          reg_write;
     // other

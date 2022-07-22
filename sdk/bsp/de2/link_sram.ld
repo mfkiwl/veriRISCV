@@ -35,7 +35,7 @@ SECTIONS
         *(.data.*)
         . = ALIGN(8);
         PROVIDE( __global_pointer$ = . + 0x800);
-        /**(.sdata .sdata.*)*/
+        *(.sdata .sdata.*)
         _edata = .;
     } >ram
 
@@ -52,11 +52,11 @@ SECTIONS
     PROVIDE( _end = . );
     PROVIDE( end = . );
 
-  .stack ORIGIN(ram) + LENGTH(ram) - __stack_size :
-  {
-    PROVIDE( _heap_end = . );
-    . = __stack_size;
-    PROVIDE( _sp = . );
-  } >ram AT>ram
+    .stack ORIGIN(ram) + LENGTH(ram) - __stack_size :
+    {
+        PROVIDE( _heap_end = . );
+        . = __stack_size;
+        PROVIDE( _sp = . );
+    } >ram AT>ram
 
 }

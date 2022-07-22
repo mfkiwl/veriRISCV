@@ -24,7 +24,6 @@ module MEM (
     input ex2mem_pipeline_data_t        ex2mem_pipeline_data,
 
     // input from LSB
-    input                               lsu_readdatavalid,
     input [`DATA_RANGE]                 lsu_readdata,
 
     // pipeline stage
@@ -62,7 +61,7 @@ module MEM (
     assign mem_stage_data.pc = ex2mem_pipeline_data.pc;
     assign mem_stage_data.instruction = ex2mem_pipeline_data.instruction;
     assign mem_stage_data.reg_regid = ex2mem_pipeline_data.reg_regid;
-    assign mem_stage_data.reg_writedata = lsu_readdatavalid ? lsu_readdata : ex2mem_pipeline_data.alu_out;
+    assign mem_stage_data.reg_writedata = ex2mem_pipeline_ctrl.mem_read ? lsu_readdata : ex2mem_pipeline_data.alu_out;
     assign mem_stage_data.csr_write_opcode = ex2mem_pipeline_data.csr_write_opcode;
     assign mem_stage_data.csr_writedata = ex2mem_pipeline_data.csr_writedata;
     assign mem_stage_data.csr_address = ex2mem_pipeline_data.csr_address;

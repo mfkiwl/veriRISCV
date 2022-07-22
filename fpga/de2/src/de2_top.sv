@@ -35,7 +35,7 @@ module de2_top (
     logic       clk;
 
     assign LEDR = gpio0[17:0];
-    assign LEDG[8:1] = 0;
+    assign LEDG[8:2] = 0;
 
     `ifndef SRAM
         //Disable SRAM.
@@ -56,22 +56,24 @@ module de2_top (
 
     veriRISCV_soc #(.CLK_FREQ_MHZ(25))
     veriRISCV_soc (
-        .clk            (clk),
-        .rst            (~KEY[0]),
-        .gpio0          (gpio0),
-        .gpio1          (),
-        .uart_debug_en  (SW[0]),
-        .uart_download  (LEDG[0]),
+        .clk                (clk),
+        .rst                (~KEY[0]),
+        .gpio0              (gpio0),
+        .gpio1              (),
+        .uart_debug_en      (SW[0]),
+        .core_en            (SW[1]),
+        .uart_host_writing  (LEDG[0]),
+        .uart_host_reading  (LEDG[1]),
     `ifdef SRAM
-        .sram_ce_n      (SRAM_CE_N),
-        .sram_oe_n      (SRAM_OE_N),
-        .sram_we_n      (SRAM_WE_N),
-        .sram_be_n      ({SRAM_UB_N, SRAM_LB_N}),
-        .sram_addr      (SRAM_ADDR),
-        .sram_dq        (SRAM_DQ),
+        .sram_ce_n          (SRAM_CE_N),
+        .sram_oe_n          (SRAM_OE_N),
+        .sram_we_n          (SRAM_WE_N),
+        .sram_be_n          ({SRAM_UB_N, SRAM_LB_N}),
+        .sram_addr          (SRAM_ADDR),
+        .sram_dq            (SRAM_DQ),
     `endif
-        .uart_txd       (UART_TXD),
-        .uart_rxd       (UART_RXD)
+        .uart_txd           (UART_TXD),
+        .uart_rxd           (UART_RXD)
     );
 
 endmodule

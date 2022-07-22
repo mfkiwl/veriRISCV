@@ -65,8 +65,8 @@ module avalon_s_arbiter #(
     always @(posedge clk) begin
         if (rst) pending <= 0;
         else begin
-            if (!pending & host_request & device_avn_waitrequest) pending <= 1;
-            else if (pending & !device_avn_waitrequest) pending <= 0;
+            if (!pending && host_request && device_avn_waitrequest) pending <= 1;
+            else if (pending && !device_avn_waitrequest) pending <= 0;
         end
     end
 

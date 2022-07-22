@@ -91,6 +91,7 @@ module EX (
     assign ex_stage_ctrl.valid = id2ex_pipeline_ctrl.valid;
     assign ex_stage_ctrl.csr_read = id2ex_pipeline_ctrl.csr_read;
     assign ex_stage_ctrl.csr_write = id2ex_pipeline_ctrl.csr_write;
+    assign ex_stage_ctrl.mem_read = lsu_mem_read;
     assign ex_stage_ctrl.reg_write = id2ex_pipeline_ctrl.reg_write & ~lsu_exception_load_addr_misaligned;
     assign ex_stage_ctrl.mret = id2ex_pipeline_ctrl.mret;
 

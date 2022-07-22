@@ -74,13 +74,16 @@ LINK_DEPS  += $(LINKER_SCRIPT)
 CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(DUMP_OBJS) $(VERILOG_OBJS) $(MAP_OBJS)
 
 dumpasm: software
-	$(RISCV_OBJDUMP) -D $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
+	$(RISCV_OBJDUMP) -D -S $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
 	$(RISCV_OBJCOPY) $(PROGRAM_ELF) -O verilog $(PROGRAM_ELF).verilog
 
 software: $(TARGET)
 
 download: $(TARGET).verilog
 	$(TOOL_PATH)/UartDownload.py -f $< -b $(BOARD)
+
+read: download.log
+	$(TOOL_PATH)/UartRead.py -f $< -b $(BOARD)
 
 $(TARGET): $(LINK_OBJS) $(LINK_DEPS)
 	$(CC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)
@@ -93,4 +96,4 @@ $(C_OBJS): %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 clean:
-	rm -f $(TARGET) $(CLEAN_OBJS)
+	rm -f $(TARGET) $(CLEAN_OBJS) *.log

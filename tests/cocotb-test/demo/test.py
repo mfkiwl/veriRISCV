@@ -71,3 +71,13 @@ async def uart(dut, timeout=1000):
 async def coremark(dut, timeout=1000):
     file = '/sdk/software/benchmark/coremark/coremark.verilog'
     await testVerilog(dut, 'coremark', timeout, file)
+
+@cocotb.test()
+async def uart1(dut, timeout=600):
+    await testVerilog(dut, 'uart', timeout)
+    DELTA = 0.1
+    await reset(dut)
+    time = 0
+    while time < timeout:
+        await Timer(DELTA, "us")
+        time += DELTA

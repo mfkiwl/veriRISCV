@@ -81,7 +81,6 @@ module veriRISCV_core (
     logic                   hdu_load_stall;
     logic                   lsu_stall_req;
 
-    logic                   lsu_readdatavalid;
     logic [`DATA_RANGE]     lsu_readdata;
     logic                   lsu_exception_load_addr_misaligned;
     logic                   lsu_exception_store_addr_misaligned;
@@ -166,7 +165,6 @@ module veriRISCV_core (
         .ex2mem_pipeline_ctrl   (ex2mem_pipeline_ctrl),
         .ex2mem_pipeline_exc    (ex2mem_pipeline_exc),
         .ex2mem_pipeline_data   (ex2mem_pipeline_data),
-        .lsu_readdatavalid      (lsu_readdatavalid),
         .lsu_readdata           (lsu_readdata),
         .mem2wb_pipeline_ctrl   (mem2wb_pipeline_ctrl),
         .mem2wb_pipeline_exc    (mem2wb_pipeline_exc),
@@ -237,7 +235,6 @@ module veriRISCV_core (
         .dbus_avalon_req            (dbus_avalon_req),
         .dbus_avalon_resp           (dbus_avalon_resp),
         .lsu_readdata               (lsu_readdata),
-        .lsu_readdatavalid          (lsu_readdatavalid),
         .lsu_exception_load_addr_misaligned   (lsu_exception_load_addr_misaligned),
         .lsu_exception_store_addr_misaligned  (lsu_exception_store_addr_misaligned)
     );
