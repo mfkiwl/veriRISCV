@@ -3,8 +3,8 @@
 
 #define RVMODEL_DATA_SECTION
 
-#define BEGIN_SIGNATURE_PTR    0x80000000
-#define END_SIGNATURE_PTR      0x80000004
+#define BEGIN_SIGNATURE_PTR    0x3FF0
+#define END_SIGNATURE_PTR      0x3FF4
 
 #define RVMODEL_HALT                                              \
   la t0, begin_signature;                                         \

@@ -70,3 +70,4 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 clean_all: clean
 	rm -rf __pycache__
 	rm -rf results.xml *.vcd
+	rm -rf *.signature

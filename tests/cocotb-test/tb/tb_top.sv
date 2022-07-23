@@ -16,7 +16,7 @@ module tb_top (
     inout [31:0]            gpio1,
     input                   uart_debug_en
 );
-    parameter SRAM_AW   = 19;   // SRAM address width
+    parameter SRAM_AW   = 25;   // SRAM address width, a large size for riscv-arch-test
     parameter SRAM_DW   = 16;   // SRAM data width
 
     `ifdef SRAM
@@ -30,7 +30,7 @@ module tb_top (
         /* verilator lint_off UNOPT */
         wire  [SRAM_DW-1:0]     sram_dq;
         /* verilator lint_on UNOPT */
-        SRAM SRAM(.*);
+        SRAM #( .AW(SRAM_AW), .DW(SRAM_DW)) SRAM(.*);
     `endif
 
     logic                       core_en;

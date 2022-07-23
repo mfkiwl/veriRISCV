@@ -15,7 +15,9 @@
 // Memory Configuration
 
 // Memory address width (bytes address)
+`ifndef MAIN_MEMORY_AW
 `define MAIN_MEMORY_AW     (15)
+`endif
 
 // Memory Map
 

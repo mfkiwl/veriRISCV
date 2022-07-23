@@ -85,7 +85,7 @@ async def test(dut, ram_file, timeout=10):
 async def testVerilog(dut, name, timeout=100):
     REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')
     RV_TEST_PATH = '/tests/riscv-isa/riscv-tests/generated/'
-    VERILOG_EXTENSION = '.verilog_reversed_4byte'
+    VERILOG_EXTENSION = '.verilog'
     file = REPO_ROOT + RV_TEST_PATH + name + VERILOG_EXTENSION
     await test(dut, file, timeout)
 

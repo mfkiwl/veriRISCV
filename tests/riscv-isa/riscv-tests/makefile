@@ -68,7 +68,7 @@ all: $(tests_dump)
 
 %.dump: %
 	$(RISCV_OBJDUMP) generated/$< > generated/$@
-	$(RISCV_OBJCOPY) -O verilog generated/$< generated/$<.verilog_reversed_4byte
+	$(RISCV_OBJCOPY) -O verilog generated/$< generated/$<.verilog
 	rm -r generated/$<
 
 clean:
