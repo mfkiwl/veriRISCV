@@ -24,3 +24,9 @@ sdk/software/demo/fibonacci/fib
 
 # fpga
 output
+
+# xilinx
+*.Xil
+*.jou
+*.str
+*.log

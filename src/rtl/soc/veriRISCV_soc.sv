@@ -8,6 +8,11 @@
 // ------------------------------------------------------------------------------------------------
 // A simple SoC for the cpu design
 // ------------------------------------------------------------------------------------------------
+// Different configuration of the SoC
+//  1. BRAM: using BRAM as main memory  (Default configuration)
+//  2. SRAM: using SRAM as main memory  (Add `define SRAM)
+//  3. BRAM2C: using BRAM2C as main memory (Add `define BRAM2C)
+// ------------------------------------------------------------------------------------------------
 
 `include "core.svh"
 `include "veriRISCV_soc.svh"

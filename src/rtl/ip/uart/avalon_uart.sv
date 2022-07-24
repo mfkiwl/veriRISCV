@@ -105,7 +105,7 @@ module avalon_uart (
     reg             ie_rxwm;
     reg             ie_txwm;
     logic           ie_write;
-    assign ie = {30'b0, ip_rxwm, ip_txwm};
+    assign ie = {30'b0, ie_rxwm, ie_txwm};
 
     // ip 0x14
     logic [31:0]    ip;

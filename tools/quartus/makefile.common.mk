@@ -44,7 +44,9 @@ export QUARTUS_QIP		= $(QIP)
 export QUARTUS_PIN		= $(PIN)
 export QUARTUS_DEFINE	= $(DEFINE)
 
-QIP	= $(OUT_DIR)/$(QSYS)/synthesis/$(QSYS).qip
+ifdef $(QSYS)
+	QIP	= $(OUT_DIR)/$(QSYS)/synthesis/$(QSYS).qip
+endif
 SOF = $(OUT_DIR)/$(PROJECT).sof
 
 #########################################################

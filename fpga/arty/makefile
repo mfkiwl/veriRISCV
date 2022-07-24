@@ -21,25 +21,24 @@ BRAM2C ?= 0
 #########################################################
 
 PROJECT = veriRISCV
-TOP = de2_top
-SDC	= $(PWD)/src/de2.sdc
-PIN = $(PWD)/src/de2_pin.tcl
+
+TOP = arty_top
+
+XDC += $(PWD)/src/arty_pin.xdc
+XDC += $(PWD)/src/arty_timing.xdc
 
 include $(GIT_ROOT)/src/rtl/soc/veriRISCV_soc.mk
 
-VERILOG += $(PWD)/src/pll.v
-VERILOG += $(PWD)/src/de2_top.sv
 VERILOG += $(VERILOG_SOURCES)
+VERILOG += $(PWD)/src/mmcm_clk_wiz.v
+VERILOG += $(PWD)/src/mmcm.v
+VERILOG += $(PWD)/src/arty_top.sv
 
 SEARCH += $(GIT_ROOT)/src/rtl/core/include
 SEARCH += $(GIT_ROOT)/src/rtl/soc
-
-ifeq ($(SRAM), 1)
-	DEFINE += SRAM
-endif
 
 ifeq ($(BRAM2C), 1)
 	DEFINE += BRAM2C
 endif
 
-include $(GIT_ROOT)/tools/quartus/makefile.nonqsys.mk
+include $(GIT_ROOT)/tools/vivado/makefile.mk

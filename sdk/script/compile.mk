@@ -51,10 +51,8 @@ BOARD		?= de2
 include $(BSP_PATH)/$(BOARD)/$(BOARD).mk
 include $(LIB_PATH)/lib.mk
 
-
 # additional C include files
 C_INCS += $(BSP_PATH)/$(BOARD)
-
 
 INCLUDES = $(addprefix -I, $(C_INCS))
 
