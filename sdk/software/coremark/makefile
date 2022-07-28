@@ -6,7 +6,6 @@
 # SRC files
 #############################################################
 
-REPO_ROOT = $(shell git rev-parse --show-toplevel)
 
 C_SRCS += core_list_join.c
 C_SRCS += core_main.c
@@ -22,11 +21,18 @@ C_INCS += $(PWD)
 # Config
 #############################################################
 
-#CFLAGS := -O2 -fno-common -funroll-loops -finline-functions --param max-inline-insns-auto=20 -falign-functions=4 -falign-jumps=4 -falign-loops=4
-#CFLAGS := -O2 -fno-common -finline-functions --param max-inline-insns-auto=20 -falign-functions=4 -falign-jumps=4 -falign-loops=4
-CFLAGS :=
+# optimizations
+CFLAGS := -O2
+CFLAGS += -fno-common
+#CFLAGS += -funroll-loops
+CFLAGS += -finline-functions
+CFLAGS += --param max-inline-insns-auto=20
+CFLAGS += -falign-functions=4
+CFLAGS += -falign-jumps=4
+CFLAGS += -falign-loops=4
+
+CFLAGS += -DITERATIONS=500
 CFLAGS += -DFLAGS_STR=\""$(CFLAGS)"\"
-CFLAGS += -DITERATIONS=1
 
 #############################################################
 # Command
@@ -34,9 +40,4 @@ CFLAGS += -DITERATIONS=1
 
 TARGET = coremark
 
-PROGRAM     = $(TARGET)
-PROGRAM_ELF = $(PROGRAM)
-
-COMMON_BASE = ../../common
-
-include $(REPO_ROOT)/sdk/script/compile.mk
+include $(BSP_BASE)/env/common.mk

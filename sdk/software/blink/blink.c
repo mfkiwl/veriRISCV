@@ -2,26 +2,27 @@
 // Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 // Author: Heqing Huang
 //
-// Date Created: 07/14/2022
+// Date Created: 07/10/2022
 // ------------------------------------------------------------------------------------------------
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
-// System Utility functions
+// blinker program
 // ------------------------------------------------------------------------------------------------
 
+#include <stdint.h>
+#include "platform.h"
 
-#include "sysutils.h"
+int main(int argc, char **argv)
+{
+    uint32_t value = 0xFFFFFFFF;
 
-/**
- * @brief  Light the LED to indicate the program is downloaded correctly
- *
- * @param base
- */
-void light_led(uint32_t base) {
-    *((uint32_t *) (base + 0x8)) = 0x1;
-    *((uint32_t *) (base + 0xC)) = 1;
+    // enable output
+    avalon_gpio_write_en(GPIO0_BASE, 0xFFFFFFFF);
+
+    while(1) {
+        avalon_gpio_write(GPIO0_BASE, value);
+        value = ~value;
+        for (int i = 0; i < 500000; i++);
+    }
+    return 0;
 }
-
-
-
-

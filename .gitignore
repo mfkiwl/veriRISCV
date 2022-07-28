@@ -17,10 +17,11 @@ results.xml
 # c
 *.o
 *.map
-sdk/software/demo/uart/uart
-sdk/software/benchmark/coremark/coremark
-sdk/software/demo/blink/blink
-sdk/software/demo/fibonacci/fib
+sdk/software/blink/blink
+sdk/software/hello_riscv/hello_riscv
+sdk/software/fibonacci/fibonacci
+sdk/software/coremark/coremark
+
 
 # fpga
 output

@@ -7,10 +7,26 @@
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
 
-#ifndef __BOARD_DE2_H__
-#define __BOARD_DE2_H__
+#ifndef __BOARD_H__
+#define __BOARD_H__
+
+// Defines for DE2 Board
+#ifdef BOARD_DE2
+
+// Clock Frequency in MHz
+#define CLK_FREQ_MHZ     25
+
+
+#endif
+
+// Defines for Arty Board
+#ifdef BOARD_ARTY
 
 // Clock Frequency in MHz
 #define CLK_FREQ_MHZ     50
+
+
+#endif
+
 
 #endif

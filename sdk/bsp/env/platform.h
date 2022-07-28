@@ -6,11 +6,20 @@
 // ------------------------------------------------------------------------------------------------
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
+// Platform
+// ------------------------------------------------------------------------------------------------
 
-#ifndef __BOARD_DE2_H__
-#define __BOARD_DE2_H__
+#ifndef __PLATFORM_H__
+#define __PLATFORM_H__
 
-// Clock Frequency in MHz
-#define CLK_FREQ_MHZ     25
+#include "board.h"
+#include "encoding.h"
+
+#include "avalon_gpio.h"
+#include "avalon_uart.h"
+
+// SOC component address mapping
+#define GPIO0_BASE      (0x80001000)
+#define UART0_BASE      (0x80003000)
 
 #endif

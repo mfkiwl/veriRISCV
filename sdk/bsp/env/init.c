@@ -9,7 +9,6 @@
 // cpu init code - config and setup peripherals
 // ------------------------------------------------------------------------------------------------
 
-#include "peripheral.h"
 #include "platform.h"
 
 void _init() {
@@ -25,8 +24,7 @@ void _init() {
     // enable interrupt (mie)
     //_write_csr(mie, 0x888);
 
-    // initialize uart
-    // enabling uart TX only for now
+    // -- Initialize uart -- //
     avalon_uart_init_s uart_init;
     uart_init.txen  = 1;
     uart_init.nstop = 0;
