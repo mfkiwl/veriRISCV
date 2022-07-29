@@ -66,8 +66,3 @@ class RegCheck:
             if value != self.register[reg]:
                 raise ValueError(f"Wrong register data on register {reg}. Expected: {hex(self.register[reg])}, Actual: {hex(value)}")
         self._log.info("*** Register Check PASS ***")
-
-def main():
-    regCheck = RegCheck(None, sys.argv[1])
-if __name__ == "__main__":
-    main()

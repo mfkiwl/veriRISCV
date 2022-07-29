@@ -28,6 +28,7 @@ VERILOG_SOURCES += $(TB_PATH)/tb_top.sv
 # Simulator config
 # -----------------------------------------
 
+MODULE = tests
 TOPLEVEL = tb_top
 
 # -----------------------------------------
@@ -53,11 +54,12 @@ endif
 ifeq ($(SRAM), 1)
 	EXTRA_ARGS += -DSRAM
 endif
-ifeq ($(BRAM2C), 1)
-	EXTRA_ARGS += -DBRAM2C
-endif
 ifeq ($(DUMP), 1)
 	EXTRA_ARGS += --trace-fst --trace-structs
+endif
+# Increase the memory size for some of the test cases
+ifeq ($(SIM),verilator)
+EXTRA_ARGS += "-DMAIN_MEMORY_AW=24"
 endif
 endif
 
@@ -66,6 +68,9 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 # -----------------------------------------
 # Other
 # -----------------------------------------
+
+gen_test:
+	python3 GenTests.py
 
 clean_all: clean
 	rm -rf __pycache__
