@@ -45,6 +45,12 @@ module mcsr
     input               i_marchid_value_wen,
     input               i_mimpid_value_wen,
     input               i_mhartid_value_wen,
+    input               i_mip_msip_wen,
+    input               i_mip_msip,
+    input               i_mip_mtip_wen,
+    input               i_mip_mtip,
+    input               i_mip_meip_wen,
+    input               i_mip_meip,
 
     // Hardware value output port
     output              o_mstatus_mpie,
@@ -52,7 +58,10 @@ module mcsr
     output [29:0]       o_mtvec_base,
     output [1:0]        o_mtvec_mode,
     output [31:0]       o_mscratch_value,
-    output [31:0]       o_mepc_value
+    output [31:0]       o_mepc_value,
+    output              o_mie_msie,
+    output              o_mie_mtie,
+    output              o_mie_meie
 );
 
     logic [31:0]    mstatus;
@@ -99,6 +108,16 @@ module mcsr
     logic [31:0]    mcycleh;
     reg [31:0]      mcycleh_value;
 
+    logic [31:0]    mie;
+    reg             mie_msie;
+    reg             mie_mtie;
+    reg             mie_meie;
+
+    logic [31:0]    mip;
+    reg             mip_msip;
+    reg             mip_mtip;
+    reg             mip_meip;
+
     // -- Assign register with its field -- //
 
     assign mstatus = {19'h0, mstatus_mpp, 3'h0, mstatus_mpie, 3'h0, mstatus_mie, 3'h0};
@@ -114,20 +133,17 @@ module mcsr
     assign mhartid = {mhartid_value};
     assign mcycle = mcycle_value;
     assign mcycleh = mcycleh_value;
+    assign mie = {20'b0, mie_meie, 3'b0, mie_mtie, 3'b0, mie_msie, 3'b0};
+    assign mip = {20'b0, mip_meip, 3'b0, mip_mtip, 3'b0, mip_msip, 3'b0};
 
     // -- Assign constant field with its value -- //
 
     assign mstatus_mpp = 2'b11;
-
     assign misa_mxl = 2'h1;
     assign misa_extensions = 26'h100;
-
     assign mvendorid_value = 32'h0;
-
     assign marchid_value = 32'h0;
-
     assign mimpid_value = 32'h0;
-
     assign mhartid_value = 32'h0;
 
 
@@ -139,6 +155,9 @@ module mcsr
     assign o_mtvec_mode = mtvec_mode;
     assign o_mscratch_value = mscratch_value;
     assign o_mepc_value = mepc_value;
+    assign o_mie_msie = mie_msie;
+    assign o_mie_mtie = mie_mtie;
+    assign o_mie_meie = mie_meie;
 
     // -- Read Logic -- //
     always @(*) begin
@@ -150,6 +169,7 @@ module mcsr
             12'h341: csr_readdata = mepc;
             12'h342: csr_readdata = mcause;
             12'h343: csr_readdata = mtval;
+            12'h344: csr_readdata = mip;
             12'hB00: csr_readdata = mcycle;
             12'hB80: csr_readdata = mcycleh;
             12'hf11: csr_readdata = mvendorid;
@@ -164,7 +184,7 @@ module mcsr
     always @(posedge clk) begin
         if (rst) begin
             mstatus_mpie <= 1'h0;
-            mstatus_mie <= 1'h1;        // set to 1 ?
+            mstatus_mie <= 1'h1;
             mtvec_base <= 30'h0;
             mtvec_mode <= 2'h0;
             mscratch_value <= 32'h0;
@@ -172,6 +192,12 @@ module mcsr
             mcause_interrupt <= 1'h0;
             mcause_exception_code <= 31'h0;
             mtval_value <= 32'h0;
+            mie_msie <= 'b0;
+            mie_mtie <= 'b0;
+            mie_meie <= 'b0;
+            mip_msip <= 'b0;
+            mip_mtip <= 'b0;
+            mip_meip <= 'b0;
         end
         else begin
 
@@ -181,12 +207,20 @@ module mcsr
             if (i_mcause_interrupt_wen) mcause_interrupt <= i_mcause_interrupt;
             if (i_mcause_exception_code_wen) mcause_exception_code <= i_mcause_exception_code;
             if (i_mtval_value_wen) mtval_value <= i_mtval_value;
+            if (i_mip_msip_wen) mip_msip <= i_mip_msip;
+            if (i_mip_mtip_wen) mip_mtip <= i_mip_mtip;
+            if (i_mip_meip_wen) mip_meip <= i_mip_meip;
 
             if (csr_write) begin
                 case(csr_address)
                     12'h300: begin
-                        mstatus_mpie <= csr_writedata[7:7];
-                        mstatus_mie <= csr_writedata[3:3];
+                        mstatus_mpie <= csr_writedata[7];
+                        mstatus_mie <= csr_writedata[3];
+                    end
+                    12'h304: begin
+                        mie_msie <= csr_writedata[3];
+                        mie_mtie <= csr_writedata[7];
+                        mie_meie <= csr_writedata[11];
                     end
                     12'h305: begin
                         mtvec_base <= csr_writedata[31:2];

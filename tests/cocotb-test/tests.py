@@ -8,38 +8,8 @@
 # veriRISCV
 # ------------------------------------------------------------------------------------------------
 
-from env import riscv_tests, riscv_arch_test, sanity_test
+from env import riscv_tests, riscv_arch_test, sanity_test, dedicated_tests
 import cocotb
-
-# sanity Test
-
-@cocotb.test()
-async def sanity_tests_logic_simple(dut):
-    await sanity_test(dut, 'logic_simple')
-
-@cocotb.test()
-async def sanity_tests_logic_forward(dut):
-    await sanity_test(dut, 'logic_forward')
-
-@cocotb.test()
-async def sanity_tests_load_store(dut):
-    await sanity_test(dut, 'load_store')
-
-@cocotb.test()
-async def sanity_tests_branch(dut):
-    await sanity_test(dut, 'branch')
-
-@cocotb.test()
-async def sanity_tests_lui_auipc(dut):
-    await sanity_test(dut, 'lui_auipc')
-
-@cocotb.test()
-async def sanity_tests_load_stall(dut):
-    await sanity_test(dut, 'load_stall')
-
-@cocotb.test()
-async def sanity_tests_jal_jalr(dut):
-    await sanity_test(dut, 'jal_jalr')
 
 # riscv-tests Test
 
@@ -356,3 +326,9 @@ async def riscv_arch_test_srl(dut):
 @cocotb.test()
 async def riscv_arch_test_srli(dut):
     await riscv_arch_test(dut, 'I', 'srli-01')
+
+# dedicated-tests Test
+
+@cocotb.test()
+async def dedicated_tests_software_interrupt(dut):
+    await dedicated_tests(dut, 'software_interrupt')

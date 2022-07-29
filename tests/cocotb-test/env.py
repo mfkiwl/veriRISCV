@@ -147,9 +147,9 @@ class ENV:
         DELTA = 0.1
         self.getMemoryConfig()
 
-        # clear memory (only for sanity test)
-        if self.test_type == 'SANITY_TEST':
-            self.clearMemory(self.ram_path, 128)
+        # clear memory
+        #if self.test_type == 'SANITY_TEST':
+        self.clearMemory(self.ram_path, 1024)
 
         # Load the Instruction RAM
         self.loadFromVerilogDump(self.ramFile, self.ram_path, self.ram_width)
@@ -194,7 +194,7 @@ class ENV:
             self.check_signature()
 
 # Test for SANITY TESTS
-async def sanity_test(dut, name, timeout=100):
+async def sanity_test(dut, name, timeout=2):
     REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')
     TEST_PATH = '/tests/riscv-isa/sanity-tests/'
     ramFile = REPO_ROOT + TEST_PATH + name + '.verilog'
@@ -219,3 +219,11 @@ async def riscv_arch_test(dut, isa, name, timeout=300):
     env = ENV(dut, name, 'RISCV_ARCH_TEST', ramFile, refFile, timeout)
     await env.test()
 
+# Test for DEDICATED TESTS
+async def dedicated_tests(dut, name, timeout=100):
+    REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')
+    TEST_PATH = '/tests/riscv-isa/dedicated-tests/generated/'
+    ramFile = REPO_ROOT + TEST_PATH + 'test-p-' + name + '.verilog'
+    # use the infrastructure of RISCV_TEST
+    env = ENV(dut, name, 'RISCV_TEST', ramFile, timeout=timeout)
+    await env.test()

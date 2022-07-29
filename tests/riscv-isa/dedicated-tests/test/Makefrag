@@ -1,0 +1,5 @@
+
+tests_name = \
+	software_interrupt \
+
+test_p_tests = $(addprefix test-p-, $(tests_name))

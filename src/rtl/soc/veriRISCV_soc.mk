@@ -19,6 +19,12 @@ VERILOG_SOURCES += $(AVN_BUS_PATH)/avalon_s_crossbar.sv
 # SRAM CONTROLLER
 VERILOG_SOURCES += $(SRAM_PATH)/avalon_sram_controller.sv
 
+# CLIC
+VERILOG_SOURCES += $(IP_PATH)/clic/avalon_clic.sv
+
+# PLIC
+VERILOG_SOURCES += $(IP_PATH)/plic/avalon_plic.sv
+
 # GPIO
 VERILOG_SOURCES += $(GPIO_PATH)/avalon_gpio.sv
 
@@ -35,7 +41,6 @@ VERILOG_SOURCES += $(UART_HOST_PATH)/avalon_uart_host.sv
 
 # MEMORY
 VERILOG_SOURCES += $(REPO_ROOT)/src/rtl/ip/memory/avalon_ram_1rw.sv
-VERILOG_SOURCES += $(REPO_ROOT)/src/rtl/ip/memory/avalon_ram_1rw_2c.sv
 VERILOG_SOURCES += $(REPO_ROOT)/src/rtl/ip/memory/avalon_ram_2rw.sv
 
 # SOC

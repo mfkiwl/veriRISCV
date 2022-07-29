@@ -97,14 +97,25 @@ module veriRISCV_soc #(
     logic [31:0]    ram_avn_readdata;
     logic           ram_avn_waitrequest;
 
-    // AON domain
-    logic           aon_avn_read;
-    logic           aon_avn_write;
-    logic [31:0]    aon_avn_address;
-    logic [3:0]     aon_avn_byte_enable;
-    logic [31:0]    aon_avn_writedata;
-    logic [31:0]    aon_avn_readdata;
-    logic           aon_avn_waitrequest;
+    // CLIC
+    logic           clic_avn_read;
+    logic           clic_avn_write;
+    logic [31:0]    clic_avn_address;
+    logic [3:0]     clic_avn_byte_enable;
+    logic [31:0]    clic_avn_writedata;
+    logic [31:0]    clic_avn_readdata;
+    logic           clic_avn_waitrequest;
+
+    // PLIC
+    logic           plic_avn_read;
+    logic           plic_avn_write;
+    logic [31:0]    plic_avn_address;
+    logic [3:0]     plic_avn_byte_enable;
+    logic [31:0]    plic_avn_writedata;
+    logic [31:0]    plic_avn_readdata;
+    logic           plic_avn_waitrequest;
+
+    logic [31:0]    plic_interrupt_in;
 
     // GPIO0
     logic           gpio0_avn_read;
@@ -135,13 +146,16 @@ module veriRISCV_soc #(
 
     logic           uart0_uart_txd;
     logic           uart0_uart_rxd;
-
     logic           uart_host_uart_txd;
     logic           uart_host_uart_rxd;
+    logic           uart0_txwm_int;
+    logic           uart0_rxwm_int;
 
     // reset signals
     reg             uart_host_rst;
     reg             core_rst;
+    reg             clic_rst;
+    reg             plic_rst;
     reg             uart0_rst;
     reg             gpio0_rst;
     reg             gpio1_rst;
@@ -163,8 +177,6 @@ module veriRISCV_soc #(
         .debug_interrupt
     );
 
-    assign software_interrupt = 0;
-    assign timer_interrupt = 0;
     assign external_interrupt = 0;
     assign debug_interrupt = 0;
 
@@ -194,6 +206,8 @@ module veriRISCV_soc #(
         if (rst) begin
             uart_host_rst <= 1'b1;
             core_rst  <= 1'b1;
+            clic_rst  <= 1'b1;
+            plic_rst  <= 1'b1;
             uart0_rst <= 1'b1;
             gpio0_rst <= 1'b1;
             gpio1_rst <= 1'b1;
@@ -201,6 +215,8 @@ module veriRISCV_soc #(
         else begin
             uart_host_rst <= 1'b0;
             core_rst  <= uart_host_reading | uart_host_writing | ~core_en;
+            plic_rst  <= uart_host_writing;
+            clic_rst  <= uart_host_writing;
             uart0_rst <= uart_host_writing;
             gpio0_rst <= uart_host_writing;
             gpio1_rst <= uart_host_writing;
@@ -217,7 +233,7 @@ module veriRISCV_soc #(
 
     // Main memory
 
-`ifdef SRAM
+    `ifdef SRAM
     avalon_sram_controller #(
         .AVN_AW     (SRAM_AW),
         .AVN_DW     (32),
@@ -235,23 +251,13 @@ module veriRISCV_soc #(
         .avn_waitrequest    (ram_avn_waitrequest),
         .* // sram port
     );
-`else
+
+    `else
 
     localparam MM_AW = `MAIN_MEMORY_AW;
 
-    `ifdef BRAM2C
-    avalon_ram_1rw_2c
-    `else
-    avalon_ram_1rw
-    `endif
-    #(
-        .AW       (MM_AW-2),
-        .DW       (32)
-    )
+    avalon_ram_1rw #(.AW (MM_AW-2), .DW (32))
     u_memory(
-        `ifdef BRAM2C
-        .rst         (rst),
-        `endif
         .clk         (clk),
         .read        (ram_avn_read),
         .write       (ram_avn_write),
@@ -261,7 +267,8 @@ module veriRISCV_soc #(
         .readdata    (ram_avn_readdata),
         .waitrequest (ram_avn_waitrequest)
     );
-`endif
+
+    `endif
 
     // uart debug host
     localparam UART_DIV = CLK_FREQ_MHZ * 1000000 / UART_BAUD_RATE;
@@ -285,9 +292,35 @@ module veriRISCV_soc #(
         .uart_host_reading  (uart_host_reading)
     );
 
-    // AON domain
-    assign aon_avn_readdata = 0;
-    assign aon_avn_waitrequest = 0;
+    // CLIC
+    avalon_clic
+    clic (
+        .clk                (clk),
+        .rst                (clic_rst),
+        .avn_read           (clic_avn_read),
+        .avn_write          (clic_avn_write),
+        .avn_address        (clic_avn_address[4:0]),
+        .avn_writedata      (clic_avn_writedata),
+        .avn_readdata       (clic_avn_readdata),
+        .avn_waitrequest    (clic_avn_waitrequest),
+        .timer_interrupt    (timer_interrupt),
+        .software_interrupt (software_interrupt)
+    );
+
+    // PLIC
+    avalon_plic
+    plic (
+        .clk                (clk),
+        .rst                (plic_rst),
+        .avn_read           (plic_avn_read),
+        .avn_write          (plic_avn_write),
+        .avn_address        (plic_avn_address[3:0]),
+        .avn_writedata      (plic_avn_writedata),
+        .avn_readdata       (plic_avn_readdata),
+        .avn_waitrequest    (plic_avn_waitrequest),
+        .plic_interrupt_in  (plic_interrupt_in),
+        .external_interrupt (external_interrupt)
+    );
 
     // UART0
     avalon_uart
@@ -300,8 +333,8 @@ module veriRISCV_soc #(
         .avn_writedata      (uart0_avn_writedata),
         .avn_readdata       (uart0_avn_readdata),
         .avn_waitrequest    (uart0_avn_waitrequest),
-        .int_txwm           (),
-        .int_rxwm           (),
+        .int_txwm           (uart0_txwm_int),
+        .int_rxwm           (uart0_rxwm_int),
         .uart_txd           (uart0_uart_txd),
         .uart_rxd           (uart0_uart_rxd)
     );
@@ -341,5 +374,8 @@ module veriRISCV_soc #(
     assign uart0_uart_rxd = uart_rxd;
     assign uart_host_uart_rxd = uart_rxd;
     assign uart_txd = uart0_uart_txd & uart_host_uart_txd;
+
+    // connect the interrupt
+    assign plic_interrupt_in = {30'b0, uart0_rxwm_int, uart0_txwm_int};
 
 endmodule

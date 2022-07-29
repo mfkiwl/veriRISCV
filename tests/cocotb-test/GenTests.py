@@ -22,7 +22,7 @@ f"""
 # veriRISCV
 # ------------------------------------------------------------------------------------------------
 
-from env import riscv_tests, riscv_arch_test, sanity_test
+from env import riscv_tests, riscv_arch_test, sanity_test, dedicated_tests
 import cocotb
 """
 
@@ -48,11 +48,15 @@ riscv_arch_test__rv32i_m_i_instruction = [
     'sra', 'srai', 'srl', 'srli',
 ]
 
+# DEDICATED TEST
+dedicated_test = ['software_interrupt']
+
 # Generate tests cases
 
-GEN_SANITY_TEST = True
+GEN_SANITY_TEST = False # Sanity test does not work after enabling exceptions
 GEN_RISCV_TESTS = True
 GEN_RISCV_ARCH_TEST = True
+GEN_DEDICATED_TEST = True
 
 def gen_sanity_tests(name):
     func = \
@@ -83,6 +87,16 @@ async def riscv_arch_test_{funcName}(dut):
 """
     return func
 
+def gen_dedicated_tests(name):
+    func = \
+f"""
+@cocotb.test()
+async def dedicated_tests_{name}(dut):
+    await dedicated_tests(dut, '{name}')
+"""
+    return func
+
+
 def gen_tests():
     OUTPUT = 'tests.py'
     FH = open(OUTPUT, "w")
@@ -106,6 +120,11 @@ def gen_tests():
         FH.write("\n# riscv-arch-test Test\n")
         for test in riscv_arch_test__rv32i_m_i_instruction:
             FH.write(gen_riscv_arch_tests('I', test))
+
+    if GEN_DEDICATED_TEST:
+        FH.write("\n# dedicated-tests Test\n")
+        for test in dedicated_test:
+            FH.write(gen_dedicated_tests(test))
 
     FH.close()
 

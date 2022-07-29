@@ -11,7 +11,27 @@
 
 `include "core.svh"
 `include "veriRISCV_soc.svh"
-`include "veriRISCV_soc_utils.svh"
+
+// connect a bus to a host port in avalon bus crossbar
+`define CONNECT_AVALON_S_HOSTS(PORT, BUS, IDX) \
+    assign ``PORT``_hosts_avn_read[IDX]         = ``BUS``_avn_read; \
+    assign ``PORT``_hosts_avn_write[IDX]        = ``BUS``_avn_write; \
+    assign ``PORT``_hosts_avn_address[IDX]      = ``BUS``_avn_address; \
+    assign ``PORT``_hosts_avn_byte_enable[IDX]  = ``BUS``_avn_byte_enable; \
+    assign ``PORT``_hosts_avn_writedata[IDX]    = ``BUS``_avn_writedata; \
+    assign ``BUS``_avn_readdata                 = ``PORT``_hosts_avn_readdata[IDX]; \
+    assign ``BUS``_avn_waitrequest              = ``PORT``_hosts_avn_waitrequest[IDX];
+
+// connect a bus to a device port in avalon bus crossbar/decoder
+`define CONNECT_AVALON_S_DEVICE(PORT, BUS, IDX) \
+    assign ``BUS``_avn_read                         = ``PORT``_devices_avn_read[IDX]; \
+    assign ``BUS``_avn_write                        = ``PORT``_devices_avn_write[IDX]; \
+    assign ``BUS``_avn_address                      = ``PORT``_devices_avn_address[IDX]; \
+    assign ``BUS``_avn_byte_enable                  = ``PORT``_devices_avn_byte_enable[IDX]; \
+    assign ``BUS``_avn_writedata                    = ``PORT``_devices_avn_writedata[IDX]; \
+    assign ``PORT``_devices_avn_readdata[IDX]       = ``BUS``_avn_readdata; \
+    assign ``PORT``_devices_avn_waitrequest[IDX]    = ``BUS``_avn_waitrequest;
+
 
 module veriRISCV_avalon_bus (
     input           clk,
@@ -53,14 +73,23 @@ module veriRISCV_avalon_bus (
     input [31:0]    ram_avn_readdata,
     input           ram_avn_waitrequest,
 
-    // AON domain
-    output          aon_avn_read,
-    output          aon_avn_write,
-    output [31:0]   aon_avn_address,
-    output [3:0]    aon_avn_byte_enable,
-    output [31:0]   aon_avn_writedata,
-    input [31:0]    aon_avn_readdata,
-    input           aon_avn_waitrequest,
+    // CLIC domain
+    output          clic_avn_read,
+    output          clic_avn_write,
+    output [31:0]   clic_avn_address,
+    output [3:0]    clic_avn_byte_enable,
+    output [31:0]   clic_avn_writedata,
+    input [31:0]    clic_avn_readdata,
+    input           clic_avn_waitrequest,
+
+    // PLIC domain
+    output          plic_avn_read,
+    output          plic_avn_write,
+    output [31:0]   plic_avn_address,
+    output [3:0]    plic_avn_byte_enable,
+    output [31:0]   plic_avn_writedata,
+    input [31:0]    plic_avn_readdata,
+    input           plic_avn_waitrequest,
 
     // GPIO0
     output          gpio0_avn_read,
@@ -148,7 +177,7 @@ module veriRISCV_avalon_bus (
     // peripheral bus decoder
     // ----------------------------------------
 
-    localparam PERI_BUS_ND = 4;  // number of device
+    localparam PERI_BUS_ND = 6;  // number of device
     localparam PERI_BUS_AW = 32;
     localparam PERI_BUS_DW = 32;
 
@@ -230,28 +259,29 @@ module veriRISCV_avalon_bus (
     // connect device to peripheral bus decoder
     // ----------------------------------------
 
-    // device 0: AON
-    assign peri_devices_address_low[0]  = `AON_LOW;
-    assign peri_devices_address_high[0] = `AON_HIGH;
+    // device 0: CLIC
+    assign peri_devices_address_low[0]  = `CLIC_LOW;
+    assign peri_devices_address_high[0] = `CLIC_HIGH;
+    `CONNECT_AVALON_S_DEVICE(peri, clic, 0)
 
-    `CONNECT_AVALON_S_DEVICE(peri, aon, 0)
+    // device 1: PLIC
+    assign peri_devices_address_low[1]  = `PLIC_LOW;
+    assign peri_devices_address_high[1] = `PLIC_HIGH;
+    `CONNECT_AVALON_S_DEVICE(peri, plic, 1)
 
     // device 1: GPIO0
-    assign peri_devices_address_low[1]  = `GPIO0_LOW;
-    assign peri_devices_address_high[1] = `GPIO0_HIGH;
-
-    `CONNECT_AVALON_S_DEVICE(peri, gpio0, 1)
+    assign peri_devices_address_low[2]  = `GPIO0_LOW;
+    assign peri_devices_address_high[2] = `GPIO0_HIGH;
+    `CONNECT_AVALON_S_DEVICE(peri, gpio0, 2)
 
     // device 2: GPIO1
-    assign peri_devices_address_low[2]  = `GPIO1_LOW;
-    assign peri_devices_address_high[2] = `GPIO1_HIGH;
-
-    `CONNECT_AVALON_S_DEVICE(peri, gpio1, 2)
+    assign peri_devices_address_low[3]  = `GPIO1_LOW;
+    assign peri_devices_address_high[3] = `GPIO1_HIGH;
+    `CONNECT_AVALON_S_DEVICE(peri, gpio1, 3)
 
     // device 3: UART0
-    assign peri_devices_address_low[3]  = `UART0_LOW;
-    assign peri_devices_address_high[3] = `UART0_HIGH;
-
-    `CONNECT_AVALON_S_DEVICE(peri, uart0, 3)
+    assign peri_devices_address_low[4]  = `UART0_LOW;
+    assign peri_devices_address_high[4] = `UART0_HIGH;
+    `CONNECT_AVALON_S_DEVICE(peri, uart0, 4)
 
 endmodule

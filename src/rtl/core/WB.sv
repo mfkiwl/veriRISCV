@@ -53,15 +53,24 @@ module WB (
     logic                   i_mstatus_mpie;
     logic  [1:0]            i_mstatus_mpp;
     logic  [31:0]           i_mtval_value;
+    logic                   i_mip_meip_wen;
+    logic                   i_mip_msip_wen;
+    logic                   i_mip_mtip_wen;
+    logic                   i_mip_meip;
+    logic                   i_mip_msip;
+    logic                   i_mip_mtip;
 
-    logic [`DATA_RANGE]     csr_readdata;
     logic [31:0]            o_mepc_value;
     logic [31:0]            o_mscratch_value;
     logic                   o_mstatus_mie;
     logic                   o_mstatus_mpie;
     logic [29:0]            o_mtvec_base;
     logic [1:0]             o_mtvec_mode;
+    logic                   o_mie_meie;
+    logic                   o_mie_msie;
+    logic                   o_mie_mtie;
 
+    logic [`DATA_RANGE]     csr_readdata;
     logic                   csr_write;
     logic                   csr_read;
 
@@ -92,12 +101,15 @@ module WB (
     (/*AUTOINST*/
      // Outputs
      .csr_readdata                      (csr_readdata[`DATA_RANGE]), // Templated
-     .o_mepc_value                      (o_mepc_value[31:0]),
-     .o_mscratch_value                  (o_mscratch_value[31:0]),
-     .o_mstatus_mie                     (o_mstatus_mie),
      .o_mstatus_mpie                    (o_mstatus_mpie),
+     .o_mstatus_mie                     (o_mstatus_mie),
      .o_mtvec_base                      (o_mtvec_base[29:0]),
      .o_mtvec_mode                      (o_mtvec_mode[1:0]),
+     .o_mscratch_value                  (o_mscratch_value[31:0]),
+     .o_mepc_value                      (o_mepc_value[31:0]),
+     .o_mie_msie                        (o_mie_msie),
+     .o_mie_mtie                        (o_mie_mtie),
+     .o_mie_meie                        (o_mie_meie),
      // Inputs
      .clk                               (clk),
      .rst                               (rst),
@@ -113,7 +125,13 @@ module WB (
      .i_mstatus_mie                     (i_mstatus_mie),
      .i_mstatus_mpie                    (i_mstatus_mpie),
      .i_mstatus_mpp                     (i_mstatus_mpp[1:0]),
-     .i_mtval_value                     (i_mtval_value[31:0]));
+     .i_mtval_value                     (i_mtval_value[31:0]),
+     .i_mip_msip_wen                    (i_mip_msip_wen),
+     .i_mip_msip                        (i_mip_msip),
+     .i_mip_mtip_wen                    (i_mip_mtip_wen),
+     .i_mip_mtip                        (i_mip_mtip),
+     .i_mip_meip_wen                    (i_mip_meip_wen),
+     .i_mip_meip                        (i_mip_meip));
 
     // trap_ctrl
     /* trap_ctrl AUTO_TEMPLATE (
@@ -140,6 +158,12 @@ module WB (
      .o_mstatus_mie                     (i_mstatus_mie),         // Templated
      .o_mstatus_mpie                    (i_mstatus_mpie),        // Templated
      .o_mstatus_mpp                     (i_mstatus_mpp),         // Templated
+     .o_mip_msip_wen                    (i_mip_msip_wen),        // Templated
+     .o_mip_msip                        (i_mip_msip),            // Templated
+     .o_mip_mtip_wen                    (i_mip_mtip_wen),        // Templated
+     .o_mip_mtip                        (i_mip_mtip),            // Templated
+     .o_mip_meip_wen                    (i_mip_meip_wen),        // Templated
+     .o_mip_meip                        (i_mip_meip),            // Templated
      .trap_take                         (trap_take),
      .trap_pc                           (trap_pc[`PC_RANGE]),
      // Inputs
@@ -161,7 +185,10 @@ module WB (
      .i_mtvec_mode                      (o_mtvec_mode),          // Templated
      .i_mstatus_mie                     (o_mstatus_mie),         // Templated
      .i_mstatus_mpie                    (o_mstatus_mpie),        // Templated
-     .i_mepc_value                      (o_mepc_value));          // Templated
+     .i_mepc_value                      (o_mepc_value),          // Templated
+     .i_mie_msie                        (o_mie_msie),            // Templated
+     .i_mie_mtie                        (o_mie_mtie),            // Templated
+     .i_mie_meie                        (o_mie_meie));            // Templated
 
 
 endmodule
