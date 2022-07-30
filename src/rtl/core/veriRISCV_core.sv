@@ -73,8 +73,8 @@ module veriRISCV_core (
 
     logic                   trap_take;
     logic [`PC_RANGE]       trap_pc;
-
-    logic                   lsu_stall_req;
+    logic                   ifu_ibus_busy;
+    logic                   lsu_dbus_busy;
     logic                   hdu_load_stall;
 
     // ---------------------------------
@@ -149,7 +149,7 @@ module veriRISCV_core (
         .mem_flush              (mem_flush),
         .dbus_avalon_req        (dbus_avalon_req),
         .dbus_avalon_resp       (dbus_avalon_resp),
-        .lsu_stall_req          (lsu_stall_req),
+        .lsu_dbus_busy          (lsu_dbus_busy),
         .ex2mem_pipeline_ctrl   (ex2mem_pipeline_ctrl),
         .ex2mem_pipeline_exc    (ex2mem_pipeline_exc),
         .ex2mem_pipeline_data   (ex2mem_pipeline_data),
@@ -191,9 +191,8 @@ module veriRISCV_core (
     hdu u_hdu(
         .branch_take        (branch_take),
         .trap_take          (trap_take),
-        .lsu_stall_req      (lsu_stall_req),
+        .lsu_dbus_busy      (lsu_dbus_busy),
         .load_stall_req     (hdu_load_stall),
-        .ibus_waitrequest   (ibus_avalon_resp.waitrequest),
         .ex_csr_read        (id2ex_pipeline_ctrl.csr_read),
         .mem_csr_read       (ex2mem_pipeline_ctrl.csr_read),
         .if_flush           (if_flush),

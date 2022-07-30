@@ -148,8 +148,7 @@ class ENV:
         self.getMemoryConfig()
 
         # clear memory
-        #if self.test_type == 'SANITY_TEST':
-        self.clearMemory(self.ram_path, 1024)
+        self.clearMemory(self.ram_path, 2 ** 13)
 
         # Load the Instruction RAM
         self.loadFromVerilogDump(self.ramFile, self.ram_path, self.ram_width)

@@ -29,3 +29,6 @@ ANDI  x18, x1, 0x0F
 SLLI  x19, x1, 0x4
 SRLI  x20, x5, 0x1
 SRAI  x21, x5, 0x1
+
+LOOP:
+	j LOOP

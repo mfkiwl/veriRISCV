@@ -92,3 +92,6 @@ NOP
 
 END:
 	BEQ x0, x0, END
+
+LOOP:
+	j LOOP

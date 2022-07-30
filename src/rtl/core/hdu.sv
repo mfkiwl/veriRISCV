@@ -14,13 +14,7 @@
 /*
 Note for HDU
 
-** ibus_waitrequest **:
-Cause: instruction bus is busy and need to wait.
-Stage of the req: IF
-Affect: 1. Stall IF/ID/EX stage and let other stage goes.
-        1. flush the IF stage since the instruction is not ready and let other stage go
-
-** lsu_stall_req **:
+** lsu_dbus_busy **:
 Cause: data bus is busy while we access the data bus.
 Stage of the req: MEM
 Affect: 1. Stall the whole pipeline since we might have dependence on MEM/WB stage
@@ -50,9 +44,8 @@ Affect: 1. Flush IF, ID, EX, MEM stage
 */
 
 module hdu (
-    input       ibus_waitrequest,   // instruction bus wait request
-    input       lsu_stall_req,      // lsu stall request
-    input       load_stall_req,     // load denpendence stall request
+    input       lsu_dbus_busy,          // data bus wait request
+    input       load_stall_req,         // load denpendence stall request
 
     input       ex_csr_read,
     input       mem_csr_read,
@@ -79,21 +72,19 @@ module hdu (
     // So if a signal casuse a stall that should not be flushed while at the same time other signals cause flush
     // we should disable those signals from flushing the pipeline.
 
-    // Why: (ibus_waitrequest) & ~(load_stall_req | lsu_stall_req) ?
-    // - If we have load dependence or lsu is requesting stall then we should not flush if stage
-    assign if_flush = branch_take | trap_take | (ibus_waitrequest) & ~(load_stall_req | lsu_stall_req);
+    assign if_flush = branch_take | trap_take;
 
-    // Why: load_stall_req & ~lsu_stall_req ?
+    // Why: load_stall_req & ~lsu_dbus_busy ?
     // - If lsu is requesting for stall, then we should not flush id stage for load dependence, since EX stage need to wait
-    assign id_flush  = branch_take | csr_stall | trap_take | (load_stall_req & ~lsu_stall_req);
+    assign id_flush  = branch_take | csr_stall | trap_take | (load_stall_req & ~lsu_dbus_busy);
 
     assign ex_flush  = trap_take;
     assign mem_flush = trap_take;
     assign wb_flush  = 0;
 
-    assign if_stall  = load_stall_req | csr_stall | ibus_waitrequest | lsu_stall_req;
-    assign id_stall  = lsu_stall_req;
-    assign ex_stall  = lsu_stall_req;
-    assign mem_stall = lsu_stall_req;
+    assign if_stall  = load_stall_req | csr_stall | lsu_dbus_busy;
+    assign id_stall  = lsu_dbus_busy;
+    assign ex_stall  = lsu_dbus_busy;
+    assign mem_stall = lsu_dbus_busy;
 
 endmodule

@@ -25,7 +25,7 @@ module lsu (
     input  avalon_resp_t            dbus_avalon_resp,
     // port to MEM stage
     output logic [`DATA_RANGE]      lsu_readdata,
-    output logic                    lsu_stall_req,
+    output logic                    lsu_dbus_busy,
     // exception
     output logic                    lsu_exception_load_addr_misaligned,
     output logic                    lsu_exception_store_addr_misaligned
@@ -48,7 +48,7 @@ module lsu (
     // ---------------------------------
     // logic
     // ---------------------------------
-    assign lsu_stall_req = (dbus_avalon_req.read | dbus_avalon_req.write) & dbus_avalon_resp.waitrequest;
+    assign lsu_dbus_busy = (dbus_avalon_req.read | dbus_avalon_req.write) & dbus_avalon_resp.waitrequest;
 
     assign dbus_avalon_req.write = lsu_mem_write & ~addr_misaligned;
     assign dbus_avalon_req.read = lsu_mem_read & ~addr_misaligned;

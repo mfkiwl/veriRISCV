@@ -42,3 +42,6 @@ LW x17, 0x10(x0)
 LW x18, 0x20(x0)
 LW x19, 0x30(x0)
 LW x20, 0x40(x0)
+
+LOOP:
+	j LOOP

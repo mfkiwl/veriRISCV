@@ -24,7 +24,7 @@ module MEM (
     input ex2mem_pipeline_data_t        ex2mem_pipeline_data,
 
     // lsu
-    output                              lsu_stall_req,
+    output                              lsu_dbus_busy,
 
     // data bus
     output avalon_req_t                 dbus_avalon_req,
@@ -110,7 +110,7 @@ module MEM (
         .lsu_address                (ex2mem_pipeline_data.alu_out),
         .lsu_writedata              (ex2mem_pipeline_data.mem_writedata),
         .lsu_readdata               (mem2wb_pipeline_memory_data),
-        .lsu_stall_req              (lsu_stall_req),
+        .lsu_dbus_busy              (lsu_dbus_busy),
         .dbus_avalon_req            (dbus_avalon_req),
         .dbus_avalon_resp           (dbus_avalon_resp),
         .lsu_exception_load_addr_misaligned   (lsu_exception_load_addr_misaligned),

@@ -3,13 +3,43 @@
 # Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 # Author: Heqing Huang
 #
-# Date Created: 2022-07-28
+# Date Created: 2022-07-29
 # ------------------------------------------------------------------------------------------------
 # veriRISCV
 # ------------------------------------------------------------------------------------------------
 
 from env import riscv_tests, riscv_arch_test, sanity_test, dedicated_tests
 import cocotb
+
+# sanity Test
+
+@cocotb.test()
+async def sanity_tests_logic_simple(dut):
+    await sanity_test(dut, 'logic_simple')
+
+@cocotb.test()
+async def sanity_tests_logic_forward(dut):
+    await sanity_test(dut, 'logic_forward')
+
+@cocotb.test()
+async def sanity_tests_load_store(dut):
+    await sanity_test(dut, 'load_store')
+
+@cocotb.test()
+async def sanity_tests_branch(dut):
+    await sanity_test(dut, 'branch')
+
+@cocotb.test()
+async def sanity_tests_lui_auipc(dut):
+    await sanity_test(dut, 'lui_auipc')
+
+@cocotb.test()
+async def sanity_tests_load_stall(dut):
+    await sanity_test(dut, 'load_stall')
+
+@cocotb.test()
+async def sanity_tests_jal_jalr(dut):
+    await sanity_test(dut, 'jal_jalr')
 
 # riscv-tests Test
 

@@ -53,7 +53,7 @@ dedicated_test = ['software_interrupt']
 
 # Generate tests cases
 
-GEN_SANITY_TEST = False # Sanity test does not work after enabling exceptions
+GEN_SANITY_TEST = True
 GEN_RISCV_TESTS = True
 GEN_RISCV_ARCH_TEST = True
 GEN_DEDICATED_TEST = True

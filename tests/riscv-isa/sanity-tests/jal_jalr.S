@@ -24,3 +24,6 @@ ADDI x10, x0, 1
 
 JALR1:
 ADDI x11, x0, 2
+
+LOOP:
+	j LOOP
