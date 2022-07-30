@@ -9,10 +9,6 @@
 // Load Store Unit
 // ------------------------------------------------------------------------------------------------
 
-// The LSU is located at the memory stage but the logic is actually across the EX and MEM stage
-// We assume that the memory has an input or output register which act as a hidden pipeline stage
-// The request is sent to memory at EX stage and the data comes back at the MEM stage
-
 `include "core.svh"
 
 module lsu (

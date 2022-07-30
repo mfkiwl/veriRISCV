@@ -177,7 +177,6 @@ module veriRISCV_soc #(
         .debug_interrupt
     );
 
-    assign external_interrupt = 0;
     assign debug_interrupt = 0;
 
     // instruction bus

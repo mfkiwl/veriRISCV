@@ -25,6 +25,7 @@ module WB (
     input mem2wb_pipeline_ctrl_t    mem2wb_pipeline_ctrl,
     input mem2wb_pipeline_exc_t     mem2wb_pipeline_exc,
     input mem2wb_pipeline_data_t    mem2wb_pipeline_data,
+    input [`DATA_RANGE]             mem2wb_pipeline_memory_data,
     // to register file
     output                          wb_reg_write,
     output [`RF_RANGE]              wb_reg_regid,
@@ -79,7 +80,8 @@ module WB (
     // ---------------------------------
 
     assign wb_reg_write     = mem2wb_pipeline_ctrl.reg_write & ~wb_flush;
-    assign wb_reg_writedata = mem2wb_pipeline_ctrl.csr_read ? csr_readdata : mem2wb_pipeline_data.reg_writedata;
+    assign wb_reg_writedata = mem2wb_pipeline_ctrl.csr_read ? csr_readdata :
+                              mem2wb_pipeline_ctrl.mem_read ? mem2wb_pipeline_memory_data : mem2wb_pipeline_data.reg_writedata;
     assign wb_reg_regid     = mem2wb_pipeline_data.reg_regid;
 
     assign csr_read = mem2wb_pipeline_ctrl.csr_read & ~wb_flush;
@@ -141,7 +143,7 @@ module WB (
         .exception_store_addr_misaligned   (mem2wb_pipeline_exc.exception_store_addr_misaligned),
         .mret                              (mem2wb_pipeline_ctrl.mret),
         .pc                                (mem2wb_pipeline_data.pc),
-        .fault_address                     (mem2wb_pipeline_data.lsu_address),
+        .fault_address                     (mem2wb_pipeline_data.mem_address),
         .fault_instruction                 (mem2wb_pipeline_data.instruction),
 
         .i_\(.*\)                          (o_\1),
@@ -170,7 +172,7 @@ module WB (
      .clk                               (clk),
      .rst                               (rst),
      .pc                                (mem2wb_pipeline_data.pc), // Templated
-     .fault_address                     (mem2wb_pipeline_data.lsu_address), // Templated
+     .fault_address                     (mem2wb_pipeline_data.mem_address), // Templated
      .fault_instruction                 (mem2wb_pipeline_data.instruction), // Templated
      .software_interrupt                (software_interrupt),
      .timer_interrupt                   (timer_interrupt),

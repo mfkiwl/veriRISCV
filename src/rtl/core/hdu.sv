@@ -17,11 +17,12 @@ Note for HDU
 ** ibus_waitrequest **:
 Cause: instruction bus is busy and need to wait.
 Stage of the req: IF
-Affect: 1. flush the IF stage since the instruction is not ready and let other stage go
+Affect: 1. Stall IF/ID/EX stage and let other stage goes.
+        1. flush the IF stage since the instruction is not ready and let other stage go
 
 ** lsu_stall_req **:
 Cause: data bus is busy while we access the data bus.
-Stage of the req: EX
+Stage of the req: MEM
 Affect: 1. Stall the whole pipeline since we might have dependence on MEM/WB stage
 
 ** load_stall_req **:

@@ -48,11 +48,6 @@ module veriRISCV_core (
     // EX stage
     logic                   ex_flush;
     logic                   ex_stall;
-    logic                   lsu_mem_read;
-    logic                   lsu_mem_write;
-    logic [`CORE_MEM_OP_RANGE]  lsu_mem_opcode;
-    logic [`DATA_RANGE]     lsu_address;
-    logic [`DATA_RANGE]     lsu_writedata;
     ex2mem_pipeline_ctrl_t  ex2mem_pipeline_ctrl;
     ex2mem_pipeline_exc_t   ex2mem_pipeline_exc;
     ex2mem_pipeline_data_t  ex2mem_pipeline_data;
@@ -63,6 +58,7 @@ module veriRISCV_core (
     mem2wb_pipeline_ctrl_t  mem2wb_pipeline_ctrl;
     mem2wb_pipeline_exc_t   mem2wb_pipeline_exc;
     mem2wb_pipeline_data_t  mem2wb_pipeline_data;
+    logic [`DATA_RANGE]     mem2wb_pipeline_memory_data;
 
     // WB stage
     logic                   wb_flush;
@@ -78,12 +74,8 @@ module veriRISCV_core (
     logic                   trap_take;
     logic [`PC_RANGE]       trap_pc;
 
-    logic                   hdu_load_stall;
     logic                   lsu_stall_req;
-
-    logic [`DATA_RANGE]     lsu_readdata;
-    logic                   lsu_exception_load_addr_misaligned;
-    logic                   lsu_exception_store_addr_misaligned;
+    logic                   hdu_load_stall;
 
     // ---------------------------------
     // IF stage
@@ -139,13 +131,6 @@ module veriRISCV_core (
         .id2ex_pipeline_exc     (id2ex_pipeline_exc),
         .id2ex_pipeline_data    (id2ex_pipeline_data),
         .wb_reg_writedata       (wb_reg_writedata),
-        .lsu_mem_read           (lsu_mem_read),
-        .lsu_mem_write          (lsu_mem_write),
-        .lsu_mem_opcode         (lsu_mem_opcode),
-        .lsu_address            (lsu_address),
-        .lsu_writedata          (lsu_writedata),
-        .lsu_exception_load_addr_misaligned(lsu_exception_load_addr_misaligned),
-        .lsu_exception_store_addr_misaligned(lsu_exception_store_addr_misaligned),
         .branch_pc              (branch_pc),
         .branch_take            (branch_take),
         .ex2mem_pipeline_ctrl   (ex2mem_pipeline_ctrl),
@@ -162,13 +147,16 @@ module veriRISCV_core (
         .rst                    (rst),
         .mem_stall              (mem_stall),
         .mem_flush              (mem_flush),
+        .dbus_avalon_req        (dbus_avalon_req),
+        .dbus_avalon_resp       (dbus_avalon_resp),
+        .lsu_stall_req          (lsu_stall_req),
         .ex2mem_pipeline_ctrl   (ex2mem_pipeline_ctrl),
         .ex2mem_pipeline_exc    (ex2mem_pipeline_exc),
         .ex2mem_pipeline_data   (ex2mem_pipeline_data),
-        .lsu_readdata           (lsu_readdata),
         .mem2wb_pipeline_ctrl   (mem2wb_pipeline_ctrl),
         .mem2wb_pipeline_exc    (mem2wb_pipeline_exc),
-        .mem2wb_pipeline_data   (mem2wb_pipeline_data)
+        .mem2wb_pipeline_data   (mem2wb_pipeline_data),
+        .mem2wb_pipeline_memory_data   (mem2wb_pipeline_memory_data)
     );
 
 
@@ -187,6 +175,7 @@ module veriRISCV_core (
         .mem2wb_pipeline_ctrl   (mem2wb_pipeline_ctrl),
         .mem2wb_pipeline_exc    (mem2wb_pipeline_exc),
         .mem2wb_pipeline_data   (mem2wb_pipeline_data),
+        .mem2wb_pipeline_memory_data   (mem2wb_pipeline_memory_data),
         .wb_reg_write           (wb_reg_write),
         .wb_reg_regid           (wb_reg_regid),
         .wb_reg_writedata       (wb_reg_writedata),
@@ -200,43 +189,22 @@ module veriRISCV_core (
     // ---------------------------------
 
     hdu u_hdu(
-        .branch_take (branch_take),
-        .trap_take   (trap_take),
-        .load_stall_req(hdu_load_stall),
-        .ibus_waitrequest(ibus_avalon_resp.waitrequest),
-        .lsu_stall_req(lsu_stall_req),
-        .ex_csr_read (id2ex_pipeline_ctrl.csr_read),
-        .mem_csr_read(ex2mem_pipeline_ctrl.csr_read),
-        .if_flush    (if_flush),
-        .if_stall    (if_stall),
-        .id_flush    (id_flush),
-        .id_stall    (id_stall),
-        .ex_flush    (ex_flush),
-        .ex_stall    (ex_stall),
-        .mem_flush   (mem_flush),
-        .mem_stall   (mem_stall),
-        .wb_flush    (wb_flush)
-    );
-
-    // ---------------------------------
-    // LSU
-    // ---------------------------------
-
-    lsu u_lsu (
-        .clk                        (clk),
-        .rst                        (rst),
-        .lsu_mem_read               (lsu_mem_read),
-        .lsu_mem_write              (lsu_mem_write),
-        .lsu_mem_opcode             (lsu_mem_opcode),
-        .lsu_address                (lsu_address),
-        .lsu_writedata              (lsu_writedata),
-        .lsu_stall_req              (lsu_stall_req),
-        // data bus
-        .dbus_avalon_req            (dbus_avalon_req),
-        .dbus_avalon_resp           (dbus_avalon_resp),
-        .lsu_readdata               (lsu_readdata),
-        .lsu_exception_load_addr_misaligned   (lsu_exception_load_addr_misaligned),
-        .lsu_exception_store_addr_misaligned  (lsu_exception_store_addr_misaligned)
+        .branch_take        (branch_take),
+        .trap_take          (trap_take),
+        .lsu_stall_req      (lsu_stall_req),
+        .load_stall_req     (hdu_load_stall),
+        .ibus_waitrequest   (ibus_avalon_resp.waitrequest),
+        .ex_csr_read        (id2ex_pipeline_ctrl.csr_read),
+        .mem_csr_read       (ex2mem_pipeline_ctrl.csr_read),
+        .if_flush           (if_flush),
+        .if_stall           (if_stall),
+        .id_flush           (id_flush),
+        .id_stall           (id_stall),
+        .ex_flush           (ex_flush),
+        .ex_stall           (ex_stall),
+        .mem_flush          (mem_flush),
+        .mem_stall          (mem_stall),
+        .wb_flush           (wb_flush)
     );
 
 endmodule

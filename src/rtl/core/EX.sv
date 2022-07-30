@@ -22,15 +22,6 @@ module EX (
     input id2ex_pipeline_data_t         id2ex_pipeline_data,
     // from wb stage
     input [`DATA_RANGE]                 wb_reg_writedata,
-    // to LSU in memory stage
-    output                              lsu_mem_read,
-    output                              lsu_mem_write,
-    output [`CORE_MEM_OP_RANGE]         lsu_mem_opcode,
-    output [`DATA_RANGE]                lsu_address,
-    output [`DATA_RANGE]                lsu_writedata,
-    // from LSU
-    input                               lsu_exception_load_addr_misaligned,
-    input                               lsu_exception_store_addr_misaligned,
     // branch control
     output [`PC_RANGE]                  branch_pc,
     output                              branch_take,
@@ -79,25 +70,16 @@ module EX (
                      id2ex_pipeline_data.alu_op2_sel_4    ? 'd4 :
                      op2_forwarded;
 
-    // Signal to LSU
-    assign lsu_writedata  = op2_forwarded;
-    assign lsu_mem_read   = id2ex_pipeline_ctrl.mem_read;
-    assign lsu_mem_write  = id2ex_pipeline_ctrl.mem_write;
-    assign lsu_mem_opcode = id2ex_pipeline_data.mem_opcode;
-    // use a separate memory address generation (AGU) for better performance
-    assign lsu_address    = op1_forwarded + id2ex_pipeline_data.imm_value;
-
     // pipelien stge signal
     assign ex_stage_ctrl.valid = id2ex_pipeline_ctrl.valid;
-    assign ex_stage_ctrl.csr_read = id2ex_pipeline_ctrl.csr_read;
+    assign ex_stage_ctrl.csr_read  = id2ex_pipeline_ctrl.csr_read;
     assign ex_stage_ctrl.csr_write = id2ex_pipeline_ctrl.csr_write;
-    assign ex_stage_ctrl.mem_read = lsu_mem_read;
-    assign ex_stage_ctrl.reg_write = id2ex_pipeline_ctrl.reg_write & ~lsu_exception_load_addr_misaligned;
+    assign ex_stage_ctrl.mem_read  = id2ex_pipeline_ctrl.mem_read;
+    assign ex_stage_ctrl.mem_write = id2ex_pipeline_ctrl.mem_write;
+    assign ex_stage_ctrl.reg_write = id2ex_pipeline_ctrl.reg_write;
     assign ex_stage_ctrl.mret = id2ex_pipeline_ctrl.mret;
 
     assign ex_stage_exc.exception_ill_instr = id2ex_pipeline_exc.exception_ill_instr;
-    assign ex_stage_exc.exception_load_addr_misaligned = lsu_exception_load_addr_misaligned;
-    assign ex_stage_exc.exception_store_addr_misaligned = lsu_exception_store_addr_misaligned;
 
     assign ex_stage_data.pc = id2ex_pipeline_data.pc;
     assign ex_stage_data.instruction = id2ex_pipeline_data.instruction;
@@ -105,7 +87,8 @@ module EX (
     assign ex_stage_data.csr_writedata = id2ex_pipeline_data.alu_op2_sel_imm ? id2ex_pipeline_data.imm_value : op1_forwarded;
     assign ex_stage_data.csr_address = id2ex_pipeline_data.csr_address;
     assign ex_stage_data.reg_regid = id2ex_pipeline_data.reg_regid;
-    assign ex_stage_data.lsu_address = lsu_address;
+    assign ex_stage_data.mem_writedata = op2_forwarded;
+    assign ex_stage_data.mem_opcode = id2ex_pipeline_data.mem_opcode;
 
     // pipeline stage
     assign stage_run = ~ex_stall;
