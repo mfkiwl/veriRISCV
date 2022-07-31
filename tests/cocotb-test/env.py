@@ -33,7 +33,7 @@ END_SIGNATURE_PTR   = 0x3FF4
 
 class ENV:
 
-    def __init__(self, dut, name, test_type, ramFile, refFile="", timeout=10):
+    def __init__(self, dut, name, test_type, ramFile, refFile="", timeout=10, check_result=True):
         self.dut = dut
         self.name = name
         self.test_type = test_type
@@ -41,18 +41,38 @@ class ENV:
         self.refFile = refFile
         self.timeout = timeout
         self.signature = f'{self.name}.signature'
+        self.check_result = check_result
+        self.use_sram = 'SRAM' in os.environ and os.environ['SRAM']
 
     def getMemoryConfig(self):
         """ Get the memory config """
-        if 'SRAM' in os.environ and os.environ['SRAM']:
+        if self.use_sram:
             self.ram_path = self.dut.SRAM.sram_mem
             self.ram_width = 2
         else:
             self.ram_path = self.dut.u_veriRISCV_soc.u_memory.ram
             self.ram_width = 4
 
-    def getMemoryData(self, addr):
+    async def waitMemoryIdle(self):
+        """ Make sure that the memory is not being written when we want to get the data from memory """
+
+        # 1. check if the avalon bus waitrequest is set or not
+        waitrequest =  self.dut.u_veriRISCV_soc.ram_avn_waitrequest
+        while waitrequest.value.integer == 1:
+            await RisingEdge(self.dut.clk)
+
+        # 2. If we use sram, make sure that sram is not being written when we get the data from sram
+        if self.use_sram:
+            sram_we_n = self.dut.u_veriRISCV_soc.u_avalon_sram_controller.sram_we_n
+            sram_ce_n = self.dut.u_veriRISCV_soc.u_avalon_sram_controller.sram_ce_n
+            while sram_ce_n.value.integer == 0 and sram_we_n.value.integer == 0:
+                await RisingEdge(self.dut.clk)
+
+    async def getMemoryData(self, addr):
         """ Get the memory data for a specific address """
+
+        await self.waitMemoryIdle()
+
         word_addr = addr >> int(math.log2(self.ram_width)) # From byte address to word address
         data = 0
         if self.ram_width == 4: # data size is 4 bytes (word)
@@ -108,22 +128,23 @@ class ENV:
         completed = passed or failed
         return completed, passed
 
-    def checkFinish(self):
+    async def checkFinish(self):
         """ Check if the test has finished or not """
-        beginSignature = self.getMemoryData(BEGIN_SIGNATURE_PTR)
-        endSignature = self.getMemoryData(END_SIGNATURE_PTR)
+        beginSignature = await self.getMemoryData(BEGIN_SIGNATURE_PTR)
+        endSignature = await self.getMemoryData(END_SIGNATURE_PTR)
         if beginSignature > 0xF and endSignature > beginSignature:
             return True
         return False
 
-    def dumpSignature(self):
+    async def dumpSignature(self):
         """ Dump the signature to the output directory """
-        beginSignature = self.getMemoryData(BEGIN_SIGNATURE_PTR)
-        endSignature = self.getMemoryData(END_SIGNATURE_PTR)
+        beginSignature = await self.getMemoryData(BEGIN_SIGNATURE_PTR)
+        endSignature = await self.getMemoryData(END_SIGNATURE_PTR)
         self.dut._log.info(f"Begin Signature: {hex(beginSignature)}, End Signature: {hex(endSignature)}")
         FP = open(self.signature, "w")
         for addr in range(beginSignature, endSignature, 4):
-            data = hex(self.getMemoryData(addr))
+            data = await self.getMemoryData(addr)
+            data = hex(data)
             FP.write(data[2:].zfill(8) + '\n')
         FP.close()
 
@@ -171,26 +192,27 @@ class ENV:
             if self.test_type == 'RISCV_TEST':
                 finished, passed = self.checkRegResult()
             if self.test_type == 'RISCV_ARCH_TEST':
-                finished =  self.checkFinish()
+                finished = await self.checkFinish()
 
         # Check test result
-        if self.test_type == 'SANITY_TEST':
-            reg_path = self.dut.u_veriRISCV_soc.u_veriRISCV_core.u_ID.u_regfile.register_file
-            regCheck = RegCheck(reg_path, self.refFile)
-            regCheck.checkRegister()
-            return
+        if self.check_result:
+            if self.test_type == 'SANITY_TEST':
+                reg_path = self.dut.u_veriRISCV_soc.u_veriRISCV_core.u_ID.u_regfile.register_file
+                regCheck = RegCheck(reg_path, self.refFile)
+                regCheck.checkRegister()
+                return
 
-        if not finished:
-            raise Exception("Test timeout")
-            return
+            if not finished:
+                raise Exception("Test timeout")
+                return
 
-        if self.test_type == 'RISCV_TEST':
-            if not passed:
-                raise Exception("Test failed.")
+            if self.test_type == 'RISCV_TEST':
+                if not passed:
+                    raise Exception("Test failed.")
 
-        if self.test_type == 'RISCV_ARCH_TEST':
-            self.dumpSignature()
-            self.check_signature()
+            if self.test_type == 'RISCV_ARCH_TEST':
+                await self.dumpSignature()
+                self.check_signature()
 
 # Test for SANITY TESTS
 async def sanity_test(dut, name, timeout=2):
@@ -210,7 +232,7 @@ async def riscv_tests(dut, name, timeout=100):
     await env.test()
 
 # Test for RISCV ARCH TEST
-async def riscv_arch_test(dut, isa, name, timeout=300):
+async def riscv_arch_test(dut, isa, name, timeout=1000):
     REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')
     TEST_PATH = 'tests/riscv-isa/riscv-arch-test/riscv-arch-test'
     ramFile = f"{REPO_ROOT}/{TEST_PATH}/work/rv32i_m/{isa}/{name}.elf.verilog"
@@ -225,4 +247,13 @@ async def dedicated_tests(dut, name, timeout=100):
     ramFile = REPO_ROOT + TEST_PATH + 'test-p-' + name + '.verilog'
     # use the infrastructure of RISCV_TEST
     env = ENV(dut, name, 'RISCV_TEST', ramFile, timeout=timeout)
+    await env.test()
+
+# Test for Software program
+async def software_tests(dut, name, timeout=200):
+    REPO_ROOT = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE).communicate()[0].rstrip().decode('utf-8')
+    TEST_PATH = f'/sdk/software/{name}/{name}.verilog'
+    ramFile = REPO_ROOT + TEST_PATH
+    # use the infrastructure of RISCV_TEST
+    env = ENV(dut, name, 'SOFTWARE_TEST', ramFile, timeout=timeout, check_result=False)
     await env.test()

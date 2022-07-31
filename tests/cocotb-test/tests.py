@@ -3,7 +3,7 @@
 # Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 # Author: Heqing Huang
 #
-# Date Created: 2022-07-29
+# Date Created: 2022-07-31
 # ------------------------------------------------------------------------------------------------
 # veriRISCV
 # ------------------------------------------------------------------------------------------------
@@ -362,3 +362,7 @@ async def riscv_arch_test_srli(dut):
 @cocotb.test()
 async def dedicated_tests_software_interrupt(dut):
     await dedicated_tests(dut, 'software_interrupt')
+
+@cocotb.test()
+async def dedicated_tests_timer_interrupt(dut):
+    await dedicated_tests(dut, 'timer_interrupt')

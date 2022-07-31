@@ -49,7 +49,7 @@ riscv_arch_test__rv32i_m_i_instruction = [
 ]
 
 # DEDICATED TEST
-dedicated_test = ['software_interrupt']
+dedicated_test = ['software_interrupt', 'timer_interrupt']
 
 # Generate tests cases
 

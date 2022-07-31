@@ -75,10 +75,10 @@ module avalon_clic (
         case(avn_address)
         /* verilator lint_on CASEINCOMPLETE */
         5'h00: msip_write = avn_write;
-        5'h08: mtimecmp_write_0 = avn_write;
-        5'h0C: mtimecmp_write_1 = avn_write;
-        5'h10: mtime_write_0 = avn_write;
-        5'h18: mtime_write_1 = avn_write;
+        5'h10: mtimecmp_write_0 = avn_write;
+        5'h14: mtimecmp_write_1 = avn_write;
+        5'h18: mtime_write_0 = avn_write;
+        5'h1C: mtime_write_1 = avn_write;
         endcase
     end
 

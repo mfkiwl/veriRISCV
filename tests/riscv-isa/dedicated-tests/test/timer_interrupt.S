@@ -2,11 +2,11 @@
 // Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 // Author: Heqing Huang
 //
-// Date Created: 07/28/2022
+// Date Created: 07/31/2022
 // ------------------------------------------------------------------------------------------------
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
-// Test software interrupt behavior.
+// Test timer interrupt behavior.
 // ------------------------------------------------------------------------------------------------
 
 #include "riscv_test.h"
@@ -15,7 +15,7 @@
 RVTEST_CODE_BEGIN
 
   .align 2
-  .equ MSIP_ADDR, 0x80000000
+  .equ MTIMECMP0_ADDR, 0x80000010
 
   # set the mtvec to interrupt handler address
   la t0, mtvec_handler
@@ -26,42 +26,43 @@ RVTEST_CODE_BEGIN
   ori  t0, x0, 0x8
   csrs mstatus, t0
 
-  # enable software interrupt
-  ori  t0, x0, 0x8
+  # enable timer interrupt
+  ori  t0, x0, 0x80
   csrs mie, t0
 
-  # write 1 to msip to trigger software interrupt
-  li s0, MSIP_ADDR
-  ori t1, x0, 0x1
-  ori a0, x0, 0xa
+  # setup to mtcmp register to trigger software interrupt
+  ori  t1, x0, 100
+  li s0, MTIMECMP0_ADDR
   sw t1, 0(s0)
-  # few nop instructions
+
+  # Wait for the timer to fire interrupt
+  ori  t2, x0, 0
+WAIT:
+  beq  t2, x0, WAIT
 
 
   # check if the interrupt has changed register value
-  ori s11, x0, 0xf
-  beq a0, s11, pass
+  ori t1, x0, 0xf
+  beq a0, t1, pass
 
   j fail
 
 TEST_PASSFAIL
 
   .global mtvec_handler
-  # We should not use s11 as destination register sicne we did not save the context
   mtvec_handler:
     # check mip
-    ori t1, x0, 0x8
+    ori t1, x0, 0x80
     csrr t0, mip
     bne t0, t1, fail
     # check mcause
     csrr t0, mcause
-    li t1, 0x80000003
+    li t1, 0x80000007
     bne t0, t1, fail
-    sw x0, 0(s0)  # clear the interrupt
+    li s0, MTIMECMP0_ADDR
+    sw x0, 0(s0)  # clear the interrupt by setting mtimecmp to 0
+    ori t2, x0, 1 # set t2 to none zero to break the wait loop
     li a0, 0xf
-    csrr t0, mepc
-    #addi t0, t0, 4  # advance pc to pc + 4
-    csrw mepc, t0
     mret
 
 RVTEST_CODE_END
