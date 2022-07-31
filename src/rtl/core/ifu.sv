@@ -177,7 +177,24 @@ module ifu #(
         end
     end
 
+    `ifdef COCOTB_SIM
+
+        integer f1, f2;
+        logic [31:0] previous_pc = 1;
+
+        initial begin
+            f1 = $fopen("instructions.log","w");
+            f2 = $fopen("instructions_time.log","w");
+        end
+
+        always @(posedge clk) begin
+            if (instruction_valid && instruction_pc != previous_pc) begin
+                $fwrite(f1, "%10x | %10x\n", instruction_pc, instruction);
+                $fwrite(f2, "%10x | %10x | %t\n", instruction_pc, instruction, $time);
+                previous_pc = instruction_pc;
+            end
+        end
+
+    `endif
+
 endmodule
-
-
-

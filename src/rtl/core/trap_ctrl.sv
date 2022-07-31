@@ -53,7 +53,7 @@ module trap_ctrl (
     output reg              o_mip_mtip_wen,
     output reg              o_mip_mtip,
     output reg              o_mip_meip_wen,
-    output                  o_mip_meip,
+    output reg              o_mip_meip,
     // output control
     output                  trap_take,
     output [`PC_RANGE]      trap_pc

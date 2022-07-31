@@ -11,6 +11,9 @@
 
 `include "core.svh"
 
+// FIXME:
+// If memory stage is stalled. We need to have a way to keep the read data otherwise the read data will be lost
+
 module lsu (
     input                           clk,
     input                           rst,
@@ -25,6 +28,7 @@ module lsu (
     input  avalon_resp_t            dbus_avalon_resp,
     // port to MEM stage
     output logic [`DATA_RANGE]      lsu_readdata,
+    output reg                      lsu_readdata_valid,
     output logic                    lsu_dbus_busy,
     // exception
     output logic                    lsu_exception_load_addr_misaligned,
@@ -33,7 +37,6 @@ module lsu (
 
     reg [1:0]                       prev_byte_addr;
     reg [`CORE_MEM_OP_RANGE]        prev_mem_opcode;
-    reg                             read_pending;
     reg                             wait_memory;
 
     logic                           sign_bit;
@@ -54,9 +57,10 @@ module lsu (
     assign dbus_avalon_req.read = lsu_mem_read & ~addr_misaligned;
     assign dbus_avalon_req.address = {lsu_address[`DATA_WIDTH-1:2], 2'b00}; // make it aligned to word boundary
 
+    // read latency is 1 so the data will be ready one cycle after the read is taken
     always @(posedge clk) begin
-        if (rst) read_pending <= 1'b0;
-        else read_pending <= lsu_mem_read;
+        if (rst) lsu_readdata_valid <= 1'b0;
+        else lsu_readdata_valid <= dbus_avalon_req.read & ~dbus_avalon_resp.waitrequest;
     end
 
     // --  write data generation  -- //

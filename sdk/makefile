@@ -88,7 +88,7 @@ software: software_clean
 	DOWNLOAD=$(DOWNLOAD)
 
 dasm: software
-	$(RISCV_OBJDUMP) -D -S $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
+	$(RISCV_OBJDUMP) -S $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
 	$(RISCV_OBJCOPY) $(PROGRAM_ELF) -O verilog $(PROGRAM_ELF).verilog
 
 uart_upload: $(PROGRAM_ELF).verilog

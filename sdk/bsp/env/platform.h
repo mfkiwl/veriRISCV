@@ -19,7 +19,10 @@
 #include "avalon_uart.h"
 
 // SOC component address mapping
-#define GPIO0_BASE      (0x80001000)
-#define UART0_BASE      (0x80003000)
+#define CLIC_BASE       (0x80000000)
+#define PLIC_BASE       (0x80001000)
+#define GPIO0_BASE      (0x80002000)
+#define GPIO1_BASE      (0x80003000)
+#define UART0_BASE      (0x80004000)
 
 #endif

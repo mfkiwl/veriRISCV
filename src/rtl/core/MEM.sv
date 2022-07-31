@@ -48,6 +48,11 @@ module MEM (
     logic                       stage_run;
     logic                       stage_flush;
 
+    reg                         use_hold_data;
+    reg [`DATA_RANGE]           lsu_readdata_hold;
+    logic [`DATA_RANGE]         lsu_readdata;
+    logic                       lsu_readdata_valid;
+
     logic                       lsu_exception_load_addr_misaligned;
     logic                       lsu_exception_store_addr_misaligned;
 
@@ -75,6 +80,20 @@ module MEM (
     assign mem_stage_data.csr_writedata = ex2mem_pipeline_data.csr_writedata;
     assign mem_stage_data.csr_address = ex2mem_pipeline_data.csr_address;
     assign mem_stage_data.mem_address = ex2mem_pipeline_data.alu_out;
+
+    // LSU data hold
+    // we need to hold the lsu read data in case of the pipeline is stalled and a read is pending.
+    always @(posedge clk) begin
+        if (lsu_readdata_valid) lsu_readdata_hold <= lsu_readdata;
+    end
+
+    always @(posedge clk) begin
+        if (rst) use_hold_data <= 1'b0;
+        else if (lsu_readdata_valid && mem_stall) use_hold_data <= 1'b1;
+        else if (!mem_stall) use_hold_data <= 1'b0;
+    end
+
+    assign mem2wb_pipeline_memory_data = use_hold_data ? lsu_readdata_hold : lsu_readdata;
 
     // Pipeline Stage
     assign stage_run = ~mem_stall;
@@ -109,7 +128,8 @@ module MEM (
         .lsu_mem_opcode             (ex2mem_pipeline_data.mem_opcode),
         .lsu_address                (ex2mem_pipeline_data.alu_out),
         .lsu_writedata              (ex2mem_pipeline_data.mem_writedata),
-        .lsu_readdata               (mem2wb_pipeline_memory_data),
+        .lsu_readdata               (lsu_readdata),
+        .lsu_readdata_valid         (lsu_readdata_valid),
         .lsu_dbus_busy              (lsu_dbus_busy),
         .dbus_avalon_req            (dbus_avalon_req),
         .dbus_avalon_resp           (dbus_avalon_resp),

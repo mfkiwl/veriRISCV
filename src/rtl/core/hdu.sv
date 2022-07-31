@@ -68,15 +68,10 @@ module hdu (
     // For simplicity, we just let csr complete before excuting the next instruction
     assign csr_stall = ex_csr_read | mem_csr_read;
 
-    // NOTE: In our pipeline logic, flush has priority over stall.
-    // So if a signal casuse a stall that should not be flushed while at the same time other signals cause flush
-    // we should disable those signals from flushing the pipeline.
+    // General rule 1: if a pipeline stage is stalled, branch should not flush that stage
 
-    assign if_flush = branch_take | trap_take;
-
-    // Why: load_stall_req & ~lsu_dbus_busy ?
-    // - If lsu is requesting for stall, then we should not flush id stage for load dependence, since EX stage need to wait
-    assign id_flush  = branch_take | csr_stall | trap_take | (load_stall_req & ~lsu_dbus_busy);
+    assign if_flush = branch_take & ~if_stall | trap_take;
+    assign id_flush = branch_take & ~id_stall | csr_stall | trap_take | (load_stall_req & ~lsu_dbus_busy);
 
     assign ex_flush  = trap_take;
     assign mem_flush = trap_take;
