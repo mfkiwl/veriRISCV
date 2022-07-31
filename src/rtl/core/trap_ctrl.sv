@@ -12,13 +12,23 @@
 
 `include "core.svh"
 
+// FIXME: Other corner cases:
+// 1. Taking exception in WB and MEM stage is mem_read or mem_write
+// => We should flush memory stage
+// 2. Taking interrupt in WB and MEM stage is stalled due to dbus busy.
+// => We should flush memory stage. Ideally the memory should not take the write data while it's pending.
+// Need to fix this
+
 module trap_ctrl (
     input                   clk,
     input                   rst,
     // input information
+    input                   wb_stall,
     input [`PC_RANGE]       pc,
     input [`DATA_RANGE]     fault_address,
     input [`DATA_RANGE]     fault_instruction,
+    input                   next_instruction_valid,
+    input [`DATA_RANGE]     next_instruction_pc,
     // Interrupt
     input                   software_interrupt,
     input                   timer_interrupt,
@@ -89,11 +99,11 @@ module trap_ctrl (
     // check interrupt/exception
 
     assign software_interrupt_masked = software_interrupt & i_mie_msie & i_mstatus_mie;
-    assign timer_interrupt_masked = timer_interrupt    & i_mie_mtie & i_mstatus_mie;
+    assign timer_interrupt_masked = timer_interrupt & i_mie_mtie & i_mstatus_mie;
     assign external_interrupt_masked = external_interrupt & i_mie_meie & i_mstatus_mie;
 
-    assign exception_enter = exception_instr_addr_misaligned | exception_ill_instr | exception_load_addr_misaligned | exception_store_addr_misaligned;
-    assign interrupt_enter = software_interrupt_masked | timer_interrupt_masked | external_interrupt_masked;
+    assign exception_enter = ~wb_stall & (exception_instr_addr_misaligned | exception_ill_instr | exception_load_addr_misaligned | exception_store_addr_misaligned);
+    assign interrupt_enter = next_instruction_valid & ~wb_stall & (software_interrupt_masked | timer_interrupt_masked | external_interrupt_masked) ;
     assign trap_enter = exception_enter | interrupt_enter;
     assign trap_return = mret;
     assign trap_take = trap_enter | trap_return;
@@ -150,13 +160,10 @@ module trap_ctrl (
     assign o_mcause_exception_code = mcause_exception_code;
     assign o_mcause_interrupt = interrupt_enter;
 
-
     // update mepc register
     // When exception is triggered in M-mode, mepc is written with the virtual address of the instruction that encountered the exception.
     // When interrupt is triggered in M-mode, mepc is written with the virtual address of the next instruction.
-    // FIXME: pc + 4 is not the correct "next instruction". For example, if the current instruction is a branch or jump and the branch is taken
-    // then pc + 4 will be a invalid instruction
-    assign o_mepc_value = interrupt_enter ? pc + 4 : pc;
+    assign o_mepc_value = interrupt_enter ? next_instruction_pc : pc;
 
     // update mtval register
     // we only have fault address and fault instruction right now

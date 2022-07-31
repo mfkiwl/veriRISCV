@@ -61,7 +61,7 @@ module veriRISCV_core (
     logic [`DATA_RANGE]     mem2wb_pipeline_memory_data;
 
     // WB stage
-    logic                   wb_flush;
+    logic                   wb_stall;
     logic                   wb_reg_write;
     logic [`RF_RANGE]       wb_reg_regid;
     logic [`DATA_RANGE]     wb_reg_writedata;
@@ -164,10 +164,14 @@ module veriRISCV_core (
     // WB stage
     // ---------------------------------
 
+    // NOTE: In general we can consider using ex2mem_pipeline_ctrl.valid as mem_valid
+    // One concern is that what if mem stage get flushed then ex2mem_pipeline_ctrl.valid is not good enough.
+    // This is OK for now becasue mem stage only get flushed by a taken trap.
+
     WB u_WB(
         .clk                    (clk),
         .rst                    (rst),
-        .wb_flush               (wb_flush),
+        .wb_stall               (wb_stall),
         .software_interrupt     (software_interrupt),
         .timer_interrupt        (timer_interrupt),
         .external_interrupt     (external_interrupt),
@@ -176,6 +180,8 @@ module veriRISCV_core (
         .mem2wb_pipeline_exc    (mem2wb_pipeline_exc),
         .mem2wb_pipeline_data   (mem2wb_pipeline_data),
         .mem2wb_pipeline_memory_data   (mem2wb_pipeline_memory_data),
+        .mem_valid              (ex2mem_pipeline_ctrl.valid),
+        .mem_instruction_pc     (ex2mem_pipeline_data.pc),
         .wb_reg_write           (wb_reg_write),
         .wb_reg_regid           (wb_reg_regid),
         .wb_reg_writedata       (wb_reg_writedata),
@@ -203,7 +209,7 @@ module veriRISCV_core (
         .ex_stall           (ex_stall),
         .mem_flush          (mem_flush),
         .mem_stall          (mem_stall),
-        .wb_flush           (wb_flush)
+        .wb_stall           (wb_stall)
     );
 
 endmodule

@@ -10,19 +10,19 @@
 // ------------------------------------------------------------------------------------------------
 
 #include "platform.h"
+#include <stdint.h>
+
+extern void trap_entry();
 
 void _init() {
 
-    // init the uart with default configuration
-    // TBD
-
     // write the trap handler register
-    // TBD
+    write_csr(mtvec, (uint32_t) &trap_entry);
 
     // enable global interrupt (mstatus)
-    //_write_csr(mstatus, 0x8);
+    write_csr(mstatus, 0x8);
     // enable interrupt (mie)
-    //_write_csr(mie, 0x888);
+    write_csr(mie, 0x888);
 
     // -- Initialize uart -- //
     uart_init_cfg_s uart_init_cfg;

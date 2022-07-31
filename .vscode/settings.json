@@ -1,3 +1,8 @@
 {
     "verilog.linting.verilator.arguments": "--lint-only -I../core/include -Iinclude -y ../core",
+    "files.associations": {
+        "*.rdlh": "systemrdl",
+        "type_traits": "c",
+        "uart.h": "c"
+    },
 }

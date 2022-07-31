@@ -60,7 +60,7 @@ module hdu (
     output      ex_stall,
     output      mem_flush,
     output      mem_stall,
-    output      wb_flush
+    output      wb_stall
 );
 
     logic   csr_stall;
@@ -75,11 +75,11 @@ module hdu (
 
     assign ex_flush  = trap_take;
     assign mem_flush = trap_take;
-    assign wb_flush  = 0;
 
     assign if_stall  = load_stall_req | csr_stall | lsu_dbus_busy;
     assign id_stall  = lsu_dbus_busy;
     assign ex_stall  = lsu_dbus_busy;
     assign mem_stall = lsu_dbus_busy;
+    assign wb_stall = lsu_dbus_busy;
 
 endmodule

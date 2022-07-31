@@ -15,7 +15,7 @@
 module WB (
     input                           clk,
     input                           rst,
-    input                           wb_flush,
+    input                           wb_stall,
     // Interrupt
     input                           software_interrupt,
     input                           timer_interrupt,
@@ -26,6 +26,9 @@ module WB (
     input mem2wb_pipeline_exc_t     mem2wb_pipeline_exc,
     input mem2wb_pipeline_data_t    mem2wb_pipeline_data,
     input [`DATA_RANGE]             mem2wb_pipeline_memory_data,
+    // input from MEM stge
+    input                           mem_valid,
+    input [`DATA_RANGE]             mem_instruction_pc,
     // to register file
     output                          wb_reg_write,
     output [`RF_RANGE]              wb_reg_regid,
@@ -75,17 +78,30 @@ module WB (
     logic                   csr_write;
     logic                   csr_read;
 
+    logic                   next_instruction_valid;
+    logic [`DATA_RANGE]     next_instruction_pc;
+
     // ---------------------------------
     // Main logic
     // ---------------------------------
 
-    assign wb_reg_write     = mem2wb_pipeline_ctrl.reg_write & ~wb_flush;
+    assign wb_reg_write     = mem2wb_pipeline_ctrl.reg_write;
     assign wb_reg_writedata = mem2wb_pipeline_ctrl.csr_read ? csr_readdata :
                               mem2wb_pipeline_ctrl.mem_read ? mem2wb_pipeline_memory_data : mem2wb_pipeline_data.reg_writedata;
     assign wb_reg_regid     = mem2wb_pipeline_data.reg_regid;
 
-    assign csr_read = mem2wb_pipeline_ctrl.csr_read & ~wb_flush;
-    assign csr_write = mem2wb_pipeline_ctrl.csr_write & ~wb_flush;
+    assign csr_read = mem2wb_pipeline_ctrl.csr_read;
+    assign csr_write = mem2wb_pipeline_ctrl.csr_write;
+
+    // NOTE: when we return from interrupt, we need to return to the "next instructions" of the instruction when interrupts is taken
+    // In general, people would think that the "next instructions" is pc + 4, however, this is not always true.
+    // For example, if the instruction in WB stage is a taken branch, then the next instruction is not pc + 4.
+    // One reasonable solution here is to use the instruction in memory stage as the next instruction,
+    // and we also need to make sure that the instruction in memory stage is valid.
+    // So to take a interrupt, we need to wait till we have a valid instruction in memory stage.
+
+    assign next_instruction_valid = mem_valid;
+    assign next_instruction_pc = mem_instruction_pc;
 
     // ---------------------------------
     // Module instantiation
@@ -171,9 +187,12 @@ module WB (
      // Inputs
      .clk                               (clk),
      .rst                               (rst),
+     .wb_stall                          (wb_stall),
      .pc                                (mem2wb_pipeline_data.pc), // Templated
      .fault_address                     (mem2wb_pipeline_data.mem_address), // Templated
      .fault_instruction                 (mem2wb_pipeline_data.instruction), // Templated
+     .next_instruction_valid            (next_instruction_valid),
+     .next_instruction_pc               (next_instruction_pc[`DATA_RANGE]),
      .software_interrupt                (software_interrupt),
      .timer_interrupt                   (timer_interrupt),
      .external_interrupt                (external_interrupt),

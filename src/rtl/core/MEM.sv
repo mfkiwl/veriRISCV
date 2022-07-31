@@ -56,6 +56,9 @@ module MEM (
     logic                       lsu_exception_load_addr_misaligned;
     logic                       lsu_exception_store_addr_misaligned;
 
+    logic                       lsu_mem_read;
+    logic                       lsu_mem_write;
+
     // ---------------------------------
     // Main logic
     // ---------------------------------
@@ -94,6 +97,16 @@ module MEM (
     end
 
     assign mem2wb_pipeline_memory_data = use_hold_data ? lsu_readdata_hold : lsu_readdata;
+
+    // lsu read/write logic
+
+    // NOTE: A corner case: dbus is busy and we have a read/write request. At the same time,
+    // interrupt/exception in WB stage need to flush memory stage.
+    // However, the avalon bus protocal requires that the request must be keep unchanged till it is taken.
+    // To FIX this issue, we requires that the interrupt/exception can't be taken if the Wb stage is stalled.
+    assign lsu_mem_read = ex2mem_pipeline_ctrl.mem_read & ~mem_flush;
+    assign lsu_mem_write = ex2mem_pipeline_ctrl.mem_write & ~mem_flush;
+
 
     // Pipeline Stage
     assign stage_run = ~mem_stall;

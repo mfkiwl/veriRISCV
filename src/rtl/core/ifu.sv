@@ -178,6 +178,7 @@ module ifu #(
     end
 
     `ifdef COCOTB_SIM
+    `ifdef COCOTB_LOG_INSTUCTION
 
         integer f1, f2;
         logic [31:0] previous_pc = 1;
@@ -195,6 +196,7 @@ module ifu #(
             end
         end
 
+    `endif
     `endif
 
 endmodule

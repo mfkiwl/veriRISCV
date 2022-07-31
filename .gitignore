@@ -21,6 +21,7 @@ sdk/software/blink/blink
 sdk/software/hello_riscv/hello_riscv
 sdk/software/fibonacci/fibonacci
 sdk/software/coremark/coremark
+sdk/software/interrupt/interrupt
 
 
 # fpga

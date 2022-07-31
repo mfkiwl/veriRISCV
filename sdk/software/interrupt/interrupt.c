@@ -2,31 +2,23 @@
 // Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 // Author: Heqing Huang
 //
-// Date Created: 07/10/2022
+// Date Created: 07/11/2022
 // ------------------------------------------------------------------------------------------------
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
-// Platform
+// uart read and write program
 // ------------------------------------------------------------------------------------------------
 
-#ifndef __PLATFORM_H__
-#define __PLATFORM_H__
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "platform.h"
 
-#include "board.h"
-#include "encoding.h"
-
-#include "gpio.h"
-#include "uart.h"
-#include "clic.h"
-
-// SOC component address mapping
-#define CLIC_BASE       (0x80000000)
-#define PLIC_BASE       (0x80001000)
-#define GPIO0_BASE      (0x80002000)
-#define GPIO1_BASE      (0x80003000)
-#define UART0_BASE      (0x80004000)
-
-// Helper functions
-#define REG32_PTR(base, reg)  ((volatile uint32_t *) (base + reg))
-
-#endif
+int main(int argc, char **argv)
+{
+    printf("Interrupt test:\n");
+    // software interrupt
+    clic_msip_set(CLIC_BASE);
+    clic_mtimecmp_low_set(CLIC_BASE, 0x10000);
+    return 0;
+}
