@@ -30,8 +30,8 @@ ASM_SRCS += $(ENV_DIR)/start.S
 # C source file
 C_SRCS += $(ENV_DIR)/init.c
 C_SRCS += $(ENV_DIR)/syscalls.c
-C_SRCS += $(DRIVER_DIR)/gpio/avalon_gpio.c
-C_SRCS += $(DRIVER_DIR)/uart/avalon_uart.c
+C_SRCS += $(DRIVER_DIR)/gpio/gpio.c
+C_SRCS += $(DRIVER_DIR)/uart/uart.c
 
 # C include directory
 C_INCS += $(ENV_DIR)

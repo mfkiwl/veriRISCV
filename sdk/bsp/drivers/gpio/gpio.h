@@ -10,17 +10,21 @@
  * ---------------------------------------------------------------
  */
 
-#ifndef __AVALON_GPIO_H__
-#define __AVALON_GPIO_H__
+#ifndef __GPIO_H__
+#define __GPIO_H__
 
-#include <stdlib.h>
-#include "avalon_gpio_reg.h"
+#include <stdint.h>
+#include "gpio_reg.h"
 
-void avalon_gpio_read_en(uint32_t base, uint32_t mask);
-void avalon_gpio_write_en(uint32_t base, uint32_t mask);
-uint32_t avalon_gpio_read(uint32_t base);
-void avalon_gpio_write(uint32_t base, uint32_t data);
-void avalon_gpio_set_0(uint32_t base);
+void gpio_read_en(uint32_t base, uint32_t mask);
+
+void gpio_write_en(uint32_t base, uint32_t mask);
+
+uint32_t gpio_read(uint32_t base);
+
+void gpio_write(uint32_t base, uint32_t data);
+
+void gpio_set_0(uint32_t base);
 
 
-#endif /* __AVALON_GPIO_H__ */
+#endif /* __GPIO_H__ */

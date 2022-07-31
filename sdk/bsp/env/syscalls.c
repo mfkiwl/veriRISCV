@@ -105,7 +105,7 @@ int _read (int file, char *ptr, int len) {
     // if the file is tty, we read from uart
     if (isatty(file)) {
         for (i = 0; i < len; i++) {
-            ptr[i] = avalon_uart_read_byte_blocking(UART0_BASE);
+            ptr[i] = uart_read_byte_blocking(UART0_BASE);
             // return partial value if we get EOL
             if ('\n' == ptr[i]) {
                 return i;
@@ -173,7 +173,7 @@ clock_t _times (struct tms *buf) {
 int _write (int file, char *buf, size_t nbytes) {
 
   if (isatty(file)) {
-    avalon_uart_putnc_blocking(UART0_BASE, buf, nbytes);
+    uart_putnc_blocking(UART0_BASE, buf, nbytes);
     return nbytes;
   }
 

@@ -15,8 +15,8 @@
 #include "board.h"
 #include "encoding.h"
 
-#include "avalon_gpio.h"
-#include "avalon_uart.h"
+#include "gpio.h"
+#include "uart.h"
 
 // SOC component address mapping
 #define CLIC_BASE       (0x80000000)
@@ -24,5 +24,8 @@
 #define GPIO0_BASE      (0x80002000)
 #define GPIO1_BASE      (0x80003000)
 #define UART0_BASE      (0x80004000)
+
+// Helper functions
+#define REG32_PTR(base, reg)  ((volatile uint32_t *) (base + reg))
 
 #endif

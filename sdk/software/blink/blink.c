@@ -17,10 +17,10 @@ int main(int argc, char **argv)
     uint32_t value = 0xFFFFFFFF;
 
     // enable output
-    avalon_gpio_write_en(GPIO0_BASE, 0xFFFFFFFF);
+    gpio_write_en(GPIO0_BASE, 0xFFFFFFFF);
 
     while(1) {
-        avalon_gpio_write(GPIO0_BASE, value);
+        gpio_write(GPIO0_BASE, value);
         value = ~value;
         for (int i = 0; i < 500000; i++);
     }

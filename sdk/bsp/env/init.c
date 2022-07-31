@@ -25,17 +25,17 @@ void _init() {
     //_write_csr(mie, 0x888);
 
     // -- Initialize uart -- //
-    avalon_uart_init_s uart_init;
-    uart_init.txen  = 1;
-    uart_init.nstop = 0;
-    uart_init.txcnt = 0;
-    uart_init.rxen  = 0;
-    uart_init.rxcnt = 0;
-    uart_init.ie_txwm = 0;
-    uart_init.ie_rxwm = 0;
-    uart_init.div = AVALON_UART_CAL_DIV(CLK_FREQ_MHZ, 115200);
+    uart_init_cfg_s uart_init_cfg;
+    uart_init_cfg.txen  = 1;
+    uart_init_cfg.nstop = 0;
+    uart_init_cfg.txcnt = 0;
+    uart_init_cfg.rxen  = 0;
+    uart_init_cfg.rxcnt = 0;
+    uart_init_cfg.ie_txwm = 0;
+    uart_init_cfg.ie_rxwm = 0;
+    uart_init_cfg.div = UART_CAL_DIV(CLK_FREQ_MHZ, 115200);
 
-    avalon_uart_init(UART0_BASE, &uart_init);
+    uart_init(UART0_BASE, &uart_init_cfg);
 
 
 }

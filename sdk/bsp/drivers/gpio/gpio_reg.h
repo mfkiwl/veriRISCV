@@ -10,16 +10,14 @@
  * ---------------------------------------------------------------
  */
 
-#ifndef __AVALON_GPIO_REGS_H__
-#define __AVALON_GPIO_REGS_H__
-
-#include "stdint.h"
+#ifndef __GPIO_REGS_H__
+#define __GPIO_REGS_H__
 
 // Register
 
-#define AVALON_GPIO_VALUE_REG       0x0
-#define AVALON_GPIO_INPUT_EN_REG    0x4
-#define AVALON_GPIO_OUTPUT_EN_REG   0x8
-#define AVALON_GPIO_PORT_REG        0xC
+#define GPIO_VALUE_REG       0x0
+#define GPIO_INPUT_EN_REG    0x4
+#define GPIO_OUTPUT_EN_REG   0x8
+#define GPIO_PORT_REG        0xC
 
-#endif /* __AVALON_GPIO_REGS_H__ */
+#endif /* __GPIO_REGS_H__ */
