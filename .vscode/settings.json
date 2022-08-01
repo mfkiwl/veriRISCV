@@ -3,6 +3,8 @@
     "files.associations": {
         "*.rdlh": "systemrdl",
         "type_traits": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "platform.h": "c",
+        "interrupt.h": "c"
     },
 }

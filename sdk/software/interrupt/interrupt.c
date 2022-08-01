@@ -12,13 +12,24 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "platform.h"
+#include "interrupt.h"
 
 int main(int argc, char **argv)
 {
+    int count = 6;
+
     printf("Interrupt test:\n");
-    // software interrupt
+
+    // register the interrupt
+    msoftware_isr_register(&msoftware_isr, NULL);
+    mtimer_isr_register(&mtimer_isr, &count);
+
+    // set interrupt
     clic_msip_set(CLIC_BASE);
     clic_mtimecmp_low_set(CLIC_BASE, 0x10000);
+
+    while (1);
     return 0;
 }

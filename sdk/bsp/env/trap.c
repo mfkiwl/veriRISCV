@@ -12,8 +12,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "platform.h"
+#include "interrupt.h"
 
 // -------------------------------------------------
 // Defines
@@ -23,17 +25,20 @@
 #define MCAUSE_INT_MASK         0x80000000
 #define MCAUSE_LD_ADDR_MISALIGN 0x4
 
-#define M_SOFTWARE              3
-#define M_TIMER                 7
-#define M_EXTERNAL              11
+#define M_SOFTWARE  3
+#define M_TIMER     7
+#define M_EXTERNAL  11
 
+// ISR information
+typedef struct _isr_info_s {
+    uint32_t irq;       // interrupt number
+    isr_t isr;          // isr function
+    void* isr_context;  // isr function parameter
+} isr_info_s;
 
 // -------------------------------------------------
-// Functions
-// -------------------------------------------------
-
-
 // Exceptions
+// -------------------------------------------------
 
 void print_exception_info(uint32_t mcause, uint32_t mepc) {
     printf("Exception: mcause = %x\n", mcause);
@@ -52,43 +57,87 @@ void exception_handler(uint32_t mcause, uint32_t mepc) {
     exit_trap(mepc, mcause);
 }
 
-// Interrupt s
+// -------------------------------------------------
+// Interrupt
+// -------------------------------------------------
 
-void __attribute__((weak)) m_timer_interrupt_handler() {
+static isr_info_s mtimer_isr_info;
+static isr_info_s msoftware_isr_info;
+static isr_info_s external_isr_info[INT_COUNT];
+
+/**
+ * @brief register an interrupt service routine
+ *
+ * @param irq interrupt ID
+ * @param isr pointer to interrupt service routine
+ * @param isr_context pointer to any passed context, not supported yet TBD
+ * @return int
+ */
+void _isr_register (isr_info_s* isr_info, uint32_t irq, isr_t isr, void* isr_context) {
+    isr_info->irq = irq;
+    isr_info->isr = isr;
+    isr_info->isr_context = isr_context;
+}
+
+void mtimer_isr_register(isr_t isr, void* isr_context) {
+    _isr_register(&mtimer_isr_info, 0, isr, isr_context);
+}
+
+void msoftware_isr_register(isr_t isr, void* isr_context) {
+    _isr_register(&msoftware_isr_info, 0, isr, isr_context);
+}
+
+void external_isr_register(uint32_t irq, isr_t isr, void* isr_context) {
+    _isr_register(&external_isr_info[irq], 0, isr, isr_context);
+}
+
+void __attribute__((weak)) mtimer_isr(void* isr_context) {
+    static int count = 0;
+    int* max_count = (int *) isr_context;
     // clear mtime
     clic_mtime_low_clear(CLIC_BASE, 0);
     clic_mtime_high_clear(CLIC_BASE, 0);
     printf("Timer interrupt triggered\n");
+    count++;
+    if (count >= *max_count) {
+        clic_mtimecmp_low_clear(CLIC_BASE, 0);
+        clic_mtimecmp_high_clear(CLIC_BASE, 0);
+    }
 }
 
-void __attribute__((weak)) m_software_interrupt_handler() {
+void __attribute__((weak)) msoftware_isr(void* isr_context) {
     // clear msip
     clic_msip_clear(CLIC_BASE);
     printf("Software interrupt triggered\n");
 }
 
-void __attribute__((weak)) m_external_interrupt_handler() {}
-
-void interrupt_handler(uint32_t mcause) {
-    switch(mcause & MCAUSE_EXP_MASK) {
+void interrupt_handler(uint32_t int_type) {
+    switch(int_type) {
         case M_SOFTWARE: {
-            m_software_interrupt_handler();
+            msoftware_isr_info.isr(msoftware_isr_info.isr_context);
             break;
         }
         case M_TIMER: {
-            m_timer_interrupt_handler();
+            mtimer_isr_info.isr(mtimer_isr_info.isr_context);
             break;
         }
         case M_EXTERNAL: {
-            m_external_interrupt_handler();
             break;
         }
     }
 }
 
+// -------------------------------------------------
+// trap_handler
+// -------------------------------------------------
+
+
 uint32_t trap_handler(uint32_t mcause, uint32_t mepc) {
+
+    uint32_t int_type = mcause & MCAUSE_EXP_MASK;
+
     if ((mcause & MCAUSE_INT_MASK) != 0) {
-        interrupt_handler(mcause);
+        interrupt_handler(int_type);
     } else {
         exception_handler(mepc, mcause);
     }
