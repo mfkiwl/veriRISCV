@@ -22,7 +22,9 @@ typedef void (*isr_t)(void *);
 void interrupt_handler(uint32_t int_type);
 void mtimer_isr_register(isr_t isr, void* isr_context);
 void msoftware_isr_register(isr_t isr, void* isr_context);
-void external_isr_register(uint32_t irq, isr_t isr, void* isr_context);
+void external_isr_register(uint8_t irq, isr_t isr, void* isr_context);
+void external_isr_enable(uint8_t irq);
+void external_isr_disable(uint8_t irq);
 
 void __attribute__((weak)) mtimer_isr(void* isr_context);
 void __attribute__((weak)) msoftware_isr(void* isr_context);

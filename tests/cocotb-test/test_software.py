@@ -18,7 +18,7 @@ async def blink(dut):
 
 @cocotb.test()
 async def hello_riscv(dut):
-    await software_tests(dut, 'hello_riscv')
+    await software_tests(dut, 'hello_riscv', timeout=1000)
 
 @cocotb.test()
 async def interrupt(dut):

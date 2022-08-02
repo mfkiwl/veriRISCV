@@ -32,6 +32,7 @@ ASM_SRCS += $(ENV_DIR)/trap_entry.S
 C_SRCS += $(ENV_DIR)/init.c
 C_SRCS += $(ENV_DIR)/trap.c
 C_SRCS += $(ENV_DIR)/syscalls.c
+C_SRCS += $(DRIVER_DIR)/plic/plic.c
 C_SRCS += $(DRIVER_DIR)/gpio/gpio.c
 C_SRCS += $(DRIVER_DIR)/uart/uart.c
 
@@ -40,6 +41,7 @@ C_INCS += $(ENV_DIR)
 C_INCS += $(DRIVER_DIR)/gpio
 C_INCS += $(DRIVER_DIR)/uart
 C_INCS += $(DRIVER_DIR)/clic
+C_INCS += $(DRIVER_DIR)/plic
 
 INCLUDES += $(addprefix -I, $(C_INCS))
 

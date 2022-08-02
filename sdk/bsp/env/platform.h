@@ -15,9 +15,10 @@
 #include "board.h"
 #include "encoding.h"
 
+#include "clic.h"
+#include "plic.h"
 #include "gpio.h"
 #include "uart.h"
-#include "clic.h"
 
 // SOC component address mapping
 #define CLIC_BASE       (0x80000000)
@@ -26,7 +27,13 @@
 #define GPIO1_BASE      (0x80003000)
 #define UART0_BASE      (0x80004000)
 
+
+// IRQ
+#define UART_TX_IRQ     0
+#define UART_RX_IRQ     1
+
+
 // Helper functions
-#define REG32_PTR(base, reg)  ((volatile uint32_t *) (base + reg))
+#define REG32_PTR(base, reg)  ((volatile uint32_t *) ((base) + (reg)))
 
 #endif

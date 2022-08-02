@@ -31,7 +31,7 @@
 
 // ISR information
 typedef struct _isr_info_s {
-    uint32_t irq;       // interrupt number
+    uint8_t irq;        // interrupt number
     isr_t isr;          // isr function
     void* isr_context;  // isr function parameter
 } isr_info_s;
@@ -66,14 +66,14 @@ static isr_info_s msoftware_isr_info;
 static isr_info_s external_isr_info[INT_COUNT];
 
 /**
- * @brief register an interrupt service routine
+ * @brief register an interrupt service routine interrupt is enabled by default
  *
  * @param irq interrupt ID
  * @param isr pointer to interrupt service routine
  * @param isr_context pointer to any passed context, not supported yet TBD
  * @return int
  */
-void _isr_register (isr_info_s* isr_info, uint32_t irq, isr_t isr, void* isr_context) {
+void _isr_register (isr_info_s* isr_info, uint8_t irq, isr_t isr, void* isr_context) {
     isr_info->irq = irq;
     isr_info->isr = isr;
     isr_info->isr_context = isr_context;
@@ -87,8 +87,16 @@ void msoftware_isr_register(isr_t isr, void* isr_context) {
     _isr_register(&msoftware_isr_info, 0, isr, isr_context);
 }
 
-void external_isr_register(uint32_t irq, isr_t isr, void* isr_context) {
+void external_isr_register(uint8_t irq, isr_t isr, void* isr_context) {
     _isr_register(&external_isr_info[irq], 0, isr, isr_context);
+}
+
+void external_isr_enable(uint8_t irq) {
+    plic_enable_mint(PLIC_BASE, irq);
+}
+
+void external_isr_disable(uint8_t irq) {
+    plic_disable_mint(PLIC_BASE, irq);
 }
 
 void __attribute__((weak)) mtimer_isr(void* isr_context) {
@@ -112,6 +120,9 @@ void __attribute__((weak)) msoftware_isr(void* isr_context) {
 }
 
 void interrupt_handler(uint32_t int_type) {
+
+    uint32_t irq;
+
     switch(int_type) {
         case M_SOFTWARE: {
             msoftware_isr_info.isr(msoftware_isr_info.isr_context);
@@ -122,7 +133,12 @@ void interrupt_handler(uint32_t int_type) {
             break;
         }
         case M_EXTERNAL: {
-            break;
+            irq = plic_get_mint(PLIC_BASE);
+            for (int i = 0; i < 31; i++) {
+                if ((irq >> i) & 0x1) {
+                    external_isr_info[i].isr(external_isr_info[i].isr_context);
+                }
+            }
         }
     }
 }

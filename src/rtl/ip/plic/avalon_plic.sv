@@ -80,6 +80,9 @@ module avalon_plic (
 
     assign interrupt_masked = plic_interrupt_in & mint_enable;
 
+    always @(posedge clk) mint <= interrupt_masked;
+
     always @(posedge clk) external_interrupt <= |interrupt_masked;
+
 
 endmodule
