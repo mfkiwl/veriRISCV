@@ -57,4 +57,6 @@ void uart_putc(uint32_t base, const char c);
 
 void uart_putnc(uint32_t base, char *buf, size_t nbytes);
 
+uint8_t uart_getc(uint32_t base);
+
 #endif /* __UART_H__ */

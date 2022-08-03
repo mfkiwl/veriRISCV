@@ -105,9 +105,7 @@ int _read (int file, char *ptr, int len) {
     // if the file is tty, we read from uart
     if (isatty(file)) {
         for (i = 0; i < len; i++) {
-            // TBD
-            ptr[i] = 0;
-            // return partial value if we get EOL
+            ptr[i] = uart_getc(UART0_BASE);
             if ('\n' == ptr[i]) {
                 return i;
             }

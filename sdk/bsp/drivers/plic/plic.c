@@ -36,15 +36,3 @@ void plic_disable_mint(uint32_t base, uint8_t id) {
     mint_enable &= ~(1 << id);
     PLIC_MINT_ENABLE_WRITE(base, mint_enable);
 }
-
-/**
- * @brief Get the interrupt id in PLIC
- *
- * @param base
- * @param id
- */
-uint32_t plic_get_mint(uint32_t base) {
-    uint32_t mint;
-    mint = PLIC_MINT_READ(base);
-    return mint;
-}

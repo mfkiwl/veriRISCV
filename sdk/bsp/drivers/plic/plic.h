@@ -16,12 +16,13 @@
 #include <stdint.h>
 #include "plic_reg.h"
 
-#define PLIC_MINT_ENABLE_WRITE(base, data)  (*REG32_PTR(base, PLIC_MINT_ENABLE_REG) = data)
-#define PLIC_MINT_ENABLE_READ(base, data)   (*REG32_PTR(base, PLIC_MINT_ENABLE_REG))
-#define PLIC_MINT_READ(base)                (*REG32_PTR(base, PLIC_MINT_REG))
+#define PLIC_MINT_ENABLE_WRITE(base, data)  (*REG32_PTR((base), PLIC_MINT_ENABLE_REG) = (data))
+#define PLIC_MINT_ENABLE_READ(base, data)   (*REG32_PTR((base), PLIC_MINT_ENABLE_REG))
+#define PLIC_MINT_READ(base)                (*REG32_PTR((base), PLIC_MINT_REG))
+
+#define plic_get_mint(base)                 (PLIC_MINT_READ((base)))
 
 void plic_enable_mint(uint32_t base, uint8_t id);
 void plic_disable_mint(uint32_t base, uint8_t id);
-uint32_t plic_get_mint(uint32_t base);
 
 #endif /* __PLIC_H__ */

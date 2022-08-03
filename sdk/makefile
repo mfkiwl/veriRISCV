@@ -101,7 +101,7 @@ uart_read: download.log
 # pre defined command to compile software
 #############################################################
 
-programs = blink hello_riscv fibonacci coremark interrupt
+programs = blink hello_riscv fibonacci coremark interrupt uart_rw
 upload_programs = $(addprefix upload_, $(programs))
 
 $(programs):

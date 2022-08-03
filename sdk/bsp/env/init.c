@@ -32,7 +32,7 @@ void _init() {
     uart_init_cfg.txen  = 1;
     uart_init_cfg.nstop = 0;
     uart_init_cfg.txcnt = 7;
-    uart_init_cfg.rxen  = 0;
+    uart_init_cfg.rxen  = 1;
     uart_init_cfg.rxcnt = 0;
     uart_init_cfg.div = UART_CAL_DIV(CLK_FREQ_MHZ, 115200);
 

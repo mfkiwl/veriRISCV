@@ -33,7 +33,6 @@ C_SRCS += $(ENV_DIR)/init.c
 C_SRCS += $(ENV_DIR)/trap.c
 C_SRCS += $(ENV_DIR)/syscalls.c
 C_SRCS += $(DRIVER_DIR)/plic/plic.c
-C_SRCS += $(DRIVER_DIR)/gpio/gpio.c
 C_SRCS += $(DRIVER_DIR)/uart/uart.c
 
 # C include directory

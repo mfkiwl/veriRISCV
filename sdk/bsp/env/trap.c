@@ -31,9 +31,8 @@
 
 // ISR information
 typedef struct _isr_info_s {
-    uint8_t irq;        // interrupt number
-    isr_t isr;          // isr function
-    void* isr_context;  // isr function parameter
+    isr_t   isr;            // isr function
+    void*   isr_context;    // isr function parameter
 } isr_info_s;
 
 // -------------------------------------------------
@@ -68,27 +67,25 @@ static isr_info_s external_isr_info[INT_COUNT];
 /**
  * @brief register an interrupt service routine interrupt is enabled by default
  *
- * @param irq interrupt ID
  * @param isr pointer to interrupt service routine
  * @param isr_context pointer to any passed context, not supported yet TBD
  * @return int
  */
-void _isr_register (isr_info_s* isr_info, uint8_t irq, isr_t isr, void* isr_context) {
-    isr_info->irq = irq;
+void _isr_register (isr_info_s* isr_info, isr_t isr, void* isr_context) {
     isr_info->isr = isr;
     isr_info->isr_context = isr_context;
 }
 
 void mtimer_isr_register(isr_t isr, void* isr_context) {
-    _isr_register(&mtimer_isr_info, 0, isr, isr_context);
+    _isr_register(&mtimer_isr_info, isr, isr_context);
 }
 
 void msoftware_isr_register(isr_t isr, void* isr_context) {
-    _isr_register(&msoftware_isr_info, 0, isr, isr_context);
+    _isr_register(&msoftware_isr_info, isr, isr_context);
 }
 
 void external_isr_register(uint8_t irq, isr_t isr, void* isr_context) {
-    _isr_register(&external_isr_info[irq], 0, isr, isr_context);
+    _isr_register(&external_isr_info[irq], isr, isr_context);
 }
 
 void external_isr_enable(uint8_t irq) {

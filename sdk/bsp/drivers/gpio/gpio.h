@@ -13,18 +13,12 @@
 #ifndef __GPIO_H__
 #define __GPIO_H__
 
-#include <stdint.h>
 #include "gpio_reg.h"
+#include "platform.h"
 
-void gpio_read_en(uint32_t base, uint32_t mask);
-
-void gpio_write_en(uint32_t base, uint32_t mask);
-
-uint32_t gpio_read(uint32_t base);
-
-void gpio_write(uint32_t base, uint32_t data);
-
-void gpio_set_0(uint32_t base);
-
+#define gpio_write_en(base, mask)   (*REG32_PTR((base), GPIO_OUTPUT_EN_REG) = (mask))
+#define gpio_read_en(base, mask)    (*REG32_PTR((base), GPIO_INPUT_EN_REG) = (mask))
+#define gpio_write(base, data)      (*REG32_PTR((base), GPIO_PORT_REG) = (data))
+#define gpio_read(base)             (*REG32_PTR((base), GPIO_VALUE_REG))
 
 #endif /* __GPIO_H__ */
