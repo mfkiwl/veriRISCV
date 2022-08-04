@@ -23,16 +23,19 @@ static uart_rxctrl_s _rxctrl;
 static uint8_t       _tx_irq;
 static uint8_t       _rx_irq;
 
-#ifdef UART_USE_INTERRUPT
+#ifdef UART_FAST_DRIVER
 
 static uint32_t _uart_base;
-static uint8_t  _uart_write_buffer[UART_BUFFER_SIZE];
-static uint16_t _uart_write_buffer_rdptr = 0;
-static uint16_t _uart_write_buffer_wrptr = 0;
-static uint8_t  _uart_write_buffer_rdptr_wrap = 0;
-static uint8_t  _uart_write_buffer_wrptr_wrap = 0;
+static uint8_t  _tx_buffer[UART_BUFFER_SIZE];
 
-void _uart_txwm_isr(void* isr_context);
+// NOTE: These variables needs to be volatile because some of them are changed in ISR
+// without volatile modifier, -O2 optimization will not work
+static volatile uint16_t _tx_buffer_start = 0;
+static volatile uint16_t _tx_buffer_end = 0;
+static volatile uint8_t  _tx_buffer_start_wrap = 0;
+static volatile uint8_t  _tx_buffer_end_wrap = 0;
+
+static void _uart_txwm_isr(void* isr_context);
 
 #endif
 
@@ -69,7 +72,7 @@ void uart_init(uint32_t base, uart_init_cfg_s* init_cfg) {
     *REG32_PTR(base, UART_DIV_REG)    = _div.reg;
 
     // if we use interrupt, register the isr
-    #ifdef UART_USE_INTERRUPT
+    #ifdef UART_FAST_DRIVER
     _tx_irq = init_cfg->tx_irq;
     _rx_irq = init_cfg->rx_irq;
     // we need to use a static/global variable here. If we use &base as isr_context,
@@ -110,18 +113,19 @@ int uart_close(uint32_t base) {
 // Uart write
 // -------------------------------------
 
-// Function specific using interrupt
-#ifdef UART_USE_INTERRUPT
+
+// -- FAST DRIVER --//
+#ifdef UART_FAST_DRIVER
 
 /**
  * @brief Check if the write buffer is full or not
  *
  * @return uint8_t
  */
-static uint8_t _uart_write_buffer_full() {
+static uint8_t _tx_buffer_full() {
     uint8_t equal, wrapped;
-    equal = _uart_write_buffer_wrptr == _uart_write_buffer_rdptr;
-    wrapped = _uart_write_buffer_rdptr_wrap != _uart_write_buffer_wrptr_wrap;
+    equal = _tx_buffer_end == _tx_buffer_start;
+    wrapped = _tx_buffer_start_wrap != _tx_buffer_end_wrap;
     return equal && wrapped;
 }
 
@@ -130,10 +134,10 @@ static uint8_t _uart_write_buffer_full() {
  *
  * @return uint8_t
  */
-static uint8_t _uart_write_buffer_empty() {
+static uint8_t _tx_buffer_empty() {
     uint8_t equal, wrapped;
-    equal = _uart_write_buffer_wrptr == _uart_write_buffer_rdptr;
-    wrapped = _uart_write_buffer_rdptr_wrap != _uart_write_buffer_wrptr_wrap;
+    equal = _tx_buffer_end == _tx_buffer_start;
+    wrapped = _tx_buffer_start_wrap != _tx_buffer_end_wrap;
     return equal && !wrapped;
 }
 
@@ -142,66 +146,32 @@ static uint8_t _uart_write_buffer_empty() {
  *
  * @param isr_context
  */
-void _uart_txwm_isr(void* isr_context) {
+static void _uart_txwm_isr(void* isr_context) {
 
     uart_txdata_s _txdata;
     uint32_t* base = (uint32_t*) isr_context;
 
     // if we have more data to be sent:
-    while (!_uart_write_buffer_empty()) {
+    while (!_tx_buffer_empty()) {
+
+        // check if TX FIFO is full, if yes, then we should wait for the next interrupt
         _txdata.reg = *REG32_PTR(*base, UART_TXDATA_REG);
-        // if the TX FIFO is full, then we should wait for the next interrupt so we just return
         if (_txdata.full) return;
-        // if the TX FIFO is not full, then push a data into the FIFO
-        else {
-            _txdata.data = _uart_write_buffer[_uart_write_buffer_rdptr++];
-            UART_TXDATA_WRITE(*base, _txdata.reg);
-            if (_uart_write_buffer_rdptr == UART_BUFFER_SIZE) {
-                _uart_write_buffer_rdptr = 0;
-                _uart_write_buffer_rdptr_wrap = ~_uart_write_buffer_rdptr_wrap;
-            }
+
+        // write the data into TX FIFO
+        _txdata.data = _tx_buffer[_tx_buffer_start++];
+        UART_TXDATA_WRITE(*base, _txdata.reg);
+
+        // update the write pointer
+        if (_tx_buffer_start == UART_BUFFER_SIZE) {
+            _tx_buffer_start = 0;
+            _tx_buffer_start_wrap = ~_tx_buffer_start_wrap;
         }
+
     }
-    // we have sent all the data
+
     // disable the interrupt since we don't have any more data to be sent
     external_isr_disable(_tx_irq);
-}
-
-#endif
-
-/**
- * @brief Write a character through uart
- *
- * @param base
- * @param c
- */
-
-void uart_putc(uint32_t base, const char c) {
-
-    // Use interrupt mechanism
-    #ifdef UART_USE_INTERRUPT
-
-        // check if the buffer is full or not. If full then we need to stall
-        while(_uart_write_buffer_full());
-        // push the data into the buffer
-        _uart_write_buffer[_uart_write_buffer_wrptr++] = c;
-        // update write pointer
-        if (_uart_write_buffer_wrptr == UART_BUFFER_SIZE) {
-            _uart_write_buffer_wrptr = 0;
-            _uart_write_buffer_wrptr_wrap = ~_uart_write_buffer_wrptr_wrap;
-        }
-        // enable interrupt to drain out the buffer
-        external_isr_enable(_tx_irq);
-
-    // Use blocking mechanism
-    #else
-        // wait till the txdata fifo has space
-        do {
-            _txdata.reg = *REG32_PTR(base, UART_TXDATA_REG);
-        } while(_txdata.full);
-        _txdata.data = c;
-        UART_TXDATA_WRITE(base, _txdata.reg);
-    #endif
 }
 
 /**
@@ -211,51 +181,64 @@ void uart_putc(uint32_t base, const char c) {
  * @param buf
  * @param nbytes
  */
-void uart_putnc(uint32_t base, char *buf, size_t nbytes) {
+int uart_write(uint32_t base, char *buf, size_t nbytes) {
 
+    volatile uint8_t full;
+    int count = nbytes;
     uart_txdata_s _txdata;
-    uint8_t full;
 
-    // Use interrupt mechanism
-    #ifdef UART_USE_INTERRUPT
+        while (count > 0) {
+            full = _tx_buffer_full();
+            // block wait if necessary
+            if (full) {
+                external_isr_enable(_tx_irq);
+                // wait till buffer have space
+                while(full) full = _tx_buffer_full();
+            }
 
-        while (nbytes > 0) {
-            // check if the buffer is full or not.
-            // if buffer is full, enable interrupt to let buffer drain
-            if (_uart_write_buffer_full()) external_isr_enable(_tx_irq);
-            // wait till buffer have space
-            while(_uart_write_buffer_full());
             // push the data into the buffer
-            _uart_write_buffer[_uart_write_buffer_wrptr++] = *buf;
+            _tx_buffer[_tx_buffer_end++] = *buf;
+
             // update write pointer
-            if (_uart_write_buffer_wrptr == UART_BUFFER_SIZE) {
-                _uart_write_buffer_wrptr = 0;
-                _uart_write_buffer_wrptr_wrap = ~_uart_write_buffer_wrptr_wrap;
+            if (_tx_buffer_end == UART_BUFFER_SIZE) {
+                _tx_buffer_end = 0;
+                _tx_buffer_end_wrap = ~_tx_buffer_end_wrap;
             }
 
             buf++;
-            nbytes--;
+            count--;
         }
 
         // enable interrupt to drain out the buffer
         external_isr_enable(_tx_irq);
 
-    // Use blocking mechanism
-    #else
-        while (nbytes > 0) {
-            // wait till the txdata fifo has space
-            do {
-                _txdata.reg = *REG32_PTR(base, UART_TXDATA_REG);
-            } while(_txdata.full);
-            // write the data to FIFO
-            _txdata.data = *buf;
-            UART_TXDATA_WRITE(base, _txdata.reg);
-
-            buf++;
-            nbytes--;
-        }
-    #endif
+        // return number of bytes being sent
+        return (nbytes - count);
 }
+
+#else
+
+void uart_write(uint32_t base, char *buf, size_t nbytes) {
+
+    uart_txdata_s _txdata;
+
+    while (nbytes > 0) {
+        // wait till the txdata fifo has space
+        do {
+            _txdata.reg = *REG32_PTR(base, UART_TXDATA_REG);
+        } while(_txdata.full);
+        // write the data to FIFO
+        _txdata.data = *buf;
+        UART_TXDATA_WRITE(base, _txdata.reg);
+
+        buf++;
+        nbytes--;
+    }
+}
+
+
+#endif
+
 
 // -------------------------------------
 // Uart read

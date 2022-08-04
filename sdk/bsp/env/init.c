@@ -36,7 +36,7 @@ void _init() {
     uart_init_cfg.rxcnt = 0;
     uart_init_cfg.div = UART_CAL_DIV(CLK_FREQ_MHZ, 115200);
 
-    #ifdef UART_USE_INTERRUPT
+    #ifdef UART_FAST_DRIVER
     uart_init_cfg.ie_txwm = 1;
     uart_init_cfg.ie_rxwm = 0;
     uart_init_cfg.tx_irq = UART_TX_IRQ;

@@ -23,13 +23,13 @@
 #define UART_TXDATA_WRITE(base, data)   (*REG32_PTR(base, UART_TXDATA_REG) = data)
 #define UART_TXDATA_READ(base, data)    (*REG32_PTR(base, UART_TXDATA_REG))
 
-#define UART_USE_INTERRUPT
+#define UART_FAST_DRIVER
 #define UART_BUFFER_SIZE 64
 
 #define UART_CAL_DIV(CLK_FREQ_MHZ, BAUD) (CLK_FREQ_MHZ * 1000000 / BAUD)
 
 typedef struct _uart_init_cfg_s {
-    #ifdef UART_USE_INTERRUPT
+    #ifdef UART_FAST_DRIVER
     uint8_t     tx_irq;
     uint8_t     rx_irq;
     #endif
@@ -53,9 +53,7 @@ int uart_open(uint32_t base);
 
 int uart_close(uint32_t base);
 
-void uart_putc(uint32_t base, const char c);
-
-void uart_putnc(uint32_t base, char *buf, size_t nbytes);
+int uart_write(uint32_t base, char *buf, size_t nbytes);
 
 uint8_t uart_getc(uint32_t base);
 

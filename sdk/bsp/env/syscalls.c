@@ -106,11 +106,10 @@ int _read (int file, char *ptr, int len) {
     if (isatty(file)) {
         for (i = 0; i < len; i++) {
             ptr[i] = uart_getc(UART0_BASE);
-            if ('\n' == ptr[i]) {
-                return i;
-            }
+            // return partial value if we get EOL
+            if ('\n' == ptr[i] || '\r' == ptr[i]) return i;
         }
-        return i;
+      return i;
     }
     return  0;    // EOF
 }
@@ -172,7 +171,7 @@ clock_t _times (struct tms *buf) {
 int _write (int file, char *buf, size_t nbytes) {
 
   if (isatty(file)) {
-    uart_putnc(UART0_BASE, buf, nbytes);
+    uart_write(UART0_BASE, buf, nbytes);
     return nbytes;
   }
 

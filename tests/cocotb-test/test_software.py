@@ -23,3 +23,11 @@ async def hello_riscv(dut):
 @cocotb.test()
 async def interrupt(dut):
     await software_tests(dut, 'interrupt', timeout=10000)
+
+@cocotb.test()
+async def uart_rw(dut):
+    await software_tests(dut, 'uart_rw', timeout=1000)
+
+@cocotb.test()
+async def coremark(dut):
+    await software_tests(dut, 'coremark', timeout=20000)

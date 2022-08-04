@@ -22,7 +22,7 @@ sdk/software/hello_riscv/hello_riscv
 sdk/software/fibonacci/fibonacci
 sdk/software/coremark/coremark
 sdk/software/interrupt/interrupt
-sdk/software/uart/uart
+sdk/software/uart_rw/uart_rw
 
 # fpga
 output

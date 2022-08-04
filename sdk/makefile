@@ -102,10 +102,10 @@ uart_read: download.log
 #############################################################
 
 programs = blink hello_riscv fibonacci coremark interrupt uart_rw
-upload_programs = $(addprefix upload_, $(programs))
+upload_programs = $(addsuffix  _upload, $(programs))
 
 $(programs):
 	$(MAKE) dasm PROGRAM=$@
 
 $(upload_programs):
-	$(MAKE) uart_upload PROGRAM=$(subst upload_,,$@)
+	$(MAKE) uart_upload PROGRAM=$(subst _upload,,$@)
