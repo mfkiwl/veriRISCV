@@ -33,6 +33,8 @@ module WB (
     output                          wb_reg_write,
     output [`RF_RANGE]              wb_reg_regid,
     output [`DATA_RANGE]            wb_reg_writedata,
+    // to EX forwarding
+    output [`DATA_RANGE]            wb_forward_data,
     // to IF
     output [`PC_RANGE]              trap_pc,
     output                          trap_take
@@ -90,6 +92,11 @@ module WB (
                               mem2wb_pipeline_ctrl.mem_read ? mem2wb_pipeline_memory_data : mem2wb_pipeline_data.reg_writedata;
     assign wb_reg_regid     = mem2wb_pipeline_data.reg_regid;
 
+    // To improve timing:
+    // - For CSR we wait till the CSR is completed in WB stage so we don't forward CSR data to EX stage
+    // - We do not forward the memory read data to EX stage because memory data come back at EX stage and we also need to post process it
+    assign wb_forward_data  = mem2wb_pipeline_data.reg_writedata;
+
     assign csr_read = mem2wb_pipeline_ctrl.csr_read;
     assign csr_write = mem2wb_pipeline_ctrl.csr_write;
 
@@ -99,7 +106,6 @@ module WB (
     // One reasonable solution here is to use the instruction in memory stage as the next instruction,
     // and we also need to make sure that the instruction in memory stage is valid.
     // So to take a interrupt, we need to wait till we have a valid instruction in memory stage.
-
     assign next_instruction_valid = mem_valid;
     assign next_instruction_pc = mem_instruction_pc;
 

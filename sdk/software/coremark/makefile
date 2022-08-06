@@ -31,7 +31,7 @@ CFLAGS += -falign-functions=4
 CFLAGS += -falign-jumps=4
 CFLAGS += -falign-loops=4
 
-CFLAGS += -DITERATIONS=500
+CFLAGS += -DITERATIONS=1000
 CFLAGS += -DFLAGS_STR=\""$(CFLAGS)"\"
 
 #############################################################

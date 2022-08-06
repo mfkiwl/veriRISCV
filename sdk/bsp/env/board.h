@@ -14,7 +14,7 @@
 #ifdef BOARD_DE2
 
 // Clock Frequency in MHz
-#define CLK_FREQ_MHZ     25
+#define CLK_FREQ_MHZ     50
 
 
 #endif

@@ -54,7 +54,7 @@ module de2_top (
         .c0     (clk)
     );
 
-    veriRISCV_soc #(.CLK_FREQ_MHZ(25))
+    veriRISCV_soc #(.CLK_FREQ_MHZ(50))
     veriRISCV_soc (
         .clk                (clk),
         .rst                (~KEY[0]),

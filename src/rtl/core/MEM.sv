@@ -30,6 +30,9 @@ module MEM (
     output avalon_req_t                 dbus_avalon_req,
     input  avalon_resp_t                dbus_avalon_resp,
 
+    // others
+    output                              mem_mem_read,
+
     // pipeline stage
     output mem2wb_pipeline_ctrl_t       mem2wb_pipeline_ctrl,
     output mem2wb_pipeline_exc_t        mem2wb_pipeline_exc,
@@ -106,7 +109,7 @@ module MEM (
     // To FIX this issue, we requires that the interrupt/exception can't be taken if the Wb stage is stalled.
     assign lsu_mem_read = ex2mem_pipeline_ctrl.mem_read & ~mem_flush;
     assign lsu_mem_write = ex2mem_pipeline_ctrl.mem_write & ~mem_flush;
-
+    assign mem_mem_read = lsu_mem_read;
 
     // Pipeline Stage
     assign stage_run = ~mem_stall;

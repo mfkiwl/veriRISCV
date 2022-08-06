@@ -80,6 +80,6 @@ module hdu (
     assign id_stall  = lsu_dbus_busy;
     assign ex_stall  = lsu_dbus_busy;
     assign mem_stall = lsu_dbus_busy;
-    assign wb_stall = lsu_dbus_busy;
+    assign wb_stall  = lsu_dbus_busy;
 
 endmodule

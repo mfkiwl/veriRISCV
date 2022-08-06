@@ -48,6 +48,7 @@ module veriRISCV_core (
     // EX stage
     logic                   ex_flush;
     logic                   ex_stall;
+    logic                   ex_mem_read;
     ex2mem_pipeline_ctrl_t  ex2mem_pipeline_ctrl;
     ex2mem_pipeline_exc_t   ex2mem_pipeline_exc;
     ex2mem_pipeline_data_t  ex2mem_pipeline_data;
@@ -55,6 +56,7 @@ module veriRISCV_core (
     // MEM stage
     logic                   mem_stall;
     logic                   mem_flush;
+    logic                   mem_mem_read;
     mem2wb_pipeline_ctrl_t  mem2wb_pipeline_ctrl;
     mem2wb_pipeline_exc_t   mem2wb_pipeline_exc;
     mem2wb_pipeline_data_t  mem2wb_pipeline_data;
@@ -65,6 +67,7 @@ module veriRISCV_core (
     logic                   wb_reg_write;
     logic [`RF_RANGE]       wb_reg_regid;
     logic [`DATA_RANGE]     wb_reg_writedata;
+    logic [`DATA_RANGE]     wb_forward_data;
 
 
     // common signals
@@ -112,6 +115,8 @@ module veriRISCV_core (
         .wb_reg_write           (wb_reg_write),
         .wb_reg_regid           (wb_reg_regid),
         .wb_reg_writedata       (wb_reg_writedata),
+        .ex_mem_read            (ex_mem_read),
+        .mem_mem_read           (mem_mem_read),
         .hdu_load_stall         (hdu_load_stall),
         .id2ex_pipeline_ctrl    (id2ex_pipeline_ctrl),
         .id2ex_pipeline_exc     (id2ex_pipeline_exc),
@@ -130,9 +135,10 @@ module veriRISCV_core (
         .id2ex_pipeline_ctrl    (id2ex_pipeline_ctrl),
         .id2ex_pipeline_exc     (id2ex_pipeline_exc),
         .id2ex_pipeline_data    (id2ex_pipeline_data),
-        .wb_reg_writedata       (wb_reg_writedata),
+        .wb_forward_data        (wb_forward_data),
         .branch_pc              (branch_pc),
         .branch_take            (branch_take),
+        .ex_mem_read            (ex_mem_read),
         .ex2mem_pipeline_ctrl   (ex2mem_pipeline_ctrl),
         .ex2mem_pipeline_exc    (ex2mem_pipeline_exc),
         .ex2mem_pipeline_data   (ex2mem_pipeline_data)
@@ -149,6 +155,7 @@ module veriRISCV_core (
         .mem_flush              (mem_flush),
         .dbus_avalon_req        (dbus_avalon_req),
         .dbus_avalon_resp       (dbus_avalon_resp),
+        .mem_mem_read           (mem_mem_read),
         .lsu_dbus_busy          (lsu_dbus_busy),
         .ex2mem_pipeline_ctrl   (ex2mem_pipeline_ctrl),
         .ex2mem_pipeline_exc    (ex2mem_pipeline_exc),
@@ -185,6 +192,7 @@ module veriRISCV_core (
         .wb_reg_write           (wb_reg_write),
         .wb_reg_regid           (wb_reg_regid),
         .wb_reg_writedata       (wb_reg_writedata),
+        .wb_forward_data        (wb_forward_data),
         .trap_take              (trap_take),
         .trap_pc                (trap_pc)
     );

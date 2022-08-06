@@ -21,10 +21,12 @@ module EX (
     input id2ex_pipeline_exc_t          id2ex_pipeline_exc,
     input id2ex_pipeline_data_t         id2ex_pipeline_data,
     // from wb stage
-    input [`DATA_RANGE]                 wb_reg_writedata,
+    input [`DATA_RANGE]                 wb_forward_data,
     // branch control
     output [`PC_RANGE]                  branch_pc,
     output                              branch_take,
+    // others
+    output                              ex_mem_read,
     // to EX/MEM stage pipeline
     output ex2mem_pipeline_ctrl_t       ex2mem_pipeline_ctrl,
     output ex2mem_pipeline_exc_t        ex2mem_pipeline_exc,
@@ -54,11 +56,11 @@ module EX (
 
     // Forwarding MUX
     assign op1_forwarded =  (id2ex_pipeline_data.op1_forward_from_mem) ? ex2mem_pipeline_data.alu_out :
-                            (id2ex_pipeline_data.op1_forward_from_wb)  ? wb_reg_writedata :
+                            (id2ex_pipeline_data.op1_forward_from_wb)  ? wb_forward_data :
                             id2ex_pipeline_data.rs1_readdata;
 
     assign op2_forwarded =  (id2ex_pipeline_data.op2_forward_from_mem) ? ex2mem_pipeline_data.alu_out :
-                            (id2ex_pipeline_data.op2_forward_from_wb)  ? wb_reg_writedata :
+                            (id2ex_pipeline_data.op2_forward_from_wb)  ? wb_forward_data :
                             id2ex_pipeline_data.rs2_readdata;
 
     // immediate select
@@ -69,6 +71,8 @@ module EX (
     assign alu_op1 = id2ex_pipeline_data.alu_op2_sel_imm  ? id2ex_pipeline_data.imm_value :
                      id2ex_pipeline_data.alu_op2_sel_4    ? 'd4 :
                      op2_forwarded;
+
+    assign ex_mem_read = id2ex_pipeline_ctrl.mem_read & id2ex_pipeline_ctrl.reg_write;
 
     // pipelien stge signal
     assign ex_stage_ctrl.valid = id2ex_pipeline_ctrl.valid;

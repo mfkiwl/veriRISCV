@@ -21,9 +21,13 @@ module ID (
     input if2id_pipeline_ctrl_t         if2id_pipeline_ctrl,
     input if2id_pipeline_data_t         if2id_pipeline_data,
 
+    // from EX stage
+    input                               ex_mem_read,
+
     // from MEM stage
     input [`RF_RANGE]                   mem_reg_regid,
     input                               mem_reg_write,
+    input                               mem_mem_read,
 
     // from WB stage
     input                               wb_reg_write,
@@ -62,6 +66,9 @@ module ID (
     logic                   stage_run;
     logic                   stage_flush;
 
+    logic                   load_match_ex;
+    logic                   load_match_mem;
+
     logic                   exception_ill_instr;
 
     // ---------------------------------
@@ -88,8 +95,11 @@ module ID (
     assign id_stage_data.op2_forward_from_wb  = rs2_match_mem & regfile_rs2_read & mem_reg_write & rs2_non_zero;
 
     // Load dependence check
-    assign hdu_load_stall = id2ex_pipeline_ctrl.mem_read & id2ex_pipeline_ctrl.reg_write & if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr &
-                            (rs1_match_ex & regfile_rs1_read | rs2_match_ex & regfile_rs2_read);
+    // To improve timing, we do not forward the load data to EX stage, so we need to stall 2 cycles
+    // if an instruction depends on load
+    assign load_match_ex  = ex_mem_read & (rs1_match_ex & regfile_rs1_read | rs2_match_ex & regfile_rs2_read);
+    assign load_match_mem = mem_mem_read & (rs1_match_mem & regfile_rs1_read | rs2_match_mem & regfile_rs2_read);
+    assign hdu_load_stall = if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr & (load_match_ex | load_match_mem);
 
     // pipeline stage
     assign stage_run = ~id_stall;
