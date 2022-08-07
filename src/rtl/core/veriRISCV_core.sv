@@ -41,6 +41,7 @@ module veriRISCV_core (
     // ID stage
     logic                   id_flush;
     logic                   id_stall;
+    logic                   id_bubble;
     id2ex_pipeline_ctrl_t   id2ex_pipeline_ctrl;
     id2ex_pipeline_exc_t    id2ex_pipeline_exc;
     id2ex_pipeline_data_t   id2ex_pipeline_data;
@@ -48,6 +49,7 @@ module veriRISCV_core (
     // EX stage
     logic                   ex_flush;
     logic                   ex_stall;
+    logic                   ex_bubble;
     logic                   ex_mem_read;
     ex2mem_pipeline_ctrl_t  ex2mem_pipeline_ctrl;
     ex2mem_pipeline_exc_t   ex2mem_pipeline_exc;
@@ -78,7 +80,8 @@ module veriRISCV_core (
     logic [`PC_RANGE]       trap_pc;
     logic                   ifu_ibus_busy;
     logic                   lsu_dbus_busy;
-    logic                   hdu_load_stall;
+    logic                   hdu_load_stall_req;
+    logic                   muldiv_stall_req;
 
     // ---------------------------------
     // IF stage
@@ -108,6 +111,7 @@ module veriRISCV_core (
         .rst                    (rst),
         .id_flush               (id_flush),
         .id_stall               (id_stall),
+        .id_bubble              (id_bubble),
         .if2id_pipeline_ctrl    (if2id_pipeline_ctrl),
         .if2id_pipeline_data    (if2id_pipeline_data),
         .mem_reg_regid          (ex2mem_pipeline_data.reg_regid),
@@ -117,7 +121,7 @@ module veriRISCV_core (
         .wb_reg_writedata       (wb_reg_writedata),
         .ex_mem_read            (ex_mem_read),
         .mem_mem_read           (mem_mem_read),
-        .hdu_load_stall         (hdu_load_stall),
+        .hdu_load_stall_req         (hdu_load_stall_req),
         .id2ex_pipeline_ctrl    (id2ex_pipeline_ctrl),
         .id2ex_pipeline_exc     (id2ex_pipeline_exc),
         .id2ex_pipeline_data    (id2ex_pipeline_data)
@@ -132,6 +136,7 @@ module veriRISCV_core (
         .rst                    (rst),
         .ex_flush               (ex_flush),
         .ex_stall               (ex_stall),
+        .ex_bubble              (ex_bubble),
         .id2ex_pipeline_ctrl    (id2ex_pipeline_ctrl),
         .id2ex_pipeline_exc     (id2ex_pipeline_exc),
         .id2ex_pipeline_data    (id2ex_pipeline_data),
@@ -139,6 +144,7 @@ module veriRISCV_core (
         .branch_pc              (branch_pc),
         .branch_take            (branch_take),
         .ex_mem_read            (ex_mem_read),
+        .muldiv_stall_req       (muldiv_stall_req),
         .ex2mem_pipeline_ctrl   (ex2mem_pipeline_ctrl),
         .ex2mem_pipeline_exc    (ex2mem_pipeline_exc),
         .ex2mem_pipeline_data   (ex2mem_pipeline_data)
@@ -206,15 +212,18 @@ module veriRISCV_core (
         .branch_take        (branch_take),
         .trap_take          (trap_take),
         .lsu_dbus_busy      (lsu_dbus_busy),
-        .load_stall_req     (hdu_load_stall),
+        .load_stall_req     (hdu_load_stall_req),
+        .muldiv_stall_req   (muldiv_stall_req),
         .ex_csr_read        (id2ex_pipeline_ctrl.csr_read),
         .mem_csr_read       (ex2mem_pipeline_ctrl.csr_read),
         .if_flush           (if_flush),
         .if_stall           (if_stall),
         .id_flush           (id_flush),
         .id_stall           (id_stall),
+        .id_bubble          (id_bubble),
         .ex_flush           (ex_flush),
         .ex_stall           (ex_stall),
+        .ex_bubble          (ex_bubble),
         .mem_flush          (mem_flush),
         .mem_stall          (mem_stall),
         .wb_stall           (wb_stall)

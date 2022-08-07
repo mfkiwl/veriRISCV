@@ -16,6 +16,7 @@ module ID (
     input                               rst,
     input                               id_flush,
     input                               id_stall,
+    input                               id_bubble,
 
     // from IF/ID stage pipeline
     input if2id_pipeline_ctrl_t         if2id_pipeline_ctrl,
@@ -35,7 +36,7 @@ module ID (
     input [`DATA_RANGE]                 wb_reg_writedata,
 
     // to HDU
-    output                              hdu_load_stall,
+    output                              hdu_load_stall_req,
     // to ID/EX pipelineline stage
     output id2ex_pipeline_ctrl_t        id2ex_pipeline_ctrl,
     output id2ex_pipeline_exc_t         id2ex_pipeline_exc,
@@ -99,7 +100,7 @@ module ID (
     // if an instruction depends on load
     assign load_match_ex  = ex_mem_read & (rs1_match_ex & regfile_rs1_read | rs2_match_ex & regfile_rs2_read);
     assign load_match_mem = mem_mem_read & (rs1_match_mem & regfile_rs1_read | rs2_match_mem & regfile_rs2_read);
-    assign hdu_load_stall = if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr & (load_match_ex | load_match_mem);
+    assign hdu_load_stall_req = if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr & (load_match_ex | load_match_mem);
 
     // pipeline stage
     assign stage_run = ~id_stall;
@@ -107,13 +108,13 @@ module ID (
 
     always @(posedge clk) begin
         if (rst) id2ex_pipeline_ctrl <= 0;
-        else if (stage_flush) id2ex_pipeline_ctrl <= 0;
-        else if (stage_run) id2ex_pipeline_ctrl <= id_stage_ctrl;   // then
+        else if (stage_flush || id_bubble) id2ex_pipeline_ctrl <= 0;
+        else if (stage_run) id2ex_pipeline_ctrl <= id_stage_ctrl;
     end
 
     always @(posedge clk) begin
         if (rst) id2ex_pipeline_exc <= 0;
-        else if (id_flush) id2ex_pipeline_exc <= 0;
+        else if (id_flush || id_bubble) id2ex_pipeline_exc <= 0;
         else if (stage_run) id2ex_pipeline_exc <= id_stage_exc;
     end
 
@@ -138,6 +139,11 @@ module ID (
     );
 
     decoder u_decoder (
+    `ifdef ISA_RV32M
+        .mul                    (id_stage_ctrl.mul),
+        .div                    (id_stage_ctrl.div),
+        .muldiv_opcode          (id_stage_data.muldiv_opcode),
+    `endif
         .instruction            (if2id_pipeline_data.instruction),
         .regfile_reg_write      (id_stage_ctrl.reg_write),
         .regfile_reg_regid      (id_stage_data.reg_regid),

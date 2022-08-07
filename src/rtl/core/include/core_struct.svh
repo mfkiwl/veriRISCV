@@ -68,6 +68,10 @@ typedef struct packed {
     logic                          mem_write;
     // other instruction
     logic                          mret;
+`ifdef ISA_RV32M
+    logic                          mul;
+    logic                          div;
+`endif
 } id2ex_pipeline_ctrl_t;
 
 typedef struct packed {
@@ -101,6 +105,9 @@ typedef struct packed {
     logic [`DATA_RANGE]            rs2_readdata;
     // memory
     logic [`CORE_MEM_OP_RANGE]     mem_opcode;
+`ifdef ISA_RV32M
+    logic [1:0]                    muldiv_opcode;
+`endif
 } id2ex_pipeline_data_t;
 
 // EX/MEM

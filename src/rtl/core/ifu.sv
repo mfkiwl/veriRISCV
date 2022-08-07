@@ -121,7 +121,7 @@ module ifu #(
     assign ifq_ren   = ~ifq_empty & ~ifu_stall;
     // We use afull here because when we initiate the read, we need to push that read data into FIFO
     // so we have to give the FIFO one more space to accept the data
-    assign ifq_afull  = ifq_wrptr_minus_rdptr == IFQ_DEPTH - 1;
+    assign ifq_afull  = ifq_wrptr_minus_rdptr >= IFQ_DEPTH - 1;
 
     always @(posedge clk) begin
         if (rst) ifq_wen <= 0;

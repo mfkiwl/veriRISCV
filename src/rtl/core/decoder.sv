@@ -25,6 +25,9 @@
 // 2. Memory read result
 // 3. PC + 4 (JAL/JALR)
 
+// FIXME:
+// Need logic for exception_ill_instr in Logic type and I type
+
 `include "core.svh"
 
 module decoder (
@@ -64,6 +67,13 @@ module decoder (
     output logic                            mem_write,
     output logic [`CORE_MEM_OP_RANGE]       mem_opcode,
 
+`ifdef ISA_RV32M
+    // mul and div
+    output logic                            mul,
+    output logic                            div,
+    output logic [1:0]                      muldiv_opcode,
+`endif
+
     // other instruction
     output logic                            mret,
 
@@ -80,6 +90,9 @@ module decoder (
     logic [`DEC_FUNC3_RANGE]     func3;
     logic [`DEC_SYSTEM_31_7_FIELD] instr_31_7;
 
+    //logic                        func7_equal_00x;
+    logic                        func7_equal_01x;
+    //logic                        func7_equal_20x;
 
     // ---------------------------------
     //  main logic
@@ -97,6 +110,9 @@ module decoder (
     assign csr_address = instruction[`DEC_CSR_ADDR_FIELD];
     assign instr_31_7 = instruction[`DEC_SYSTEM_31_7_FIELD];
 
+    //assign func7_equal_00x = func7 == 7'b0000000;   // For most of the logic type
+    assign func7_equal_01x = func7 == 7'b0000001;   // For MUL/DIV
+    //assign func7_equal_20x = func7 == 7'b0100000;   // For SLLI/SRLI/SRAI, SRA, SUB
 
     // Decode logic
     always @* begin
@@ -123,6 +139,12 @@ module decoder (
         alu_op2_sel_4 = 1'b0;
         mret = 1'b0;
 
+    `ifdef ISA_RV32M
+        mul = 0;
+        div = 0;
+        muldiv_opcode = 0;
+    `endif
+
         // LEVEL 1 - opcode
         case(opcode)
 
@@ -136,6 +158,14 @@ module decoder (
                 // Note that bit 5 of func7 is set for SUB and SRA so we set the forth bit of SUB/SRA to fcun7[5]
                 alu_opcode[2:0] = func3;
                 alu_opcode[3] = func7[5];
+
+                // For RV32M extension
+            `ifdef ISA_RV32M
+                mul = ~func3[2] & func7_equal_01x;
+                div = func3[2] & func7_equal_01x;
+                muldiv_opcode = func3[1:0];
+            `endif
+
             end
 
             // Immediate Type instruction

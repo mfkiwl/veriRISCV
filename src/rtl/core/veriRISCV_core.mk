@@ -2,6 +2,8 @@ REPO_ROOT ?= $(shell git rev-parse --show-toplevel)
 CPU_CORE_PATH = $(REPO_ROOT)/src/rtl/core
 
 VERILOG_SOURCES += $(CPU_CORE_PATH)/alu.sv
+VERILOG_SOURCES += $(CPU_CORE_PATH)/multiplier.sv
+VERILOG_SOURCES += $(CPU_CORE_PATH)/divider.sv
 VERILOG_SOURCES += $(CPU_CORE_PATH)/bu.sv
 VERILOG_SOURCES += $(CPU_CORE_PATH)/decoder.sv
 VERILOG_SOURCES += $(CPU_CORE_PATH)/EX.sv

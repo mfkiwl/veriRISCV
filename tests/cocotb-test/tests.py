@@ -3,7 +3,7 @@
 # Copyright 2022 by Heqing Huang (feipenghhq@gamil.com)
 # Author: Heqing Huang
 #
-# Date Created: 2022-08-05
+# Date Created: 2022-08-06
 # ------------------------------------------------------------------------------------------------
 # veriRISCV
 # ------------------------------------------------------------------------------------------------
@@ -207,6 +207,38 @@ async def riscv_tests_illegal(dut):
 async def riscv_tests_ma_addr(dut):
     await riscv_tests(dut, 'rv32mi-p-ma_addr')
 
+@cocotb.test()
+async def riscv_tests_mul(dut):
+    await riscv_tests(dut, 'rv32um-p-mul')
+
+@cocotb.test()
+async def riscv_tests_mulh(dut):
+    await riscv_tests(dut, 'rv32um-p-mulh')
+
+@cocotb.test()
+async def riscv_tests_mulhsu(dut):
+    await riscv_tests(dut, 'rv32um-p-mulhsu')
+
+@cocotb.test()
+async def riscv_tests_mulhu(dut):
+    await riscv_tests(dut, 'rv32um-p-mulhu')
+
+@cocotb.test()
+async def riscv_tests_div(dut):
+    await riscv_tests(dut, 'rv32um-p-div')
+
+@cocotb.test()
+async def riscv_tests_divu(dut):
+    await riscv_tests(dut, 'rv32um-p-divu')
+
+@cocotb.test()
+async def riscv_tests_rem(dut):
+    await riscv_tests(dut, 'rv32um-p-rem')
+
+@cocotb.test()
+async def riscv_tests_remu(dut):
+    await riscv_tests(dut, 'rv32um-p-remu')
+
 # riscv-arch-test Test
 
 @cocotb.test()
@@ -356,6 +388,38 @@ async def riscv_arch_test_srl(dut):
 @cocotb.test()
 async def riscv_arch_test_srli(dut):
     await riscv_arch_test(dut, 'I', 'srli-01')
+
+@cocotb.test()
+async def riscv_arch_test_mul(dut):
+    await riscv_arch_test(dut, 'M', 'mul-01')
+
+@cocotb.test()
+async def riscv_arch_test_mulh(dut):
+    await riscv_arch_test(dut, 'M', 'mulh-01')
+
+@cocotb.test()
+async def riscv_arch_test_mulhsu(dut):
+    await riscv_arch_test(dut, 'M', 'mulhsu-01')
+
+@cocotb.test()
+async def riscv_arch_test_mulhu(dut):
+    await riscv_arch_test(dut, 'M', 'mulhu-01')
+
+@cocotb.test()
+async def riscv_arch_test_div(dut):
+    await riscv_arch_test(dut, 'M', 'div-01')
+
+@cocotb.test()
+async def riscv_arch_test_divu(dut):
+    await riscv_arch_test(dut, 'M', 'divu-01')
+
+@cocotb.test()
+async def riscv_arch_test_rem(dut):
+    await riscv_arch_test(dut, 'M', 'rem-01')
+
+@cocotb.test()
+async def riscv_arch_test_remu(dut):
+    await riscv_arch_test(dut, 'M', 'remu-01')
 
 # dedicated-tests Test
 

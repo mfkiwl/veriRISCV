@@ -105,6 +105,16 @@
 `define DEC_BRANCH_BLTU     3'b110
 `define DEC_BRANCH_BGEU     3'b111
 
+// RV32M Standard Extension
+`define DEC_RV32M_MUL       3'b000
+`define DEC_RV32M_MULH      3'b001
+`define DEC_RV32M_MULHSU    3'b010
+`define DEC_RV32M_MULHU     3'b011
+`define DEC_RV32M_DIV       3'b100
+`define DEC_RV32M_DIVU      3'b101
+`define DEC_RV32M_REM       3'b110
+`define DEC_RV32M_REMU      3'b111
+
 // MRET
 `define DEC_SYSTEM_MRET     25'b0011000000100000000000000
 

@@ -25,6 +25,12 @@ Stage of the req: ID
 Affect: 1. Stall IF stage for 1 cycle.
         2. Flush ID stage for 1 cycle.
 
+** muldiv_stall_req **
+Cause: muliplier/divider
+Stage of the req: EX
+Affect: 1. Stall IF/ID stage
+        2. Flush EX stage
+
 ** ex_csr_read/mem_csr_read **:
 Cause: instruction depends on CSR instruction
 Stage of the req: ID
@@ -46,7 +52,7 @@ Affect: 1. Flush IF, ID, EX, MEM stage
 module hdu (
     input       lsu_dbus_busy,          // data bus wait request
     input       load_stall_req,         // load denpendence stall request
-
+    input       muldiv_stall_req,
     input       ex_csr_read,
     input       mem_csr_read,
     input       branch_take,
@@ -56,8 +62,10 @@ module hdu (
     output      if_stall,
     output      id_flush,
     output      id_stall,
+    output      id_bubble,
     output      ex_flush,
     output      ex_stall,
+    output      ex_bubble,
     output      mem_flush,
     output      mem_stall,
     output      wb_stall
@@ -71,13 +79,15 @@ module hdu (
     // General rule 1: if a pipeline stage is stalled, branch should not flush that stage
 
     assign if_flush = branch_take & ~if_stall | trap_take;
-    assign id_flush = branch_take & ~id_stall | csr_stall | trap_take | (load_stall_req & ~lsu_dbus_busy);
-
+    assign id_flush = branch_take & ~id_stall | trap_take;
     assign ex_flush  = trap_take;
     assign mem_flush = trap_take;
 
-    assign if_stall  = load_stall_req | csr_stall | lsu_dbus_busy;
-    assign id_stall  = lsu_dbus_busy;
+    assign id_bubble = csr_stall | (load_stall_req & ~lsu_dbus_busy);
+    assign ex_bubble = muldiv_stall_req;
+
+    assign if_stall  = load_stall_req | csr_stall | lsu_dbus_busy | muldiv_stall_req;
+    assign id_stall  = lsu_dbus_busy | muldiv_stall_req;
     assign ex_stall  = lsu_dbus_busy;
     assign mem_stall = lsu_dbus_busy;
     assign wb_stall  = lsu_dbus_busy;

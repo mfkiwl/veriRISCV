@@ -37,6 +37,7 @@ riscv_tests__rv32ui_p = [
 'lb', 'lbu', 'lh', 'lhu', 'lw', 'sb', 'sh', 'sw'
 ]
 riscv_tests__rv32mi_p = ['mcsr', 'csr', 'illegal', 'ma_addr']
+riscv_tests__rv32um_p = ['mul', 'mulh', 'mulhsu', 'mulhu', 'div', 'divu', 'rem', 'remu']
 
 # RISCV ARCH TEST
 riscv_arch_test__rv32i_m_i_instruction = [
@@ -47,6 +48,8 @@ riscv_arch_test__rv32i_m_i_instruction = [
     'sll', 'slli', 'slt', 'slti', 'sltiu', 'sltu',
     'sra', 'srai', 'srl', 'srli',
 ]
+
+riscv_arch_test__rv32i_m_m_instruction = ['mul', 'mulh', 'mulhsu', 'mulhu', 'div', 'divu', 'rem', 'remu']
 
 # DEDICATED TEST
 dedicated_test = ['software_interrupt', 'timer_interrupt']
@@ -115,11 +118,17 @@ def gen_tests():
         for test in riscv_tests__rv32mi_p:
             name = f"rv32mi-p-{test}"
             FH.write(gen_riscv_tests(name, test))
+        for test in riscv_tests__rv32um_p:
+            name = f"rv32um-p-{test}"
+            FH.write(gen_riscv_tests(name, test))
 
     if GEN_RISCV_ARCH_TEST:
         FH.write("\n# riscv-arch-test Test\n")
         for test in riscv_arch_test__rv32i_m_i_instruction:
             FH.write(gen_riscv_arch_tests('I', test))
+        for test in riscv_arch_test__rv32i_m_m_instruction:
+            FH.write(gen_riscv_arch_tests('M', test))
+
 
     if GEN_DEDICATED_TEST:
         FH.write("\n# dedicated-tests Test\n")

@@ -33,4 +33,6 @@ Updated the hazard handling for memory read dependence and CSR
   - Iterations/Sec   : 35
   - Iterations       : 1000
 
-Compared to previous one, total ticks increased by (1395287 - 1377065) / 1377065 = 1.3% due to the additional stall cycle for load dependence
+Compared to previous one, total ticks increased by (1395287 - 1377065) / 1377065 = 1.3% due to the additional stall cycle for load dependence.
+
+Assume that we have x such instructions has load dependence. And in general each instructions take 1 cycles to complete.
