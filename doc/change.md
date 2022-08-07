@@ -28,11 +28,23 @@ Updated the hazard handling for memory read dependence and CSR
 - clock speed: 50 Mhz
   - DE2 slack: 4.633 ns
 - coremark:
-  - Total ticks      : 1395287
+  - Total ticks      : 1394821
   - Total time (secs): 28
   - Iterations/Sec   : 35
   - Iterations       : 1000
 
-Compared to previous one, total ticks increased by (1395287 - 1377065) / 1377065 = 1.3% due to the additional stall cycle for load dependence.
+Compared to previous one, total ticks increased by (1394821 - 1377065) / 1377065 = 1.289% due to the additional stall cycle for load dependence.
 
 Assume that we have x such instructions has load dependence. And in general each instructions take 1 cycles to complete.
+
+## 08/06/2022 - Added RV32M Instruction
+
+### Performance
+
+- clock speed: 50 Mhz
+  - DE2 slack: 3.663 ns
+- coremark:
+  - Total ticks      : 556990
+  - Total time (secs): 11
+  - Iterations/Sec   : 90
+  - Iterations       : 1000

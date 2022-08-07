@@ -76,17 +76,15 @@ module hdu (
     // For simplicity, we just let csr complete before excuting the next instruction
     assign csr_stall = ex_csr_read | mem_csr_read;
 
-    // General rule 1: if a pipeline stage is stalled, branch should not flush that stage
-
-    assign if_flush = branch_take & ~if_stall | trap_take;
-    assign id_flush = branch_take & ~id_stall | trap_take;
+    assign if_flush  = branch_take & ~lsu_dbus_busy | trap_take;
+    assign id_flush  = branch_take & ~lsu_dbus_busy | trap_take;
     assign ex_flush  = trap_take;
     assign mem_flush = trap_take;
 
     assign id_bubble = csr_stall | (load_stall_req & ~lsu_dbus_busy);
     assign ex_bubble = muldiv_stall_req;
 
-    assign if_stall  = load_stall_req | csr_stall | lsu_dbus_busy | muldiv_stall_req;
+    assign if_stall  = lsu_dbus_busy | load_stall_req | csr_stall | muldiv_stall_req;
     assign id_stall  = lsu_dbus_busy | muldiv_stall_req;
     assign ex_stall  = lsu_dbus_busy;
     assign mem_stall = lsu_dbus_busy;

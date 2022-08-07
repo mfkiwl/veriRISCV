@@ -97,10 +97,10 @@ module ID (
 
     // Load dependence check
     // To improve timing, we do not forward the load data to EX stage, so we need to stall 2 cycles
-    // if an instruction depends on load
+    // If ID stage is flushed, then we should not stall
     assign load_match_ex  = ex_mem_read & (rs1_match_ex & regfile_rs1_read | rs2_match_ex & regfile_rs2_read);
     assign load_match_mem = mem_mem_read & (rs1_match_mem & regfile_rs1_read | rs2_match_mem & regfile_rs2_read);
-    assign hdu_load_stall_req = if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr & (load_match_ex | load_match_mem);
+    assign hdu_load_stall_req = if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr & ~id_flush & (load_match_ex | load_match_mem);
 
     // pipeline stage
     assign stage_run = ~id_stall;
