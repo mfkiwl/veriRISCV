@@ -11,8 +11,20 @@
 
 `include "core.svh"
 
-// FIXME:
-// If memory stage is stalled. We need to have a way to keep the read data otherwise the read data will be lost
+/**
+
+LSU is responsible for processing the memory read request and memory write request.
+
+It sends the incoming read/write request into the data bus. We assume the address going into the memory
+is aligned with the data width boundary so we need to do some processing.
+
+For write requests, it place the write data into the corresponding bytes and set the byteenable respectively.
+For read requests, it process the read data and do the needful based on the read operaion.
+
+The request is send in the MEM stage. Most of FPGA BRAM has an input register, so the actual read/write happens at
+the next clock cycle which is WB stage.
+
+*/
 
 module lsu (
     input                           clk,

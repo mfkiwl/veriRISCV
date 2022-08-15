@@ -6,11 +6,15 @@
 // ------------------------------------------------------------------------------------------------
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
-// Multiplier for RISCV
-// ------------------------------------------------------------------------------------------------
-// The simpliest algorithm for divide operation for hardware is to mimic the Long division.
+// Divider for RISCV
 // ------------------------------------------------------------------------------------------------
 
+/**
+
+The simpliest algorithm for divide operation for hardware is to mimic the Long division.
+This divider design used the long division algorithm.
+
+*/
 
 `include "core.svh"
 

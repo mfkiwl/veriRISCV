@@ -9,6 +9,13 @@
 // Memory Stage
 // ------------------------------------------------------------------------------------------------
 
+/**
+
+MEM stage mainly contains the load store unit (LSU)
+
+It also contains a holding logic to hold the read data if the pipeline is stalled.
+
+*/
 
 `include "core.svh"
 

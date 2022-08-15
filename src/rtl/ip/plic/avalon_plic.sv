@@ -84,5 +84,7 @@ module avalon_plic (
 
     always @(posedge clk) external_interrupt <= |interrupt_masked;
 
+    assign avn_waitrequest = 0;
+
 
 endmodule

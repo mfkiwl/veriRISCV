@@ -105,4 +105,6 @@ module avalon_clic (
     assign software_interrupt = msip;
     always @(posedge clk) timer_interrupt <= (mtime >= mtimecmp) & (mtimecmp != 0);
 
+    assign avn_waitrequest = 0;
+
 endmodule

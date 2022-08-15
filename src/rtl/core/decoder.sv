@@ -9,21 +9,27 @@
 // Instruction decoder
 // ------------------------------------------------------------------------------------------------
 
-// Notes for the forwarding logic and ALU operand 1 and ALU operand 2 source
 
-// ALU operand 1 source:
-//  1. register rs1 data
-//  2. 0 (for LUI)
-//  3. pc (for AUIPC)
-// ALU operand 2 source:
-//  1. register rs2 data
-//  2. immediate value
-//  3. 4 (for JAL/JALR)
+/**
 
-// Register writedata source
-// 1. ALU result
-// 2. Memory read result
-// 3. PC + 4 (JAL/JALR)
+ALU operand 1 source:
+    1. register rs1 data
+    2. 0 (for LUI)
+    3. pc (for AUIPC)
+
+ALU operand 2 source:
+    1. register rs2 data
+    2. immediate value
+    3. 4 (for JAL/JALR)
+
+Register writedata source
+    1. ALU result
+    2. Memory read result
+    3. PC + 4 (JAL/JALR)
+
+*/
+
+
 
 // FIXME:
 // Need logic for exception_ill_instr in Logic type and I type
@@ -43,10 +49,10 @@ module decoder (
     output logic                            regfile_rs2_read,
 
     // branch and jump
-    output logic                            branch,             // indicating branch instruction
-    output logic [`CORE_BRANCH_OP_RANGE]    branch_opcode,
-    output logic                            jal,                // indicating jal instruction
-    output logic                            jalr,               // indicating jalr instruction
+    output logic                            branch,             // branch instruction
+    output logic [`CORE_BRANCH_OP_RANGE]    branch_opcode,      // branch type
+    output logic                            jal,                // jal instruction
+    output logic                            jalr,               // jalr instruction
 
     // alu
     output logic                            alu_op1_sel_zero,   // for LUI
@@ -57,9 +63,9 @@ module decoder (
     output logic [`DATA_RANGE]              imm_value,
 
     // csr
-    output logic                            csr_read,             // indicating read csr
-    output logic                            csr_write,
-    output logic [`CORE_CSR_OP_RANGE]       csr_write_opcode,
+    output logic                            csr_read,           // csr read
+    output logic                            csr_write,          // csr write
+    output logic [`CORE_CSR_OP_RANGE]       csr_write_opcode,   // csr write type
     output logic [`CORE_CSR_ADDR_RANGE]     csr_address,
 
     // memory
@@ -90,9 +96,7 @@ module decoder (
     logic [`DEC_FUNC3_RANGE]     func3;
     logic [`DEC_SYSTEM_31_7_FIELD] instr_31_7;
 
-    //logic                        func7_equal_00x;
     logic                        func7_equal_01x;
-    //logic                        func7_equal_20x;
 
     // ---------------------------------
     //  main logic
@@ -110,9 +114,7 @@ module decoder (
     assign csr_address = instruction[`DEC_CSR_ADDR_FIELD];
     assign instr_31_7 = instruction[`DEC_SYSTEM_31_7_FIELD];
 
-    //assign func7_equal_00x = func7 == 7'b0000000;   // For most of the logic type
     assign func7_equal_01x = func7 == 7'b0000001;   // For MUL/DIV
-    //assign func7_equal_20x = func7 == 7'b0100000;   // For SLLI/SRLI/SRAI, SRA, SUB
 
     // Decode logic
     always @* begin
@@ -267,7 +269,7 @@ module decoder (
         endcase
     end
 
-    //  - CHECK ME
+    // immediate values
     always @(*) begin
         case(opcode)
             // In the default section

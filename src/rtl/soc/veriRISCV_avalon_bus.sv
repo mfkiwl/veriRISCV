@@ -177,7 +177,7 @@ module veriRISCV_avalon_bus (
     // peripheral bus decoder
     // ----------------------------------------
 
-    localparam PERI_BUS_ND = 6;  // number of device
+    localparam PERI_BUS_ND = 5;  // number of device
     localparam PERI_BUS_AW = 32;
     localparam PERI_BUS_DW = 32;
 
@@ -269,17 +269,17 @@ module veriRISCV_avalon_bus (
     assign peri_devices_address_high[1] = `PLIC_HIGH;
     `CONNECT_AVALON_S_DEVICE(peri, plic, 1)
 
-    // device 1: GPIO0
+    // device 2: GPIO0
     assign peri_devices_address_low[2]  = `GPIO0_LOW;
     assign peri_devices_address_high[2] = `GPIO0_HIGH;
     `CONNECT_AVALON_S_DEVICE(peri, gpio0, 2)
 
-    // device 2: GPIO1
+    // device 3: GPIO1
     assign peri_devices_address_low[3]  = `GPIO1_LOW;
     assign peri_devices_address_high[3] = `GPIO1_HIGH;
     `CONNECT_AVALON_S_DEVICE(peri, gpio1, 3)
 
-    // device 3: UART0
+    // device 4: UART0
     assign peri_devices_address_low[4]  = `UART0_LOW;
     assign peri_devices_address_high[4] = `UART0_HIGH;
     `CONNECT_AVALON_S_DEVICE(peri, uart0, 4)

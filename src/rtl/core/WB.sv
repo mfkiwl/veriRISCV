@@ -10,6 +10,12 @@
 // ------------------------------------------------------------------------------------------------
 
 
+/**
+
+WB stage contains the csr module and the trap control logic
+
+*/
+
 `include "core.svh"
 
 module WB (
@@ -94,13 +100,14 @@ module WB (
 
     // To improve timing:
     // - For CSR we wait till the CSR is completed in WB stage so we don't forward CSR data to EX stage
-    // - We do not forward the memory read data to EX stage because memory data come back at EX stage and we also need to post process it
+    // - We do not forward the memory read data to EX stage because memory data come back at EX stage
+    //   and we also need to post process it
     assign wb_forward_data  = mem2wb_pipeline_data.reg_writedata;
 
     assign csr_read = mem2wb_pipeline_ctrl.csr_read;
     assign csr_write = mem2wb_pipeline_ctrl.csr_write;
 
-    // NOTE: when we return from interrupt, we need to return to the "next instructions" of the instruction when interrupts is taken
+    // When we return from interrupt, wshould return to the "next instructions" of the instruction when interrupts is taken
     // In general, people would think that the "next instructions" is pc + 4, however, this is not always true.
     // For example, if the instruction in WB stage is a taken branch, then the next instruction is not pc + 4.
     // One reasonable solution here is to use the instruction in memory stage as the next instruction,

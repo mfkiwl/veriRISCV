@@ -7,17 +7,23 @@
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
 // Multiplier for RISCV
-// ------------------------------------------------------------------------------------------------
-//
-// Mul will raise stall to stall the pipeline,
-// if a req is pending and stall is deasserted, then the data is read
-//
-// Opcode:
-//      MUL       2'b00
-//      MULH      2'b01
-//      MULHSU    2'b10
-//      MULHU     2'b11
-// ------------------------------------------------------------------------------------------------
+
+/**
+
+This multiplier is mainly targeting FPGA so we use * operator directly.
+We have input register and output register so we expect the logic to be mapped into the FPGA DSP logic.
+
+Mul will raise stall to stall the pipeline,
+
+If a req is pending and stall is deasserted, then the data is valid and send to the next stage.
+
+opcode used in opcode signal:
+    MUL       2'b00
+    MULH      2'b01
+    MULHSU    2'b10
+    MULHU     2'b11
+
+*/
 
 
 `include "core.svh"
@@ -26,7 +32,7 @@ module multiplier (
     input                   clk,
     input                   rst,
     input                   req,
-    input  [1:0]            opcode, // 2 bit is good enough
+    input  [1:0]            opcode,
     input  [`DATA_RANGE]    a,      // rs1
     input  [`DATA_RANGE]    b,      // rs2
     output [`DATA_RANGE]    o,      // rd

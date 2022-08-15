@@ -6,8 +6,33 @@
 // ------------------------------------------------------------------------------------------------
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
-// Decode Stage
+// Instruction Decode Stage
 // ------------------------------------------------------------------------------------------------
+
+
+/**
+
+ID stage contains the instruction decoder and the register file.
+
+ID stage also detects if the instruction in ID stage depends on a load instruction in the pipeline.
+Unlike the typcial 5 stage pipeline model touch in Computer architecture class,
+here we do not forward the read data from the load instruction to EX stage at all so we need to stall the
+pipelines for 2 clocks.
+
+Here are the reasons:
+- In our micro-architecture, the memory read/write requests are sent to the bus at MEM stage.
+  Most of FPGA BRAM has an input register, so the actual read/write happens at the next clock cycle which is WB stage
+  so the timing cricital path is at the WB stage.
+- If we forward the read data from WB stage to EX stage, then the timing critical path will be:
+  input_register clk to q + internal FPGA BRAM read delay + post process the read data + forwarding logic
+  + ALU delay + setup time
+  The delay is too high which almost slow down the clock speed by half in FPGA
+
+
+To Improve timing in EX stage, we check if we need to foward in EX stage, and store the information in
+pipeline registers. (pipeline retiming technique)
+
+*/
 
 `include "core.svh"
 
@@ -97,14 +122,16 @@ module ID (
 
     // Load dependence check
     // To improve timing, we do not forward the load data to EX stage, so we need to stall 2 cycles
-    // If ID stage is flushed, then we should not stall
     assign load_match_ex  = ex_mem_read & (rs1_match_ex & regfile_rs1_read | rs2_match_ex & regfile_rs2_read);
     assign load_match_mem = mem_mem_read & (rs1_match_mem & regfile_rs1_read | rs2_match_mem & regfile_rs2_read);
-    assign hdu_load_stall_req = if2id_pipeline_ctrl.valid & ~id_stage_exc.exception_ill_instr & ~id_flush & (load_match_ex | load_match_mem);
+    assign hdu_load_stall_req = if2id_pipeline_ctrl.valid           // the instruction itself is valid
+                              & ~id_stage_exc.exception_ill_instr   // instruction is not a illegal instruction
+                              & ~id_flush                           // If ID stage is flushed, then we should not stall
+                              & (load_match_ex | load_match_mem);
 
     // pipeline stage
     assign stage_run = ~id_stall;
-    assign stage_flush = id_flush | (~if2id_pipeline_ctrl.valid | id_stage_exc.exception_ill_instr) & stage_run; // flush has priority over stall
+    assign stage_flush = id_flush | (~if2id_pipeline_ctrl.valid | id_stage_exc.exception_ill_instr) & stage_run;
 
     always @(posedge clk) begin
         if (rst) id2ex_pipeline_ctrl <= 0;

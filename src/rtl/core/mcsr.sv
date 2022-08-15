@@ -164,6 +164,7 @@ module mcsr
         case(csr_address)
             12'h300: csr_readdata = mstatus;
             12'h301: csr_readdata = misa;
+            12'h304: csr_readdata = mie;
             12'h305: csr_readdata = mtvec;
             12'h340: csr_readdata = mscratch;
             12'h341: csr_readdata = mepc;

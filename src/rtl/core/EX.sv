@@ -9,6 +9,15 @@
 // Execution Stage
 // ------------------------------------------------------------------------------------------------
 
+/**
+
+EX stages contrains ALU, forwarding logic, and operand selection MUX.
+
+It also contains an optional multiplier and an optional divider to support RISCV RV32M instruction set.
+This is controlled by the ISA_RV32M macro
+
+*/
+
 `include "core.svh"
 
 module EX (

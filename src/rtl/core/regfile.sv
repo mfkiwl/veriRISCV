@@ -39,8 +39,8 @@ module regfile (
         if (reg_write) register_file[reg_regid] <= reg_writedata;
     end
 
-    // Note 1: Register_file $0 is always read zero. Here we use a mux to select 0 when read reg_regid is 0
-    // Note 2: We formard the data from WB stage if there is a dependence here.
+    // Register_file $0 is always read zero. Here we use a mux to select 0 when read reg_regid is 0
+    // We formard the data from WB stage if there is a dependence here.
 
     // Read port A
     assign rs1_regid_eq_zero = (rs1_regid == 0);

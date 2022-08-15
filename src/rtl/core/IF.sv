@@ -9,9 +9,18 @@
 // Instruction Fetch stage
 // ------------------------------------------------------------------------------------------------
 
+/**
+
+IF stage contains the Instruction Fetch Queue (IFQ)
+
+*/
+
 `include "core.svh"
 
-module IF (
+module IF #(
+    parameter IFQ_DEPTH = 4,    // instruction fetch queue depth
+    parameter IFQ_AFULL_TH  = 1 // instruction fetch queue almost full threshold
+) (
     input                   clk,
     input                   rst,
     // stage control
@@ -35,7 +44,10 @@ module IF (
     // Module instantiation
     // ---------------------------------
 
-    ifu u_ifu (
+    ifu #(
+        .IFQ_DEPTH      (IFQ_DEPTH),
+        .IFQ_AFULL_TH   (IFQ_AFULL_TH))
+    u_ifu (
         .clk                (clk),
         .rst                (rst),
         .ifu_flush          (if_flush),
