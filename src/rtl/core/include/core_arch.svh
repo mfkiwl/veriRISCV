@@ -31,4 +31,8 @@
 // ISA
 `define ISA_RV32M
 
+// Cache
+`define USE_ICACHE
+//`define USE_DCACHE
+
 `endif

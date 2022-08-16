@@ -22,6 +22,12 @@ module veriRISCV_soc #(
     parameter SRAM_AW = 18,
     parameter SRAM_DW = 16,
 `endif
+`ifdef USE_ICACHE
+    parameter ICACHE_LINE_SIZE = 4, // cache line size in bytes, support 4 byte only for now
+    parameter ICACHE_DEPTH = 32,    // depth of the cache set. Must be power of 2
+`endif
+    parameter IFQ_DEPTH = 16,       // instruction fetch queue depth. Set to 16 so it is mapped to FPGA BRAM
+    parameter IFQ_AFULL_TH = 1,     // instruction fetch queue almost full threshold
     parameter GPIO0_WIDTH = 32,
     parameter GPIO1_WIDTH = 32,
     parameter UART_BAUD_RATE = 115200,
@@ -164,7 +170,12 @@ module veriRISCV_soc #(
     // veriRISCV Core
     // --------------------------------
 
-    veriRISCV_core u_veriRISCV_core(
+    veriRISCV_core #(
+        .ICACHE_LINE_SIZE   (ICACHE_LINE_SIZE),
+        .ICACHE_DEPTH       (ICACHE_DEPTH),
+        .IFQ_DEPTH          (IFQ_DEPTH),
+        .IFQ_AFULL_TH       (IFQ_AFULL_TH))
+    u_veriRISCV_core(
         .clk,
         .rst(core_rst),
         .ibus_avalon_req,

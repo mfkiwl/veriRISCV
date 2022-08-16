@@ -12,7 +12,14 @@
 
 `include "core.svh"
 
-module veriRISCV_core (
+module veriRISCV_core #(
+`ifdef USE_ICACHE
+    parameter ICACHE_LINE_SIZE = 4,  // cache line size in bytes, support 4 byte only for now
+    parameter ICACHE_DEPTH = 32,     // depth of the cache set. Must be power of 2
+`endif
+    parameter IFQ_DEPTH = 16,   // instruction fetch queue depth. Set to 16 so it is mapped to FPGA BRAM
+    parameter IFQ_AFULL_TH = 1  // instruction fetch queue almost full threshold
+)(
     input                   clk,
     input                   rst,
     // instruction bus
@@ -83,17 +90,30 @@ module veriRISCV_core (
     logic                   hdu_load_stall_req;
     logic                   muldiv_stall_req;
 
+`ifdef USE_ICACHE
+    avalon_req_t            icache_avn_req;
+    avalon_resp_t           icache_avn_resp;
+`endif
+
     // ---------------------------------
     // IF stage
     // ---------------------------------
 
-    IF u_IF(
+    IF #(
+        .IFQ_DEPTH      (IFQ_DEPTH),
+        .IFQ_AFULL_TH   (IFQ_AFULL_TH))
+    u_IF(
         .clk                    (clk),
         .rst                    (rst),
         .if_flush               (if_flush),
         .if_stall               (if_stall),
+    `ifdef USE_ICACHE
+        .ibus_avalon_req        (icache_avn_req),
+        .ibus_avalon_resp       (icache_avn_resp),
+    `else
         .ibus_avalon_req        (ibus_avalon_req),
         .ibus_avalon_resp       (ibus_avalon_resp),
+    `endif
         .branch_take            (branch_take),
         .branch_pc              (branch_pc),
         .trap_take              (trap_take),
@@ -228,6 +248,25 @@ module veriRISCV_core (
         .mem_stall          (mem_stall),
         .wb_stall           (wb_stall)
     );
+
+    // ---------------------------------
+    // I-CACHE
+    // ---------------------------------
+
+`ifdef USE_ICACHE
+    direct_cache #(
+        .CACHE_LINE_SIZE    (ICACHE_LINE_SIZE),
+        .CACHE_DEPTH        (ICACHE_DEPTH))
+    u_instruction_cache (
+        .clk                (clk),
+        .rst                (rst),
+        .core_avn_req       (icache_avn_req),
+        .core_avn_resp      (icache_avn_resp),
+        .mem_avn_req        (ibus_avalon_req),
+        .mem_avn_resp       (ibus_avalon_resp)
+    );
+
+`endif
 
 endmodule
 

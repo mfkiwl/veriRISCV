@@ -19,7 +19,7 @@ IF stage contains the Instruction Fetch Queue (IFQ)
 
 module IF #(
     parameter IFQ_DEPTH = 4,    // instruction fetch queue depth
-    parameter IFQ_AFULL_TH  = 1 // instruction fetch queue almost full threshold
+    parameter IFQ_AFULL_TH = 1  // instruction fetch queue almost full threshold
 ) (
     input                   clk,
     input                   rst,
