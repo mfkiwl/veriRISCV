@@ -19,7 +19,8 @@ VERILOG_SOURCES += $(CPU_CORE_PATH)/csr.sv
 VERILOG_SOURCES += $(CPU_CORE_PATH)/trap_ctrl.sv
 VERILOG_SOURCES += $(CPU_CORE_PATH)/WB.sv
 VERILOG_SOURCES += $(CPU_CORE_PATH)/cache/cache_set.sv
-VERILOG_SOURCES += $(CPU_CORE_PATH)/cache/direct_cache.sv
+VERILOG_SOURCES += $(CPU_CORE_PATH)/cache/dir_cache.sv
+VERILOG_SOURCES += $(CPU_CORE_PATH)/cache/sa_cache.sv
 
 VERILOG_SOURCES += $(CPU_CORE_PATH)/veriRISCV_core.sv
 

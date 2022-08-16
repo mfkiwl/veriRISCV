@@ -58,7 +58,8 @@ class ENV:
 
         # 1. check if the avalon bus waitrequest is set or not
         waitrequest =  self.dut.u_veriRISCV_soc.ram_avn_waitrequest
-        while waitrequest.value.integer == 1:
+        write = self.dut.u_veriRISCV_soc.ram_avn_write
+        while waitrequest.value.integer == 1 and write.value.integer == 1:
             await RisingEdge(self.dut.clk)
 
         # 2. If we use sram, make sure that sram is not being written when we get the data from sram

@@ -26,7 +26,7 @@
 `define RF_RANGE        $clog2(`REG_NUM)-1:0
 
 // Immediate number size for pipeline stage
-`define CORE_IMM_RANGE          19:0
+`define CORE_IMM_RANGE          19:0+
 
 // ISA
 `define ISA_RV32M

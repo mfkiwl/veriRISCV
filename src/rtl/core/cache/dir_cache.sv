@@ -21,9 +21,9 @@ Bit 31 = 0: Cacheable address
 
 `include "core.svh"
 
-module direct_cache #(
+module dir_cache #(
     parameter CACHE_LINE_SIZE = 4,      // cache line size in bytes, support 4 byte only for now
-    parameter CACHE_DEPTH = 32          // depth of the cache set. Must be power of 2
+    parameter CACHE_SET_DEPTH = 32      // depth of the cache set. Must be power of 2
 ) (
     input                   clk,
     input                   rst,
@@ -39,18 +39,18 @@ module direct_cache #(
     // Signal Declaration
     // ---------------------------------
 
-    logic                       core_read;
-    logic                       core_write;
-    logic [`DATA_RANGE]         core_address;
-    logic [`DATA_RANGE]         core_writedata;
-    logic [`DATA_WIDTH/8-1:0]   core_byteenable;
-    logic [`DATA_RANGE]         core_readdata;
+    logic                       set_read;
+    logic                       set_write;
+    logic [`DATA_RANGE]         set_address;
+    logic [`DATA_RANGE]         set_writedata;
+    logic [`DATA_WIDTH/8-1:0]   set_byteenable;
+    logic [`DATA_RANGE]         set_readdata;
     logic                       set_hit;
     logic                       set_dirty;
     logic [`DATA_RANGE]         set_dirty_data;
-    logic                       update_write;
-    logic [`DATA_RANGE]         update_address;
-    logic [`DATA_RANGE]         update_data;
+    logic                       set_fill;
+    logic [`DATA_RANGE]         set_fill_address;
+    logic [`DATA_RANGE]         set_fill_data;
 
     // state machine
     typedef enum logic[1:0] {IDLE, FLUSH, RETRIVE} state_t;
@@ -61,7 +61,7 @@ module direct_cache #(
     logic                       non_cacheable;
 
     reg                         read_from_memory;
-    reg [`DATA_RANGE]           core_address_s1;    // need to store the address for cache update
+    reg [`DATA_RANGE]           set_address_s1;    // need to store the address for cache update
 
 
     // ---------------------------------
@@ -72,18 +72,18 @@ module direct_cache #(
     assign cache_miss = cache_access & ~set_hit;
     assign non_cacheable = core_avn_req.address[`DATA_WIDTH-1];
 
-    assign core_address = core_avn_req.address;
-    assign core_byteenable = core_avn_req.byte_enable;
+    assign set_address = core_avn_req.address;
+    assign set_byteenable = core_avn_req.byte_enable;
 
-    always @(posedge clk) core_address_s1 <= core_address;
+    always @(posedge clk) set_address_s1 <= core_avn_req.address;
     always @(posedge clk) read_from_memory <= mem_avn_req.read & ~mem_avn_resp.waitrequest;
 
     assign core_avn_resp.readdata = read_from_memory ? mem_avn_resp.readdata
-                                                     : core_readdata;   // the read data already has 1 read latency
+                                                     : set_readdata;   // the read data already has 1 read latency
 
-    assign update_write = read_from_memory;
-    assign update_data  = mem_avn_resp.readdata;
-    assign update_address = core_address_s1;
+    assign set_fill = read_from_memory;
+    assign set_fill_data  = mem_avn_resp.readdata;
+    assign set_fill_address = set_address_s1;
 
     // state machine
     always @(posedge clk) begin
@@ -93,8 +93,8 @@ module direct_cache #(
 
     always @* begin
 
-        core_read = 0;
-        core_write = 0;
+        set_read = 0;
+        set_write = 0;
 
         core_avn_resp.waitrequest = 0;
 
@@ -116,8 +116,8 @@ module direct_cache #(
             // => if the line is not dirty, we go to RETRIVE state to read the new data from memory.
             IDLE: begin
 
-                core_read = core_avn_req.read;
-                core_write = core_avn_req.write;
+                set_read = core_avn_req.read;
+                set_write = core_avn_req.write;
 
                 core_avn_resp.waitrequest = non_cacheable & mem_avn_resp.waitrequest
                                           | ~non_cacheable & cache_miss & mem_avn_resp.waitrequest;
@@ -172,23 +172,28 @@ module direct_cache #(
     // ---------------------------------
 
     cache_set #(
-        .SIZE   (CACHE_LINE_SIZE),
-        .DEPTH  (CACHE_DEPTH))
+        .CACHE_LINE_SIZE    (CACHE_LINE_SIZE),
+        .CACHE_SET_DEPTH    (CACHE_SET_DEPTH),
+        .NRU_LOGIC          (0))
     u_cache_set (
-        .clk                (clk),
-        .rst                (rst),
-        .core_read          (core_read),
-        .core_write         (core_write),
-        .core_address       (core_address),
-        .core_writedata     (core_writedata),
-        .core_byteenable    (core_byteenable),
-        .core_readdata      (core_readdata),
-        .set_hit            (set_hit),
-        .set_dirty          (set_dirty),
-        .set_dirty_data     (set_dirty_data),
-        .update_write       (update_write),
-        .update_address     (update_address),
-        .update_data        (update_data)
+        .clk            (clk),
+        .rst            (rst),
+        .read           (set_read),
+        .write          (set_write),
+        .address        (set_address),
+        .writedata      (set_writedata),
+        .byteenable     (set_byteenable),
+        .readdata       (set_readdata),
+        .hit            (set_hit),
+        .dirty          (set_dirty),
+        .dirty_data     (set_dirty_data),
+        .valid          (),
+        .fill           (set_fill),
+        .fill_address   (set_fill_address),
+        .fill_data      (set_fill_data),
+        .set_nru        (1'b0),
+        .clr_nru        (1'b0),
+        .nru            ()
     );
 
 endmodule
