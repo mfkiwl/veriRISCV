@@ -126,20 +126,27 @@ module cache_set #(
     end
 
     // nru logic for Set associative cache
-    generate
-    if (NRU_LOGIC) begin
+    //generate
+    //if (NRU_LOGIC) begin: _nru_logic
 
-    reg [CACHE_SET_DEPTH-1:0] cache_mem_nru;
+        reg [CACHE_SET_DEPTH-1:0] cache_mem_nru;
 
-    always @(posedge clk) begin
-        if (rst) cache_mem_nru <= -1;   // set default NRU to 1 (Important!)
-        else begin
-            if (clr_nru) cache_mem_nru[cache_set_addr] <= 0;
-            else if (set_nru) cache_mem_nru[cache_set_addr] <= 1'b1;
+        assign nru = cache_mem_nru[cache_set_addr];
+
+        always @(posedge clk) begin
+            if (rst) cache_mem_nru <= -1;   // set default NRU to 1 (Important!)
+            else begin
+                if (clr_nru) cache_mem_nru[cache_set_addr] <= 0;
+                else if (set_nru) cache_mem_nru[cache_set_addr] <= 1'b1;
+            end
         end
-    end
 
-    end
-    endgenerate
+    //end
+    //else begin: _no_nru_logic
+
+    //    assign nru = 0;
+
+    //end
+    //endgenerate
 
 endmodule

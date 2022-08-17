@@ -218,11 +218,12 @@ int uart_write(uint32_t base, char *buf, size_t nbytes) {
 
 #else
 
-void uart_write(uint32_t base, char *buf, size_t nbytes) {
+int uart_write(uint32_t base, char *buf, size_t nbytes) {
 
     uart_txdata_s _txdata;
+    int count = nbytes;
 
-    while (nbytes > 0) {
+    while (count > 0) {
         // wait till the txdata fifo has space
         do {
             _txdata.reg = *REG32_PTR(base, UART_TXDATA_REG);
@@ -232,8 +233,9 @@ void uart_write(uint32_t base, char *buf, size_t nbytes) {
         UART_TXDATA_WRITE(base, _txdata.reg);
 
         buf++;
-        nbytes--;
+        count--;
     }
+    return (nbytes - count);
 }
 
 

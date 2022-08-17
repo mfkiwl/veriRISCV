@@ -176,24 +176,24 @@ module dir_cache #(
         .CACHE_SET_DEPTH    (CACHE_SET_DEPTH),
         .NRU_LOGIC          (0))
     u_cache_set (
-        .clk            (clk),
-        .rst            (rst),
-        .read           (set_read),
-        .write          (set_write),
-        .address        (set_address),
-        .writedata      (set_writedata),
-        .byteenable     (set_byteenable),
-        .readdata       (set_readdata),
-        .hit            (set_hit),
-        .dirty          (set_dirty),
-        .dirty_data     (set_dirty_data),
-        .valid          (),
-        .fill           (set_fill),
-        .fill_address   (set_fill_address),
-        .fill_data      (set_fill_data),
-        .set_nru        (1'b0),
-        .clr_nru        (1'b0),
-        .nru            ()
+        .clk                (clk),
+        .rst                (rst),
+        .read               (set_read),
+        .write              (set_write),
+        .address            (set_address),
+        .writedata          (set_writedata),
+        .byteenable         (set_byteenable),
+        .readdata           (set_readdata),
+        .hit                (set_hit),
+        .dirty              (set_dirty),
+        .dirty_data         (set_dirty_data),
+        .valid              (),
+        .fill               (set_fill),
+        .fill_address       (set_fill_address),
+        .fill_data          (set_fill_data),
+        .set_nru            (1'b0),
+        .clr_nru            (1'b0),
+        .nru                ()
     );
 
 endmodule

@@ -24,7 +24,7 @@ module veriRISCV_soc #(
 `endif
 `ifdef USE_ICACHE
     parameter ICACHE_LINE_SIZE = 4, // cache line size in bytes, support 4 byte only for now
-    parameter ICACHE_DEPTH = 64,    // depth of the cache set. Must be power of 2
+    parameter ICACHE_DEPTH = 128,    // depth of the cache set. Must be power of 2
     parameter ICACHE_WAYS = 2,      // cache ways. 1 => direct mapped. >=2 set associative
 `endif
     parameter IFQ_DEPTH = 16,       // instruction fetch queue depth. Set to 16 so it is mapped to FPGA BRAM

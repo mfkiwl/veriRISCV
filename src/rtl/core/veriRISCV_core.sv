@@ -16,7 +16,7 @@ module veriRISCV_core #(
 `ifdef USE_ICACHE
     parameter ICACHE_LINE_SIZE = 4,  // cache line size in bytes, support 4 byte only for now
     parameter ICACHE_DEPTH = 32,     // depth of the cache set. Must be power of 2
-    parameter ICACHE_WAYS = 1,       // cache ways. 1 => direct mapped. >=2 set associative
+    parameter ICACHE_WAYS = 2,       // cache ways. 1 => direct mapped. >=2 set associative
 `endif
     parameter IFQ_DEPTH = 16,   // instruction fetch queue depth. Set to 16 so it is mapped to FPGA BRAM
     parameter IFQ_AFULL_TH = 1  // instruction fetch queue almost full threshold
@@ -255,22 +255,7 @@ module veriRISCV_core #(
     // ---------------------------------
 
 `ifdef USE_ICACHE
-generate
-if (ICACHE_WAYS == 1) begin:_dir_cache
-    dir_cache #(
-        .CACHE_LINE_SIZE    (ICACHE_LINE_SIZE),
-        .CACHE_SET_DEPTH    (ICACHE_DEPTH))
-    u_instruction_cache (
-        .clk                (clk),
-        .rst                (rst),
-        .core_avn_req       (icache_avn_req),
-        .core_avn_resp      (icache_avn_resp),
-        .mem_avn_req        (ibus_avalon_req),
-        .mem_avn_resp       (ibus_avalon_resp)
-    );
-end
-else begin:_sa_cache
-    sa_cache #(
+    cache #(
         .CACHE_LINE_SIZE    (ICACHE_LINE_SIZE),
         .CACHE_SET_DEPTH    (ICACHE_DEPTH),
         .CACHE_WAYS         (ICACHE_WAYS))
@@ -282,8 +267,6 @@ else begin:_sa_cache
         .mem_avn_req        (ibus_avalon_req),
         .mem_avn_resp       (ibus_avalon_resp)
     );
-end
-endgenerate
 `endif
 
 endmodule

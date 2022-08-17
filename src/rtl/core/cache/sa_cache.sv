@@ -17,6 +17,22 @@ For simplicity we use Address bit 31 (MSB) to deternmins whether the address is 
 Bit 31 = 1: Non-cacheable address
 Bit 31 = 0: Cacheable address
 
+Replacement Policy:
+
+We use NRU (Not Recently Used) algorithm for repleacment instead of LRU.
+LRU is better then NRU but it is hard for hardware implementations.
+NRU use similar idea of LRU. We keep track of whether the cell has been recently used or not.
+When replacement is needed, we choose those cells that have not been recently used.
+
+Here is how nru is implemented:
+
+- For each set in a cacheline, we use a nru indicator to  keep track of whether the cell is recently access or not.
+- The nru bit is initially set to 1 after reset indicating that it is not recently used.
+- When we have a cache hit on a cell or a fill in a cell, we clear the nru bit indicating that we have recently use.
+- If all the nru bits will become zero after the above actions, we reset the nru bit for OTHER cells to 1.
+
+// FIXME: cache is not fully work with sram and interrupt enabled for uart
+
 */
 
 `include "core.svh"
@@ -62,7 +78,8 @@ module sa_cache #(
     logic                                       set_hit_agg;
     logic                                       set_dirty_agg;
 
-    logic                                       all_nru; // All set has been recently used. Need to reset the NRU bit
+    logic                                       all_ru_hit;     // all recently used after hit
+    logic                                       all_ru_miss;    // all recently used after miss
     logic [$clog2(CACHE_WAYS)-1:0]              hit_set_id;
     logic [CACHE_WAYS-1:0]                      victim_set;
     logic [$clog2(CACHE_WAYS)-1:0]              victim_set_id;
@@ -100,15 +117,20 @@ module sa_cache #(
     assign victim_set = bit_scan(set_nru);
     assign victim_set_id = onehot2binary(victim_set);
 
-    assign all_nru = ~(|set_nru);
+    // both set_nru and set_hit/victim_set are one hot. so if they are equal
+    // then after this access all the sets are recently used.
+    assign all_ru_hit = (set_nru == set_hit);
+    assign all_ru_miss = (set_nru == victim_set);
 
     genvar i;
-    for (i = 0; i < CACHE_WAYS; i++) begin
+    generate
+    for (i = 0; i < CACHE_WAYS; i++) begin: _set
         assign set_address[i] = core_avn_req.address;
         assign set_byteenable[i] = core_avn_req.byte_enable;
         assign set_fill_data[i]  = mem_avn_resp.readdata;
         assign set_fill_address[i] = set_address_s1;
     end
+    endgenerate
 
     always @(posedge clk) set_address_s1 <= core_avn_req.address;
     always @(posedge clk) read_from_memory <= mem_avn_req.read & ~mem_avn_resp.waitrequest;
@@ -177,7 +199,7 @@ module sa_cache #(
 
                 // if cache hit, clear the NLU bit for the hitting set since we just access this set.
                 if (cache_hit) set_clr_nru = set_hit;
-                if (cache_hit && all_nru) set_set_nru = ~set_hit;
+                if (cache_hit && all_ru_hit) set_set_nru = ~set_hit;
 
                 // for noncachable situlation, we just need to stay at IDLE state
                 // the pipeline stall logic will take care of it
@@ -192,7 +214,7 @@ module sa_cache #(
                     end
                     // set is clean, we go to RETRIVE state if the bus transfer can't be done in one cycle.
                     else begin
-                        if (mem_avn_resp.waitrequest)  state_next = RETRIVE;
+                        if (mem_avn_resp.waitrequest)   state_next = RETRIVE;
                     end
                 end
             end
@@ -207,7 +229,7 @@ module sa_cache #(
                 core_avn_resp.waitrequest = mem_avn_resp.waitrequest;
                 mem_avn_req.read = 1;
                 if (!mem_avn_resp.waitrequest) set_clr_nru = victim_set;
-                if (!mem_avn_resp.waitrequest && all_nru) set_set_nru = ~victim_set;
+                if (!mem_avn_resp.waitrequest && all_ru_miss) set_set_nru = ~victim_set;
                 if (!mem_avn_resp.waitrequest) state_next = IDLE;
             end
 
@@ -224,24 +246,24 @@ module sa_cache #(
         .CACHE_SET_DEPTH    (CACHE_SET_DEPTH),
         .NRU_LOGIC          (1))
     u_cache_set[CACHE_WAYS-1:0] (
-        .clk            (clk),
-        .rst            (rst),
-        .read           (set_read),
-        .write          (set_write),
-        .address        (set_address),
-        .writedata      (set_writedata),
-        .byteenable     (set_byteenable),
-        .readdata       (set_readdata),
-        .hit            (set_hit),
-        .dirty          (set_dirty),
-        .dirty_data     (set_dirty_data),
-        .valid          (set_valid),
-        .fill           (set_fill),
-        .fill_address   (set_fill_address),
-        .fill_data      (set_fill_data),
-        .set_nru        (set_set_nru),
-        .clr_nru        (set_clr_nru),
-        .nru            (set_nru)
+        .clk                (clk),
+        .rst                (rst),
+        .read               (set_read),
+        .write              (set_write),
+        .address            (set_address),
+        .writedata          (set_writedata),
+        .byteenable         (set_byteenable),
+        .readdata           (set_readdata),
+        .hit                (set_hit),
+        .dirty              (set_dirty),
+        .dirty_data         (set_dirty_data),
+        .valid              (set_valid),
+        .fill               (set_fill),
+        .fill_address       (set_fill_address),
+        .fill_data          (set_fill_data),
+        .set_nru            (set_set_nru),
+        .clr_nru            (set_clr_nru),
+        .nru                (set_nru)
     );
 
     // ---------------------------------
