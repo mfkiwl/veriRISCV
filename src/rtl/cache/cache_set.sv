@@ -22,7 +22,7 @@ Cache Set logic
 
 module cache_set #(
     parameter CACHE_LINE_SIZE = 4,  // cache line size in bytes, support 4 byte only for now
-    parameter CACHE_SET_DEPTH = 32,       // CACHE_SET_DEPTH of the cache set. Must be power of 2
+    parameter CACHE_SET_DEPTH = 32, // CACHE_SET_DEPTH of the cache set. Must be power of 2
     parameter NRU_LOGIC = 0         // Use NRU logic
 ) (
     input                       clk,
@@ -74,14 +74,13 @@ module cache_set #(
     logic                   tag_match;
     logic                   cache_write;
 
-    reg [LINE_WIDTH-1:0]    cache_mem_data[CACHE_SET_DEPTH-1:0];
-    reg [TAG_WIDTH-1:0]     cache_mem_tag[CACHE_SET_DEPTH-1:0];
     reg [CACHE_SET_DEPTH-1:0] cache_mem_valid;
     reg [CACHE_SET_DEPTH-1:0] cache_mem_dirty;
 
     logic [BYTE_WIDTH-1:0]  fill_byte_addr;
     logic [SET_WIDTH-1:0]   fill_set_addr;
     logic [TAG_WIDTH-1:0]   fill_tag;
+    logic [`DATA_WIDTH/8-1:0] fill_byteenable;
 
     // ---------------------------------
     // main logic
@@ -92,10 +91,8 @@ module cache_set #(
     assign {fill_tag, fill_set_addr, fill_byte_addr} = fill_address;
 
     // check if we have a cache hit or a cache miss
-    assign cache_line_tag = cache_mem_tag[cache_set_addr];
     assign cache_line_valid = cache_mem_valid[cache_set_addr];
     assign cache_line_dirty = cache_mem_dirty[cache_set_addr];
-    always @(posedge clk) cache_line_data <= cache_mem_data[cache_set_addr];
 
     assign tag_match = cache_line_tag == cache_tag;
     assign hit = cache_line_valid & tag_match;
@@ -106,11 +103,6 @@ module cache_set #(
 
     // cache hit and write
     assign cache_write = hit & write;
-    always @(posedge clk) if (cache_write) cache_mem_data[cache_set_addr] <= writedata; // FIXME: byte enable logic
-
-    // cache miss update
-    always @(posedge clk) if (fill) cache_mem_tag[fill_set_addr] <= fill_tag;
-    always @(posedge clk) if (fill) cache_mem_data[fill_set_addr] <= fill_data;
 
     // cache line valid
     always @(posedge clk) begin
@@ -126,8 +118,8 @@ module cache_set #(
     end
 
     // nru logic for Set associative cache
-    //generate
-    //if (NRU_LOGIC) begin: _nru_logic
+    generate
+    if (NRU_LOGIC) begin: _nru_logic
 
         reg [CACHE_SET_DEPTH-1:0] cache_mem_nru;
 
@@ -141,12 +133,52 @@ module cache_set #(
             end
         end
 
-    //end
-    //else begin: _no_nru_logic
+    end
+    else begin: _no_nru_logic
 
-    //    assign nru = 0;
+        assign nru = 0;
 
-    //end
-    //endgenerate
+    end
+    endgenerate
+
+    assign fill_byteenable = {(`DATA_WIDTH/8){1'b1}};
+
+    // ---------------------------------
+    // Module instantiation
+    // ---------------------------------
+
+    // If we have a cache miss, we need to grab the data from the memory and then
+    // fill the data into cache ram, we also need to update the tag ram
+
+    cache_data_ram #(
+        .AW             (SET_WIDTH),
+        .DW             (`DATA_WIDTH))
+    cache_mem_data (
+        .clk            (clk),
+        // p1 is regular access to cache data.
+        .core_write     (cache_write),
+        .core_address   (cache_set_addr),
+        .core_byte_enable (byteenable),
+        .core_writedata (writedata),
+        .core_readdata  (cache_line_data),
+        // p2 is cache fill.
+        .fill_write     (fill),
+        .fill_address   (fill_set_addr),
+        .fill_byte_enable (fill_byteenable),
+        .fill_writedata (fill_data));
+
+    cache_tag_ram #(
+        .AW             (SET_WIDTH),
+        .DW             (TAG_WIDTH))
+    cache_mem_tag (
+        .clk            (clk),
+        // p1 is regular access to cache tag
+        .core_address   (cache_set_addr),
+        .core_readdata  (cache_line_tag),
+        // p2 is cache fill.
+        .fill_write     (fill),
+        .fill_address   (fill_set_addr),
+        .fill_writedata (fill_tag));
+
 
 endmodule

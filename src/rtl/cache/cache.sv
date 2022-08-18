@@ -28,7 +28,7 @@ module cache #(
 
 generate
 if (CACHE_WAYS == 1) begin:_dir_cache
-    dir_cache #(
+    cache_dirmap #(
         .CACHE_LINE_SIZE    (CACHE_LINE_SIZE),
         .CACHE_SET_DEPTH    (CACHE_SET_DEPTH))
     u_instruction_cache (
@@ -41,7 +41,7 @@ if (CACHE_WAYS == 1) begin:_dir_cache
     );
 end
 else begin:_sa_cache
-    sa_cache #(
+    cache_samap #(
         .CACHE_LINE_SIZE    (CACHE_LINE_SIZE),
         .CACHE_SET_DEPTH    (CACHE_SET_DEPTH),
         .CACHE_WAYS         (CACHE_WAYS))

@@ -6,7 +6,7 @@
 // ------------------------------------------------------------------------------------------------
 // veriRISCV
 // ------------------------------------------------------------------------------------------------
-// A Direct cache
+// A direct mapped cache
 // ------------------------------------------------------------------------------------------------
 
 /**
@@ -21,7 +21,7 @@ Bit 31 = 0: Cacheable address
 
 `include "core.svh"
 
-module dir_cache #(
+module cache_dirmap #(
     parameter CACHE_LINE_SIZE = 4,      // cache line size in bytes, support 4 byte only for now
     parameter CACHE_SET_DEPTH = 32      // depth of the cache set. Must be power of 2
 ) (

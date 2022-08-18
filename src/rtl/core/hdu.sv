@@ -76,12 +76,14 @@ module hdu (
     // For simplicity, we just let csr complete before excuting the next instruction
     assign csr_stall = ex_csr_read | mem_csr_read;
 
+    // A branch should wait and not flush the if/id sage if lsu data bus is busy
     assign if_flush  = branch_take & ~lsu_dbus_busy | trap_take;
     assign id_flush  = branch_take & ~lsu_dbus_busy | trap_take;
     assign ex_flush  = trap_take;
     assign mem_flush = trap_take;
 
-    assign id_bubble = csr_stall | (load_stall_req & ~lsu_dbus_busy);
+    // If lsu data bus is busy, then we should not insert bubble into ID stage
+    assign id_bubble = ~lsu_dbus_busy & (csr_stall | load_stall_req);
     assign ex_bubble = muldiv_stall_req;
 
     assign if_stall  = lsu_dbus_busy | load_stall_req | csr_stall | muldiv_stall_req;

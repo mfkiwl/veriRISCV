@@ -30,4 +30,4 @@ async def uart_rw(dut):
 
 @cocotb.test()
 async def coremark(dut):
-    await software_tests(dut, 'coremark', timeout=20000)
+    await software_tests(dut, 'coremark', timeout=30000)

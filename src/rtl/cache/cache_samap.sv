@@ -31,13 +31,11 @@ Here is how nru is implemented:
 - When we have a cache hit on a cell or a fill in a cell, we clear the nru bit indicating that we have recently use.
 - If all the nru bits will become zero after the above actions, we reset the nru bit for OTHER cells to 1.
 
-// FIXME: cache is not fully work with sram and interrupt enabled for uart
-
 */
 
 `include "core.svh"
 
-module sa_cache #(
+module cache_samap #(
     parameter CACHE_LINE_SIZE = 4,      // cache line size in bytes, support 4 byte only for now
     parameter CACHE_SET_DEPTH = 32,     // depth of the cache set. Must be power of 2
     parameter CACHE_WAYS = 2            // cache ways
@@ -126,6 +124,7 @@ module sa_cache #(
     generate
     for (i = 0; i < CACHE_WAYS; i++) begin: _set
         assign set_address[i] = core_avn_req.address;
+        assign set_writedata[i] = core_avn_req.writedata;
         assign set_byteenable[i] = core_avn_req.byte_enable;
         assign set_fill_data[i]  = mem_avn_resp.readdata;
         assign set_fill_address[i] = set_address_s1;
