@@ -23,8 +23,6 @@ VERILOG_SOURCES += $(CPU_CORE_PATH)/WB.sv
 VERILOG_SOURCES += $(CACHE_PATH)/cache_tag_ram.sv
 VERILOG_SOURCES += $(CACHE_PATH)/cache_data_ram.sv
 VERILOG_SOURCES += $(CACHE_PATH)/cache_set.sv
-VERILOG_SOURCES += $(CACHE_PATH)/cache_dirmap.sv
-VERILOG_SOURCES += $(CACHE_PATH)/cache_samap.sv
 VERILOG_SOURCES += $(CACHE_PATH)/cache.sv
 
 VERILOG_SOURCES += $(CPU_CORE_PATH)/veriRISCV_core.sv

@@ -16,7 +16,12 @@ module veriRISCV_core #(
 `ifdef USE_ICACHE
     parameter ICACHE_LINE_SIZE = 4,  // cache line size in bytes, support 4 byte only for now
     parameter ICACHE_DEPTH = 32,     // depth of the cache set. Must be power of 2
-    parameter ICACHE_WAYS = 2,       // cache ways. 1 => direct mapped. >=2 set associative
+    parameter ICACHE_WAYS = 1,       // cache ways. 1 => direct mapped. >=2 set associative
+`endif
+`ifdef USE_DCACHE
+    parameter DCACHE_LINE_SIZE = 4,  // cache line size in bytes, support 4 byte only for now
+    parameter DCACHE_DEPTH = 32,     // depth of the cache set. Must be power of 2
+    parameter DCACHE_WAYS = 1,       // cache ways. 1 => direct mapped. >=2 set associative
 `endif
     parameter IFQ_DEPTH = 16,   // instruction fetch queue depth. Set to 16 so it is mapped to FPGA BRAM
     parameter IFQ_AFULL_TH = 1  // instruction fetch queue almost full threshold
@@ -96,6 +101,11 @@ module veriRISCV_core #(
     avalon_resp_t           icache_avn_resp;
 `endif
 
+`ifdef USE_DCACHE
+    avalon_req_t            dcache_avn_req;
+    avalon_resp_t           dcache_avn_resp;
+`endif
+
     // ---------------------------------
     // IF stage
     // ---------------------------------
@@ -142,7 +152,7 @@ module veriRISCV_core #(
         .wb_reg_writedata       (wb_reg_writedata),
         .ex_mem_read            (ex_mem_read),
         .mem_mem_read           (mem_mem_read),
-        .hdu_load_stall_req         (hdu_load_stall_req),
+        .hdu_load_stall_req     (hdu_load_stall_req),
         .id2ex_pipeline_ctrl    (id2ex_pipeline_ctrl),
         .id2ex_pipeline_exc     (id2ex_pipeline_exc),
         .id2ex_pipeline_data    (id2ex_pipeline_data)
@@ -180,8 +190,13 @@ module veriRISCV_core #(
         .rst                    (rst),
         .mem_stall              (mem_stall),
         .mem_flush              (mem_flush),
+    `ifdef USE_DCACHE
+        .dbus_avalon_req        (dcache_avn_req),
+        .dbus_avalon_resp       (dcache_avn_resp),
+    `else
         .dbus_avalon_req        (dbus_avalon_req),
         .dbus_avalon_resp       (dbus_avalon_resp),
+    `endif
         .mem_mem_read           (mem_mem_read),
         .lsu_dbus_busy          (lsu_dbus_busy),
         .ex2mem_pipeline_ctrl   (ex2mem_pipeline_ctrl),
@@ -266,6 +281,21 @@ module veriRISCV_core #(
         .core_avn_resp      (icache_avn_resp),
         .mem_avn_req        (ibus_avalon_req),
         .mem_avn_resp       (ibus_avalon_resp)
+    );
+`endif
+
+`ifdef USE_DCACHE
+    cache #(
+        .CACHE_LINE_SIZE    (DCACHE_LINE_SIZE),
+        .CACHE_SET_DEPTH    (DCACHE_DEPTH),
+        .CACHE_WAYS         (DCACHE_WAYS))
+    u_data_cache (
+        .clk                (clk),
+        .rst                (rst),
+        .core_avn_req       (dcache_avn_req),
+        .core_avn_resp      (dcache_avn_resp),
+        .mem_avn_req        (dbus_avalon_req),
+        .mem_avn_resp       (dbus_avalon_resp)
     );
 `endif
 
